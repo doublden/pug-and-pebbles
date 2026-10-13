@@ -1,0 +1,37 @@
+{
+  "release": "0.3.0",
+  "priority": "mobile Safari and Home Screen web app",
+  "requirements": [
+    "Fix purchased pug stage rendering and clearly distinguish current stage from next preview",
+    "Add three pug stages before healthy pug; migrate existing saves without losing purchases",
+    "Add two early homes; twelve location stages total",
+    "Five falling pet-head coin bonuses x2/x3/x4/x5/x8 with weights 45/28/15/9/3; missed coins do not activate",
+    "Six idle poses with yawning, nose licking and left/right looks",
+    "Tap pug to sneeze with sound and accumulating temporary pointer-transparent saliva droplets",
+    "Rare fart with four distinct sound durations and two looking directions",
+    "Ten achievements and visible upgrade transitions",
+    "Four-slide first-run tutorial with skip and replay",
+    "Progress reset in settings with explicit warning",
+    "Developer code 1435: grant currency, stages, tool levels, tap multiplier, event speed and forced bonus/sound tests",
+    "Public GitHub version link, shareable mobile play URL, Safari Add to Home Screen support",
+    "Zoom mobile composition out, pug left, food near screen middle and more location visible",
+    "Separate interactive food artwork tied to home stages: empty cobweb bowl with two pieces, progressively fuller bowl, overflowing pile, increasingly large heaps, gold finale; subtle shake when digging",
+    "Separate persistent music/effects volume sliders; significantly louder audio with a compressor to contain overlapping effects",
+    "Random paw licking and relaxed splayed-back-leg sitting poses based on provided pug photo, across all thirteen appearance stages",
+    "Crow and sparrow animated flights, land on bowl/food/pug head, peck away one normal tap of currency per peck (max 6/4), tap to chase with temporary feather poof; pirate sparrow 0.5% of sparrow visits",
+    "Two more early pug stages and two poor homes: fifteen pug stages / fourteen homes final; migrate old tool indices and preserve prior bonuses",
+    "Two cheap tools: jar lid and wooden spoon, extra early purchases",
+    "After ten seconds of no main-screen interaction: random sleep/nose bubble/snore, whistling, backward looks, stretch; extremely rare 0.2% backward human-like toilet walk; tap interrupts and returns pug, modals suppress scenes",
+    "After publication research popular worldwide clickers and propose future engagement ideas"
+  ],
+  "status": "implementation complete and local checks passed; deployment status is available in GitHub Actions",
+  "verification": {
+    "unit_tests": 37,
+    "pug_poses_checked": 180,
+    "home_and_food_stages": 14,
+    "bird_frames": 24,
+    "offline_launch": "local server stopped; final cache has 20 WebP assets",
+    "mobile_layouts": "320x568, 390x844, landscape 844x390",
+    "physical_iphone": "not tested"
+  }
+}
