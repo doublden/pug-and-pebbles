@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f1e7">
+  <meta name="description" content="Копай камушки, покупай ложки и помоги одному очень серьёзному мопсу пройти путь от свалки до дворца. Бесплатная браузерная игра.">
+  <title>Мопс и камушки — маленькая история большого живота</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <script src="game.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Мопс и камушки — начало"><span class="brand-paw" aria-hidden="true">✦</span> Мопс и камушки <span class="version">первая история</span></a>
+    <button class="sound-toggle" id="sound" aria-pressed="false" aria-label="Включить звук">Звук: выкл.</button>
+  </header>
+  <main>
+    <div class="intro"><div><p class="eyebrow">МАЛЕНЬКАЯ ИСТОРИЯ БОЛЬШОГО ЖИВОТА</p><h1>Каждому мопсу —<br class="mobile-break"> по дворцу.</h1><p class="lead">Одна лапа. Гора камушков. И очень большие планы.</p></div><div class="balance"><span class="pebble" aria-hidden="true"></span><div><span class="balance-label" id="currency-label">Твои камушки</span><strong id="balance">0</strong></div><span class="yield" id="yield">+1 за клик</span></div></div>
+    <div class="game-layout">
+      <section class="adventure" aria-label="Мир мопса">
+        <div class="scene-frame">
+          <button class="scene" id="dig-scene" aria-label="Копать камушки: 1 за клик" data-stage="0">
+            <span class="location"><span aria-hidden="true">⌖</span> <span id="location">Свалка</span></span>
+            <span class="chapter" id="chapter">ГЛАВА 01 / 04</span>
+            <span class="dog-shadow" aria-hidden="true"></span>
+            <span class="character" id="character" aria-hidden="true"><span class="pug-sprite"></span><span class="digging-arm" id="digging-arm"><span class="arm-fur"></span><span class="held-tool" id="held-tool"></span><span class="arm-paw"></span></span></span>
+            <span class="scene-hint" id="scene-hint">Нажми на гору. Лапа справится.</span>
+            <span id="particles" class="particles" aria-hidden="true"></span>
+            <span id="art-loading" class="art-loading">Мопс уже на пути…</span>
+          </button>
+          <div class="scene-controls"><div><span class="little-label">СЕЙЧАС В ЛАПЕ</span><strong id="current-tool">Собственная лапа</strong></div><button id="dig-button" class="dig-button"><span aria-hidden="true">✦</span> Копать <span id="dig-yield">+1</span></button></div>
+        </div>
+        <div class="pug-status"><div><p class="eyebrow">ТВОЙ МОПС</p><h2 id="pug-title">Маленький голодный философ</h2><p id="pug-description">Жизнь потрепала. Но аппетит ещё есть.</p></div><div class="status-tag" id="pug-tag">Худой и чумазый</div></div>
+        <div class="journey" aria-label="Путь от свалки до дворца"><div class="journey-track"></div><div class="journey-progress" id="journey-progress"></div><div class="milestone current" data-milestone="0"><span>1</span><strong>Свалка</strong></div><div class="milestone" data-milestone="1"><span>2</span><strong>Двор</strong></div><div class="milestone" data-milestone="2"><span>3</span><strong>Сад</strong></div><div class="milestone" data-milestone="3"><span>♛</span><strong>Дворец</strong></div></div>
+        <div class="session-stats"><span>Всего накопано <strong id="total">0</strong></span><span>Взмахов лапой <strong id="clicks">0</strong></span></div>
+      </section>
+      <aside class="shop" aria-label="Улучшения">
+        <div class="shop-heading"><div><p class="eyebrow">С МАЛЕНЬКОЙ ЛАПЫ — БОЛЬШОЙ КУШ</p><h2>Арсенал копателя</h2></div><span class="section-number">01</span></div>
+        <p class="shop-description">Новая ложка — больше камушков за клик.</p>
+        <div id="tools" class="tool-list"></div>
+        <div class="pug-upgrade" id="pug-upgrade-card"><div class="shop-heading"><div><p class="eyebrow">ИНВЕСТИЦИЯ В ЩЁЧКИ</p><h2>Мопсу на жизнь</h2></div><span class="section-number">02</span></div><div class="upgrade-copy"><span class="upgrade-symbol" id="upgrade-symbol" aria-hidden="true">♡</span><div><h3 id="upgrade-name">Отмыть и накормить</h3><p id="upgrade-description">Чистая шерсть, полный живот и свой уголок во дворе.</p></div></div><div class="upgrade-benefit" id="upgrade-benefit">Пухлее мопс · Уютнее мир</div><button id="upgrade-pug" class="upgrade-button" disabled><span id="upgrade-action">Позаботиться</span><span class="price"><span class="pebble small" aria-hidden="true"></span><span id="upgrade-price">60</span></span></button><div class="purchase-progress"><span id="purchase-progress-fill"></span></div><p class="remaining" id="upgrade-remaining">Ещё 60 камушков до новой жизни</p></div>
+        <div class="small-tip"><span aria-hidden="true">✧</span><p>Ложки помогают копать.<br>Забота помогает стать счастливее.</p></div>
+      </aside>
+    </div>
+    <div class="victory" id="victory" hidden><span aria-hidden="true">♛</span><div><h2>Его Мопсейшество дома.</h2><p>Дворец получен. Щёчки отращены. Теперь можно просто купаться в золотых камушках.</p></div></div>
+    <footer><span>Сделано для одного особенного мопса.</span><span>Перезагрузка начнёт историю заново. <button id="restart">Начать сначала</button></span></footer>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <dialog id="restart-dialog"><h2>Начать новую историю?</h2><p>Все камушки и улучшения этой игры сбросятся.</p><div><button id="cancel-restart">Продолжить играть</button><button id="confirm-restart">Начать заново</button></div></dialog>
+</body>
+</html>
