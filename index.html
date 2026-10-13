@@ -1,16 +1,404 @@
-<!doctype html><html lang="ru"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#27251f"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Мопс"><meta name="description" content="Мопс и камушки: копай корм, лови друзей и обустрой жизнь своего мопса."><title>Мопс и камушки</title><link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/svg+xml" href="favicon.svg"><link rel="apple-touch-icon" href="icon-192.png"><link rel="stylesheet" href="style.css">
-<script src="game.js" defer></script><script src="icons.js" defer></script><script src="locale.js" defer></script><script src="bonuses.js" defer></script><script src="birds.js" defer></script><script src="idle.js" defer></script><script src="audio.js" defer></script><script src="sprites.js" defer></script><script src="world.js" defer></script><script src="app.js" defer></script>
-</head><body><main id="app" class="app-shell">
-<canvas id="world" tabindex="0" role="button" aria-label="Копать камушки"></canvas><button id="sneeze-button" class="sr-only" data-i18n="sneeze">Чихнуть</button><div class="shade" aria-hidden="true"></div><button id="food-hit" class="food-hit" aria-label="Копать камушки"></button><canvas id="slobber" aria-hidden="true"></canvas>
-<header class="hud"><div class="wallet"><span class="kibble" aria-hidden="true"></span><div><strong id="balance">0</strong><span id="wallet-label">камушки</span></div></div><div class="hud-actions"><button id="achievements-open" class="round-button" aria-label="Достижения"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v5c0 7-10 7-10 0zM7 5H3v3c0 3 3 4 5 4M17 5h4v3c0 3-3 4-5 4M12 14v5M7 21h10M9 19h6"/></svg><span id="achievement-dot" class="shop-dot" hidden></span></button><button id="settings-open" class="round-button" aria-label="Настройки"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 3-.7 2.2-2 .9-2.1-.6-2 3.5 1.6 1.7v2.6L3.2 15l2 3.5 2.1-.6 2 .9L10 21h4l.7-2.2 2-.9 2.1.6 2-3.5-1.6-1.7v-2.6l1.6-1.7-2-3.5-2.1.6-2-.9L14 3z"/><circle cx="12" cy="12" r="3.2"/></svg></button></div></header>
-<div class="test-chip" id="test-chip" hidden data-i18n="testMode">Тестовый прогресс</div><div class="bonus-indicator" id="bonus-indicator" hidden><span id="bonus-value">×2</span><span id="bonus-seconds">30</span></div><button id="pet-coin" class="pet-coin" hidden><span class="coin-face" aria-hidden="true"></span><strong id="coin-value" aria-hidden="true">×2</strong></button>
-<button class="bird" id="bird" hidden><canvas id="bird-canvas" class="bird-face" aria-hidden="true"></canvas></button><p class="tap-hint" id="tap-hint">Нажимай на камушки</p><div class="bottom-hud"><div class="scene-labels"><span id="pug-label">Чумазый мопс</span><span id="home-label">Свалка</span></div><div class="bottom-actions"><div class="equipped"><span id="equipped-icon" aria-hidden="true"></span><div><span id="equipped-name">Лапа</span><strong id="click-power">+1</strong></div></div><button id="shop-open" class="shop-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l1 13H4zM8 8V6a4 4 0 0 1 8 0v2"/></svg><span id="shop-open-label">Магазин</span><span class="shop-dot" id="shop-dot" hidden></span></button></div></div>
-<div class="loading" id="loading"><span class="loading-paw" aria-hidden="true">✦</span><strong id="loading-title">Мопс уже на пути</strong><span id="loading-detail">Готовим камушки…</span><button id="loading-retry" class="setting-action" hidden>↻</button></div><div class="toast" id="toast" role="status" aria-live="polite"></div></main>
-<dialog id="shop-dialog" class="sheet shop-sheet" aria-labelledby="shop-title"><div class="sheet-handle" aria-hidden="true"></div><header class="sheet-header"><div><span class="sheet-eyebrow" id="shop-eyebrow">ДЛЯ БОЛЬШИХ ПЛАНОВ</span><h1 id="shop-title">Магазин</h1></div><button class="close-button" id="shop-close">×</button></header><div class="shop-wallet"><span class="kibble tiny" aria-hidden="true"></span><strong id="shop-balance">0</strong><span id="shop-currency">камушки</span></div><p id="shop-message" class="shop-feedback" role="status" hidden></p><nav class="shop-tabs" aria-label="Разделы магазина"><button data-tab="tools" class="selected" aria-pressed="true" id="tab-tools">Инструменты</button><button data-tab="pug" aria-pressed="false" id="tab-pug">Мопс</button><button data-tab="home" aria-pressed="false" id="tab-home">Дом</button></nav><div class="shop-content" id="shop-content"></div><p class="shop-footnote" id="shop-footnote">Каждые 25 уровней инструмента — двойная сила</p><div class="save-note" id="save-note">Прогресс сохраняется на этом устройстве</div></dialog>
-<dialog id="settings-dialog" class="sheet settings-sheet" aria-labelledby="settings-title"><div class="sheet-handle" aria-hidden="true"></div><header class="sheet-header"><h1 id="settings-title">Настройки</h1><button class="close-button" id="settings-close">×</button></header><div class="settings-body"><div class="setting-row"><label id="language-label" for="language">Язык</label><select id="language"><option value="ru">Русский</option><option value="en">English</option></select></div><div class="setting-row"><label id="music-label" for="music-toggle">Музыка</label><input class="switch" id="music-toggle" type="checkbox" role="switch"></div><div class="setting-row"><label id="effects-label" for="effects-toggle">Звуки</label><input class="switch" id="effects-toggle" type="checkbox" role="switch" checked></div><div class="volume-row"><label for="music-volume" data-i18n="musicVolume"></label><output id="music-volume-value" for="music-volume"></output><input id="music-volume" type="range" min="0" max="100" step="1" value="75"></div><div class="volume-row"><label for="effects-volume" data-i18n="effectsVolume"></label><output id="effects-volume-value" for="effects-volume"></output><input id="effects-volume" type="range" min="0" max="100" step="1" value="80"></div><button class="setting-action" id="tutorial-open" data-i18n="instruction">Как играть</button><button class="setting-action" id="share-game" data-i18n="share">Поделиться игрой</button><details class="install-details"><summary data-i18n="install">Установить на iPhone</summary><p data-i18n="installHelp"></p><p data-i18n="saveDevice"></p></details><button class="setting-action" id="developer-open" data-i18n="developer">Режим разработчика</button><button class="setting-action danger" id="reset-open" data-i18n="reset">Начать заново</button><p id="settings-save-note" class="settings-note">Всё сохраняется автоматически</p><p class="version-note">Pug & Pebbles · 0.3.0</p></div></dialog>
-<dialog id="achievements-dialog" class="sheet awards-sheet" aria-labelledby="awards-title"><div class="sheet-handle" aria-hidden="true"></div><header class="sheet-header"><div><span class="sheet-eyebrow" id="awards-count"></span><h1 id="awards-title" data-i18n="achievements">Достижения</h1></div><button class="close-button" id="achievements-close">×</button></header><div id="awards-content" class="shop-content award-list"></div></dialog>
-<dialog id="tutorial-dialog" class="sheet tutorial-sheet" aria-labelledby="tutorial-title"><button class="tutorial-skip" id="tutorial-skip" data-i18n="skip">Пропустить</button><div class="tutorial-visual" id="tutorial-visual" aria-hidden="true"></div><span class="sheet-eyebrow" id="tutorial-counter"></span><h1 id="tutorial-title"></h1><p id="tutorial-copy"></p><div class="tutorial-dots" id="tutorial-dots" aria-hidden="true"></div><div class="tutorial-actions"><button id="tutorial-back" class="setting-action" data-i18n="previous">Назад</button><button id="tutorial-next" class="shop-button" data-i18n="nextSlide">Далее</button></div></dialog>
-<dialog id="reset-dialog" class="sheet confirmation-sheet" aria-labelledby="reset-title"><div class="sheet-handle" aria-hidden="true"></div><header class="sheet-header"><h1 id="reset-title" data-i18n="resetTitle">Начать с нуля?</h1></header><p data-i18n="resetWarning"></p><div class="confirmation-actions"><button id="reset-cancel" class="setting-action" data-i18n="cancel">Отмена</button><button id="reset-confirm" class="setting-action danger" data-i18n="resetConfirm">Сбросить прогресс</button></div></dialog>
-<dialog id="developer-dialog" class="sheet developer-sheet" aria-labelledby="developer-title"><div class="sheet-handle" aria-hidden="true"></div><header class="sheet-header"><h1 id="developer-title" data-i18n="developerTitle">Тестовая площадка</h1><button class="close-button" id="developer-close">×</button></header><div class="settings-body"><form id="developer-login"><label for="developer-code" data-i18n="code">Код доступа</label><input id="developer-code" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" required><p id="code-error" role="status"></p><button class="shop-button" type="submit" data-i18n="enter">Войти</button></form><div id="developer-controls" hidden><p class="settings-note" data-i18n="devHint"></p><div class="dev-row"><label for="dev-money" data-i18n="grant">Добавить камушки</label><select id="dev-money"><option value="1000">+1 000</option><option value="1000000">+1 000 000</option><option value="1000000000">+1 000 000 000</option><option value="1000000000000">+1 000 000 000 000</option></select><button id="dev-grant" data-i18n="apply">Применить</button></div><div class="dev-row"><label for="dev-pug" data-i18n="pug">Мопс</label><select id="dev-pug"></select><label for="dev-home" data-i18n="home">Дом</label><select id="dev-home"></select><button id="dev-stages" data-i18n="apply">Применить</button></div><div class="dev-row"><label for="dev-tool" data-i18n="tools">Инструменты</label><select id="dev-tool"></select><label for="dev-tool-level" data-i18n="toolLevel">Уровень инструмента</label><input id="dev-tool-level" type="number" min="1" max="500" value="25"><button id="dev-tool-apply" data-i18n="apply">Применить</button></div><div class="setting-row"><label for="dev-speed" data-i18n="eventSpeed">Частота событий</label><select id="dev-speed"><option value="1">×1</option><option value="3">×3</option><option value="10">×10</option></select></div><div class="setting-row"><label for="dev-taps" data-i18n="tapMultiplier">Множитель нажатий</label><select id="dev-taps"><option value="1">×1</option><option value="10">×10</option><option value="100">×100</option></select></div><div class="dev-row"><label for="dev-bonus" data-i18n="spawnBonus">Вызвать бонус</label><select id="dev-bonus"><option>2</option><option>3</option><option>4</option><option>5</option><option>8</option></select><button id="dev-bonus-apply" data-i18n="apply">Применить</button></div><div class="dev-row"><label for="dev-idle" data-i18n="idleScene"></label><select id="dev-idle"><option value="sleep" data-i18n="sleep"></option><option value="whistle" data-i18n="whistle"></option><option value="backlook" data-i18n="backlook"></option><option value="stretch" data-i18n="stretch"></option><option value="pee" data-i18n="pee"></option></select><button id="dev-idle-apply" data-i18n="apply"></button></div><div class="dev-row"><label for="dev-bird" data-i18n="spawnBird"></label><select id="dev-bird"><option value="crow" data-i18n="crow"></option><option value="sparrow" data-i18n="sparrow"></option><option value="pirate" data-i18n="pirate"></option></select><button id="dev-bird-apply" data-i18n="apply"></button></div><div class="dev-row"><label for="dev-fart-variant" data-i18n="variant">Вариант звука</label><select id="dev-fart-variant"><option>1</option><option>2</option><option>3</option><option>4</option></select><button id="dev-fart" data-i18n="tryFart">Проверить пук</button><button id="dev-sneeze" data-i18n="trySneeze">Проверить чих</button></div><button class="setting-action" id="dev-exit" data-i18n="exitDev">Выйти из режима</button></div></div></dialog>
-</body></html>
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#27251f" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Мопс" />
+    <meta
+      name="description"
+      content="Мопс и камушки: копай корм, лови друзей и обустрой жизнь своего мопса."
+    />
+    <title>Мопс и камушки</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="game.js" defer></script>
+    <script src="icons.js" defer></script>
+    <script src="locale.js" defer></script>
+    <script src="bonuses.js" defer></script>
+    <script src="birds.js" defer></script>
+    <script src="idle.js" defer></script>
+    <script src="audio.js" defer></script>
+    <script src="sprites.js" defer></script>
+    <script src="minigames.js" defer></script>
+    <script src="extras.js" defer></script>
+    <script src="world.js" defer></script>
+    <script src="collections.js" defer></script>
+    <script src="mini-ui.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <main id="app" class="app-shell">
+      <canvas id="world" tabindex="0" role="button" aria-label="Копать камушки"></canvas
+      ><button id="sneeze-button" class="sr-only" data-i18n="sneeze">Чихнуть</button>
+      <div class="shade" aria-hidden="true"></div>
+      <button id="food-hit" class="food-hit" aria-label="Копать камушки"></button
+      ><canvas id="slobber" aria-hidden="true"></canvas>
+      <header class="hud">
+        <div class="wallet">
+          <span class="kibble" aria-hidden="true"></span>
+          <div><strong id="balance">0</strong><span id="wallet-label">камушки</span></div>
+        </div>
+        <div class="hud-actions">
+          <button id="achievements-open" class="round-button" aria-label="Достижения">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M7 3h10v5c0 7-10 7-10 0zM7 5H3v3c0 3 3 4 5 4M17 5h4v3c0 3-3 4-5 4M12 14v5M7 21h10M9 19h6"
+              /></svg
+            ><span id="achievement-dot" class="shop-dot" hidden></span></button
+          ><button id="settings-open" class="round-button" aria-label="Настройки">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="m10 3-.7 2.2-2 .9-2.1-.6-2 3.5 1.6 1.7v2.6L3.2 15l2 3.5 2.1-.6 2 .9L10 21h4l.7-2.2 2-.9 2.1.6 2-3.5-1.6-1.7v-2.6l1.6-1.7-2-3.5-2.1.6-2-.9L14 3z"
+              />
+              <circle cx="12" cy="12" r="3.2" />
+            </svg>
+          </button>
+        </div>
+      </header>
+      <div class="test-chip" id="test-chip" hidden data-i18n="testMode">Тестовый прогресс</div>
+      <div class="bonus-indicator" id="bonus-indicator" hidden>
+        <span id="bonus-value">×2</span><span id="bonus-seconds">30</span>
+      </div>
+      <button id="pet-coin" class="pet-coin" hidden>
+        <span class="coin-face" aria-hidden="true"></span
+        ><strong id="coin-value" aria-hidden="true">×2</strong>
+      </button>
+      <button class="bird" id="bird" hidden>
+        <canvas id="bird-canvas" class="bird-face" aria-hidden="true"></canvas>
+      </button>
+      <p class="tap-hint" id="tap-hint">Нажимай на камушки</p>
+      <div class="bottom-hud">
+        <div class="scene-labels">
+          <span id="pug-label">Чумазый мопс</span><span id="home-label">Свалка</span>
+        </div>
+        <div class="bottom-actions">
+          <div class="equipped">
+            <span id="equipped-icon" aria-hidden="true"></span>
+            <div><span id="equipped-name">Лапа</span><strong id="click-power">+1</strong></div>
+          </div>
+          <button id="minigames-open" class="round-button games-button" aria-label="Мини-игры">
+            ♧</button
+          ><button id="shop-open" class="shop-button">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 8h14l1 13H4zM8 8V6a4 4 0 0 1 8 0v2" /></svg
+            ><span id="shop-open-label">Магазин</span
+            ><span class="shop-dot" id="shop-dot" hidden></span>
+          </button>
+        </div>
+      </div>
+      <div class="loading" id="loading">
+        <div class="feed-loader" aria-hidden="true">
+          <svg viewBox="0 0 300 160">
+            <g class="loader-truck">
+              <path
+                fill="#c69344"
+                stroke="#705333"
+                stroke-width="3"
+                d="M18 88h112V62h36l23 26v36H18z"
+              />
+              <path fill="#b8d5d6" d="M138 68h24l16 22h-40z" />
+              <g class="loader-bed">
+                <path fill="#d5a651" stroke="#705333" stroke-width="3" d="M20 42h100v48H20z" />
+                <path fill="#99613d" d="M24 48h92v20H24z" />
+              </g>
+              <circle cx="48" cy="122" r="16" fill="#383d36" />
+              <circle cx="155" cy="122" r="16" fill="#383d36" />
+              <circle cx="48" cy="122" r="7" fill="#c8c9ba" />
+              <circle cx="155" cy="122" r="7" fill="#c8c9ba" />
+            </g>
+            <g class="loader-pellets" fill="#a4744d">
+              <rect x="193" y="65" width="9" height="8" rx="3" />
+              <rect x="219" y="83" width="9" height="8" rx="3" />
+              <rect x="207" y="103" width="9" height="8" rx="3" />
+              <rect x="237" y="70" width="9" height="8" rx="3" />
+            </g>
+            <path fill="#8b958a" stroke="#525d52" stroke-width="3" d="M192 119h92l-12 31h-68z" />
+            <path fill="#b48252" d="M198 119q38-24 80 0z" />
+          </svg>
+        </div>
+        <strong id="loading-percent" aria-live="polite">0%</strong
+        ><progress id="loading-progress" max="100" value="0"></progress
+        ><strong id="loading-title">Мопс уже на пути</strong
+        ><span id="loading-detail">Готовим камушки…</span
+        ><button id="loading-retry" class="setting-action" hidden>↻</button>
+      </div>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </main>
+    <dialog id="shop-dialog" class="sheet shop-sheet" aria-labelledby="shop-title">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <header class="sheet-header">
+        <div>
+          <span class="sheet-eyebrow" id="shop-eyebrow">ДЛЯ БОЛЬШИХ ПЛАНОВ</span>
+          <h1 id="shop-title">Магазин</h1>
+        </div>
+        <button class="close-button" id="shop-close">×</button>
+      </header>
+      <div class="shop-wallet">
+        <span class="kibble tiny" aria-hidden="true"></span><strong id="shop-balance">0</strong
+        ><span id="shop-currency">камушки</span>
+      </div>
+      <p id="shop-message" class="shop-feedback" role="status" hidden></p>
+      <nav class="shop-tabs" aria-label="Разделы магазина">
+        <button data-tab="tools" class="selected" aria-pressed="true" id="tab-tools">
+          Инструменты</button
+        ><button data-tab="pug" aria-pressed="false" id="tab-pug">Мопс</button
+        ><button data-tab="home" aria-pressed="false" id="tab-home">Дом</button
+        ><button data-tab="hats" aria-pressed="false" id="tab-hats">Шляпы</button
+        ><button data-tab="helper" aria-pressed="false" id="tab-helper">Василий</button>
+      </nav>
+      <div class="shop-content" id="shop-content"></div>
+      <p class="shop-footnote" id="shop-footnote">Каждые 25 уровней инструмента — двойная сила</p>
+      <div class="save-note" id="save-note">Прогресс сохраняется на этом устройстве</div>
+    </dialog>
+    <dialog id="settings-dialog" class="sheet settings-sheet" aria-labelledby="settings-title">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <header class="sheet-header">
+        <h1 id="settings-title">Настройки</h1>
+        <button class="close-button" id="settings-close">×</button>
+      </header>
+      <div class="settings-body">
+        <div class="setting-row">
+          <label id="language-label" for="language">Язык</label
+          ><select id="language">
+            <option value="ru">Русский</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <label id="music-label" for="music-toggle">Музыка</label
+          ><input class="switch" id="music-toggle" type="checkbox" role="switch" />
+        </div>
+        <div class="setting-row">
+          <label id="effects-label" for="effects-toggle">Звуки</label
+          ><input class="switch" id="effects-toggle" type="checkbox" role="switch" checked />
+        </div>
+        <div class="volume-row">
+          <label for="music-volume" data-i18n="musicVolume"></label
+          ><output id="music-volume-value" for="music-volume"></output
+          ><input id="music-volume" type="range" min="0" max="100" step="1" value="75" />
+        </div>
+        <div class="volume-row">
+          <label for="effects-volume" data-i18n="effectsVolume"></label
+          ><output id="effects-volume-value" for="effects-volume"></output
+          ><input id="effects-volume" type="range" min="0" max="100" step="1" value="80" />
+        </div>
+        <button class="setting-action" id="tutorial-open" data-i18n="instruction">Как играть</button
+        ><button class="setting-action" id="share-game" data-i18n="share">Поделиться игрой</button>
+        <details class="install-details">
+          <summary data-i18n="install">Установить на iPhone</summary>
+          <p data-i18n="installHelp"></p>
+          <p data-i18n="saveDevice"></p>
+        </details>
+        <button class="setting-action" id="developer-open" data-i18n="developer">
+          Режим разработчика</button
+        ><button class="setting-action" id="newlife-open" data-i18n="newLife">Новая жизнь</button>
+        <p class="settings-note" id="life-status"></p>
+        <button class="setting-action danger" id="reset-open" data-i18n="reset">
+          Начать заново
+        </button>
+        <p id="settings-save-note" class="settings-note">Всё сохраняется автоматически</p>
+        <p class="version-note">Pug & Pebbles · 0.4.0</p>
+      </div>
+    </dialog>
+    <dialog id="achievements-dialog" class="sheet awards-sheet" aria-labelledby="awards-title">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <header class="sheet-header">
+        <div>
+          <span class="sheet-eyebrow" id="awards-count"></span>
+          <h1 id="awards-title" data-i18n="achievements">Достижения</h1>
+        </div>
+        <button class="close-button" id="achievements-close">×</button>
+      </header>
+      <div id="awards-content" class="shop-content award-list"></div>
+    </dialog>
+    <dialog id="tutorial-dialog" class="sheet tutorial-sheet" aria-labelledby="tutorial-title">
+      <button class="tutorial-skip" id="tutorial-skip" data-i18n="skip">Пропустить</button>
+      <div class="tutorial-visual" id="tutorial-visual" aria-hidden="true"></div>
+      <span class="sheet-eyebrow" id="tutorial-counter"></span>
+      <h1 id="tutorial-title"></h1>
+      <p id="tutorial-copy"></p>
+      <div class="tutorial-dots" id="tutorial-dots" aria-hidden="true"></div>
+      <div class="tutorial-actions">
+        <button id="tutorial-back" class="setting-action" data-i18n="previous">Назад</button
+        ><button id="tutorial-next" class="shop-button" data-i18n="nextSlide">Далее</button>
+      </div>
+    </dialog>
+    <dialog id="reset-dialog" class="sheet confirmation-sheet" aria-labelledby="reset-title">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <header class="sheet-header">
+        <h1 id="reset-title" data-i18n="resetTitle">Начать с нуля?</h1>
+      </header>
+      <p data-i18n="resetWarning"></p>
+      <div class="confirmation-actions">
+        <button id="reset-cancel" class="setting-action" data-i18n="cancel">Отмена</button
+        ><button id="reset-confirm" class="setting-action danger" data-i18n="resetConfirm">
+          Сбросить прогресс
+        </button>
+      </div>
+    </dialog>
+    <dialog id="developer-dialog" class="sheet developer-sheet" aria-labelledby="developer-title">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <header class="sheet-header">
+        <h1 id="developer-title" data-i18n="developerTitle">Тестовая площадка</h1>
+        <button class="close-button" id="developer-close">×</button>
+      </header>
+      <div class="settings-body">
+        <form id="developer-login">
+          <label for="developer-code" data-i18n="code">Код доступа</label
+          ><input
+            id="developer-code"
+            type="password"
+            inputmode="numeric"
+            pattern="[0-9]{4}"
+            maxlength="4"
+            autocomplete="off"
+            required
+          />
+          <p id="code-error" role="status"></p>
+          <button class="shop-button" type="submit" data-i18n="enter">Войти</button>
+        </form>
+        <div id="developer-controls" hidden>
+          <p class="settings-note" data-i18n="devHint"></p>
+          <div class="dev-row">
+            <label for="dev-money" data-i18n="grant">Добавить камушки</label
+            ><select id="dev-money">
+              <option value="1000">+1 000</option>
+              <option value="1000000">+1 000 000</option>
+              <option value="1000000000">+1 000 000 000</option>
+              <option value="1000000000000">+1 000 000 000 000</option></select
+            ><button id="dev-grant" data-i18n="apply">Применить</button>
+          </div>
+          <div class="dev-row">
+            <label for="dev-pug" data-i18n="pug">Мопс</label
+            ><select id="dev-pug"></select
+            ><label for="dev-home" data-i18n="home">Дом</label
+            ><select id="dev-home"></select
+            ><button id="dev-stages" data-i18n="apply">Применить</button>
+          </div>
+          <div class="dev-row">
+            <label for="dev-tool" data-i18n="tools">Инструменты</label
+            ><select id="dev-tool"></select
+            ><label for="dev-tool-level" data-i18n="toolLevel">Уровень инструмента</label
+            ><input id="dev-tool-level" type="number" min="1" max="500" value="25" /><button
+              id="dev-tool-apply"
+              data-i18n="apply"
+            >
+              Применить
+            </button>
+          </div>
+          <div class="setting-row">
+            <label for="dev-speed" data-i18n="eventSpeed">Частота событий</label
+            ><select id="dev-speed">
+              <option value="1">×1</option>
+              <option value="3">×3</option>
+              <option value="10">×10</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <label for="dev-taps" data-i18n="tapMultiplier">Множитель нажатий</label
+            ><select id="dev-taps">
+              <option value="1">×1</option>
+              <option value="10">×10</option>
+              <option value="100">×100</option>
+            </select>
+          </div>
+          <div class="dev-row">
+            <label for="dev-bonus" data-i18n="spawnBonus">Вызвать бонус</label
+            ><select id="dev-bonus">
+              <option>2</option>
+              <option>3</option>
+              <option>4</option>
+              <option>5</option>
+              <option>8</option></select
+            ><button id="dev-bonus-apply" data-i18n="apply">Применить</button>
+          </div>
+          <div class="dev-row">
+            <label for="dev-idle" data-i18n="idleScene"></label
+            ><select id="dev-idle">
+              <option value="sleep" data-i18n="sleep"></option>
+              <option value="whistle" data-i18n="whistle"></option>
+              <option value="backlook" data-i18n="backlook"></option>
+              <option value="stretch" data-i18n="stretch"></option>
+              <option value="pee" data-i18n="pee"></option></select
+            ><button id="dev-idle-apply" data-i18n="apply"></button>
+          </div>
+          <div class="dev-row">
+            <label for="dev-bird" data-i18n="spawnBird"></label
+            ><select id="dev-bird">
+              <option value="crow" data-i18n="crow"></option>
+              <option value="sparrow" data-i18n="sparrow"></option>
+              <option value="pirate" data-i18n="pirate"></option></select
+            ><button id="dev-bird-apply" data-i18n="apply"></button>
+          </div>
+          <div class="dev-row">
+            <label for="dev-fart-variant" data-i18n="variant">Вариант звука</label
+            ><select id="dev-fart-variant">
+              <option>1</option>
+              <option>2</option>
+              <option>3</option>
+              <option>4</option></select
+            ><button id="dev-fart" data-i18n="tryFart">Проверить пук</button
+            ><button id="dev-sneeze" data-i18n="trySneeze">Проверить чих</button>
+          </div>
+          <button class="setting-action" id="dev-spit" data-i18n="testFullSpit"></button
+          ><button class="setting-action" id="dev-mini-reset" data-i18n="resetMiniWait"></button>
+          <div class="dev-row">
+            <label for="dev-pose" data-i18n="pose"></label
+            ><select id="dev-pose">
+              <option value="look">Look</option>
+              <option value="left">Left</option>
+              <option value="scratch">Scratch</option>
+              <option value="yawn">Yawn</option>
+              <option value="lick">Lick</option>
+              <option value="pawlick">Paw lick</option>
+              <option value="splay">Relaxed sit</option></select
+            ><button id="dev-pose-apply" data-i18n="apply"></button>
+          </div>
+          <button class="setting-action" id="dev-exit" data-i18n="exitDev">Выйти из режима</button>
+        </div>
+      </div>
+    </dialog>
+    <dialog id="newlife-dialog" class="sheet confirmation-sheet" aria-labelledby="newlife-title">
+      <header class="sheet-header"><h1 id="newlife-title" data-i18n="newLife"></h1></header>
+      <p id="newlife-copy"></p>
+      <div class="confirmation-actions">
+        <button id="newlife-cancel" class="setting-action" data-i18n="cancel"></button
+        ><button id="newlife-confirm" class="setting-action" data-i18n="newLifeConfirm"></button>
+      </div>
+    </dialog>
+    <dialog id="minigames-dialog" class="sheet" aria-labelledby="minigames-title">
+      <div class="sheet-handle"></div>
+      <header class="sheet-header">
+        <h1 id="minigames-title" data-i18n="minigames"></h1>
+        <button id="minigames-close" class="close-button" aria-label="Закрыть">×</button>
+      </header>
+      <div id="mini-menu" class="settings-body"></div>
+    </dialog>
+    <dialog id="mini-dialog" class="mini-full" aria-labelledby="mini-title">
+      <header>
+        <h1 id="mini-title"></h1>
+        <button id="mini-exit" class="close-button" aria-label="Закрыть">×</button>
+      </header>
+      <p id="mini-help"></p>
+      <div class="mini-score"><strong id="mini-score"></strong><span id="mini-clock"></span></div>
+      <div class="mini-playfield">
+        <canvas id="mini-canvas" aria-hidden="true"></canvas>
+        <div id="catch-controls" class="catch-controls">
+          <button data-lane="0" aria-label="Слева сверху">↖</button
+          ><button data-lane="1" aria-label="Справа сверху">↗</button
+          ><button data-lane="2" aria-label="Слева снизу">↙</button
+          ><button data-lane="3" aria-label="Справа снизу">↘</button>
+        </div>
+      </div>
+      <div id="mini-result" hidden role="status">
+        <p id="mini-reward"></p>
+        <button id="mini-done" class="setting-action" data-i18n="close"></button>
+      </div>
+    </dialog>
+  </body>
+</html>

@@ -1,8 +1,95 @@
-const test=require('node:test');const assert=require('node:assert/strict');const {create,choose,position}=require('../birds.js');const {createGame,Amount}=require('../game.js');
-function advance(r,ms,eligible=true){let pecks=0,s;for(let n=0;n<ms;n+=100){s=r.tick(Math.min(100,ms-n),eligible);pecks+=s.pecks;}return {...s,pecks};}
-test('crow probability 40%, pirate is 0.5% of remaining sparrows',()=>{assert.equal(choose(()=>.399),'crow');let seq=[.4,.00499];assert.equal(choose(()=>seq.shift()),'pirate');seq=[.4,.005];assert.equal(choose(()=>seq.shift()),'sparrow');let counts={crow:0,sparrow:0,pirate:0};for(let first=0;first<100;first++)for(let second=0;second<1000;second++){seq=[first/100,second/1000];counts[choose(()=>seq.shift())]++;}assert.deepEqual(counts,{crow:40000,sparrow:59700,pirate:300});});
-test('crow flies in, pecks at most six times, flies away; sparrow at most four',()=>{for(const [type,max]of [['crow',6],['sparrow',4],['pirate',4]]){const r=create(()=>.5);r.force(type);const first=r.tick(100,true);assert.equal(first.bird.phase,'in');assert.equal(first.pecks,0);const s=advance(r,15000);assert.equal(s.pecks,max);assert.equal(s.bird,null);}});
-test('tap chases once and prevents every future peck',()=>{const r=create(()=>.5);r.force('crow');const b=advance(r,1000).bird;assert.ok(r.chase(b.id));assert.equal(r.chase(b.id),null);assert.equal(advance(r,15000).pecks,0);});
-test('modal / background pause prevents losses and movement',()=>{const r=create(()=>.5);r.force('sparrow');advance(r,3000);const before=r.getClock();assert.equal(advance(r,20000,false).pecks,0);assert.equal(r.getClock(),before);assert.equal(advance(r,1000).pecks,1);});
-test('flight ends precisely on selected landing point',()=>{const r=create(()=>.5);r.force('crow');const b=r.tick(0,true).bird,a={x:230,y:450};const start=position({...b,p:0},a,390,844),end=position({...b,p:1},a,390,844);assert.ok(start.x<0||start.x>390);assert.deepEqual({x:end.x,y:end.y},{x:230,y:450});assert.ok(Math.abs(end.angle)<1e-9);});
-test('peck removes one normal tap only from balance, clamps at zero',()=>{const g=createGame();g.devGrant(100);g.devTool(2,1);const before=g.getState();assert.equal(g.birdPeck().compare(2),0);assert.equal(g.getState().total.compare(before.total),0);assert.equal(g.getState().clicks,0);for(let i=0;i<100;i++)g.birdPeck();assert.equal(g.getState().balance.compare(0),0);assert.equal(g.birdPeck().compare(0),0);g.chaseBird();assert.equal(createGame(g.serialize()).getState().birdsChased,1);assert.equal(g.getState().birdPecks,102);});
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { create, choose, position } = require('../birds.js');
+const { createGame, Amount } = require('../game.js');
+function advance(r, ms, eligible = true) {
+  let pecks = 0,
+    s;
+  for (let n = 0; n < ms; n += 100) {
+    s = r.tick(Math.min(100, ms - n), eligible);
+    pecks += s.pecks;
+  }
+  return { ...s, pecks };
+}
+test('crow probability 40%, pirate is 0.5% of remaining sparrows', () => {
+  assert.equal(
+    choose(() => 0.399),
+    'crow',
+  );
+  let seq = [0.4, 0.00499];
+  assert.equal(
+    choose(() => seq.shift()),
+    'pirate',
+  );
+  seq = [0.4, 0.005];
+  assert.equal(
+    choose(() => seq.shift()),
+    'sparrow',
+  );
+  let counts = { crow: 0, sparrow: 0, pirate: 0 };
+  for (let first = 0; first < 100; first++)
+    for (let second = 0; second < 1000; second++) {
+      seq = [first / 100, second / 1000];
+      counts[choose(() => seq.shift())]++;
+    }
+  assert.deepEqual(counts, { crow: 40000, sparrow: 59700, pirate: 300 });
+});
+test('crow flies in, pecks at most six times, flies away; sparrow at most four', () => {
+  for (const [type, max] of [
+    ['crow', 6],
+    ['sparrow', 4],
+    ['pirate', 4],
+  ]) {
+    const r = create(() => 0.5);
+    r.force(type);
+    const first = r.tick(100, true);
+    assert.equal(first.bird.phase, 'in');
+    assert.equal(first.pecks, 0);
+    const s = advance(r, 15000);
+    assert.equal(s.pecks, max);
+    assert.equal(s.bird, null);
+  }
+});
+test('tap chases once and prevents every future peck', () => {
+  const r = create(() => 0.5);
+  r.force('crow');
+  const b = advance(r, 1000).bird;
+  assert.ok(r.chase(b.id));
+  assert.equal(r.chase(b.id), null);
+  assert.equal(advance(r, 15000).pecks, 0);
+});
+test('modal / background pause prevents losses and movement', () => {
+  const r = create(() => 0.5);
+  r.force('sparrow');
+  advance(r, 3000);
+  const before = r.getClock();
+  assert.equal(advance(r, 20000, false).pecks, 0);
+  assert.equal(r.getClock(), before);
+  assert.equal(advance(r, 1000).pecks, 1);
+});
+test('flight ends precisely on selected landing point', () => {
+  const r = create(() => 0.5);
+  r.force('crow');
+  const b = r.tick(0, true).bird,
+    a = { x: 230, y: 450 };
+  const start = position({ ...b, p: 0 }, a, 390, 844),
+    end = position({ ...b, p: 1 }, a, 390, 844);
+  assert.ok(start.x < 0 || start.x > 390);
+  assert.deepEqual({ x: end.x, y: end.y }, { x: 230, y: 450 });
+  assert.ok(Math.abs(end.angle) < 1e-9);
+});
+test('peck removes one normal tap only from balance, clamps at zero', () => {
+  const g = createGame();
+  g.devGrant(100);
+  g.devTool(2, 1);
+  const before = g.getState();
+  assert.equal(g.birdPeck().compare(2), 0);
+  assert.equal(g.getState().total.compare(before.total), 0);
+  assert.equal(g.getState().clicks, 0);
+  for (let i = 0; i < 100; i++) g.birdPeck();
+  assert.equal(g.getState().balance.compare(0), 0);
+  assert.equal(g.birdPeck().compare(0), 0);
+  g.chaseBird();
+  assert.equal(createGame(g.serialize()).getState().birdsChased, 1);
+  assert.equal(g.getState().birdPecks, 102);
+});

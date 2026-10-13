@@ -1,4 +1,51 @@
-const test=require('node:test'),assert=require('node:assert/strict'),{isolate}=require('../sprites.js');
-test('keeps full pug and soft fur while removing a neighboring tail inside the same cell',()=>{const w=40,h=40,data=new Uint8ClampedArray(w*h*4);const fill=(x,y,width,height,alpha=255)=>{for(let yy=y;yy<y+height;yy++)for(let xx=x;xx<x+width;xx++)data[(yy*w+xx)*4+3]=alpha;};fill(5,4,20,30);fill(4,10,1,15,7);fill(37,24,3,8);const result=isolate(data,w,h);assert.equal(data[(15*w+4)*4+3],7);assert.equal(data[(30*w+20)*4+3],255);assert.equal(data[(27*w+38)*4+3],0);assert.equal(result.mainPixels,600);assert.equal(result.removed,24);});
-test('empty transparent cell stays empty',()=>{const data=new Uint8ClampedArray(16);assert.equal(isolate(data,2,2).mainPixels,0);});
-test('faint alpha bridge does not attach a neighboring crown to the pug',()=>{const w=50,h=60,data=new Uint8ClampedArray(w*h*4);const fill=(x,y,ww,hh,a=255)=>{for(let yy=y;yy<y+hh;yy++)for(let xx=x;xx<x+ww;xx++)data[(yy*w+xx)*4+3]=a;};fill(5,5,35,35);fill(22,40,1,7,20);fill(19,47,10,8);isolate(data,w,h);assert.equal(data[(50*w+23)*4+3],0);assert.equal(data[(39*w+20)*4+3],255);});
+const test = require('node:test'),
+  assert = require('node:assert/strict'),
+  { isolate } = require('../sprites.js');
+test('keeps full pug and soft fur while removing a neighboring tail inside the same cell', () => {
+  const w = 40,
+    h = 40,
+    data = new Uint8ClampedArray(w * h * 4);
+  const fill = (x, y, width, height, alpha = 255) => {
+    for (let yy = y; yy < y + height; yy++)
+      for (let xx = x; xx < x + width; xx++) data[(yy * w + xx) * 4 + 3] = alpha;
+  };
+  fill(5, 4, 20, 30);
+  fill(4, 10, 1, 15, 7);
+  fill(37, 24, 3, 8);
+  const result = isolate(data, w, h);
+  assert.equal(data[(15 * w + 4) * 4 + 3], 7);
+  assert.equal(data[(30 * w + 20) * 4 + 3], 255);
+  assert.equal(data[(27 * w + 38) * 4 + 3], 0);
+  assert.equal(result.mainPixels, 600);
+  assert.equal(result.removed, 24);
+});
+test('empty transparent cell stays empty', () => {
+  const data = new Uint8ClampedArray(16);
+  assert.equal(isolate(data, 2, 2).mainPixels, 0);
+});
+test('faint alpha bridge does not attach a neighboring crown to the pug', () => {
+  const w = 50,
+    h = 60,
+    data = new Uint8ClampedArray(w * h * 4);
+  const fill = (x, y, ww, hh, a = 255) => {
+    for (let yy = y; yy < y + hh; yy++)
+      for (let xx = x; xx < x + ww; xx++) data[(yy * w + xx) * 4 + 3] = a;
+  };
+  fill(5, 5, 35, 35);
+  fill(22, 40, 1, 7, 20);
+  fill(19, 47, 10, 8);
+  isolate(data, w, h);
+  assert.equal(data[(50 * w + 23) * 4 + 3], 0);
+  assert.equal(data[(39 * w + 20) * 4 + 3], 255);
+});
+test('strong neighboring pixel is removed even inside soft fur dilation radius', () => {
+  const w = 12,
+    h = 12,
+    data = new Uint8ClampedArray(w * h * 4);
+  for (let y = 3; y < 8; y++) for (let x = 3; x < 7; x++) data[(y * w + x) * 4 + 3] = 255;
+  data[(5 * w + 8) * 4 + 3] = 255;
+  data[(5 * w + 7) * 4 + 3] = 24;
+  isolate(data, w, h);
+  assert.equal(data[(5 * w + 8) * 4 + 3], 0);
+  assert.equal(data[(5 * w + 7) * 4 + 3], 24);
+});
