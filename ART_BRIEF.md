@@ -4,6 +4,8 @@ Generated with the built-in image generator. Real pug reference photographs rema
 
 Three character atlases contain ten stages in a 5 by 2 grid. homes-middle.png contains six scenes in a 3 by 2 grid. Stages 0, 3, 6, 9 use the original background atlas. Canvas samples assets directly; there is no separate digging arm. Animation combines breathing with transitions to head-turn and scratching poses, rather than a fully articulated skeleton.
 
+Sprite rendering isolates each full pug as the largest connected alpha component in a padded cell. This preserves its own tail extending across a grid boundary while removing detached pieces of neighboring pugs. A shared boundary at source row 385 separates the looking pose at stage 4 from the next row's royal crown. Padded extraction retains the complete crown in stage 9. Original PNG files are preserved.
+
 ## Generation prompts
 
 ### pugs-idle.png

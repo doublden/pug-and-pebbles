@@ -1,0 +1,3 @@
+const test=require('node:test'),assert=require('node:assert/strict'),{isolate}=require('../sprites.js');
+test('keeps full pug and soft fur while removing a neighboring tail inside the same cell',()=>{const w=40,h=40,data=new Uint8ClampedArray(w*h*4);const fill=(x,y,width,height,alpha=255)=>{for(let yy=y;yy<y+height;yy++)for(let xx=x;xx<x+width;xx++)data[(yy*w+xx)*4+3]=alpha;};fill(5,4,20,30);fill(4,10,1,15,7);fill(37,24,3,8);const result=isolate(data,w,h);assert.equal(data[(15*w+4)*4+3],7);assert.equal(data[(30*w+20)*4+3],255);assert.equal(data[(27*w+38)*4+3],0);assert.equal(result.mainPixels,600);assert.equal(result.removed,24);});
+test('empty transparent cell stays empty',()=>{const data=new Uint8ClampedArray(16);assert.equal(isolate(data,2,2).mainPixels,0);});
