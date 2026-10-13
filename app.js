@@ -1,166 +1,32 @@
-'use strict';
-(() => {
-  const {TOOLS, STAGES, UPGRADES, createGame} = window.PugGame;
-  const game = createGame();
-  const $ = id => document.getElementById(id);
-  const number = value => value.toLocaleString('ru-RU');
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  let sound = false, audio, animationTimer, toastTimer;
-  const spoon = large => `<svg viewBox="0 0 80 80" aria-hidden="true"><defs><linearGradient id="metal-${large}" x2="1" y2="1"><stop stop-color="#f8f8ed"/><stop offset=".45" stop-color="#a5b2ad"/><stop offset=".65" stop-color="#edf0db"/><stop offset="1" stop-color="#83918c"/></linearGradient></defs><g transform="rotate(35 40 40)"><rect x="36" y="29" width="8" height="43" rx="4" fill="url(#metal-${large})" stroke="#77867f" stroke-width="1.5"/><ellipse cx="40" cy="22" rx="${large ? 15 : 11}" ry="${large ? 21 : 16}" fill="url(#metal-${large})" stroke="#77867f" stroke-width="1.5"/><path d="M35 12Q29 20 34 28" fill="none" stroke="#fff" stroke-width="2" opacity=".7"/></g></svg>`;
-  const shovel = `<svg viewBox="0 0 80 80" aria-hidden="true"><g transform="rotate(35 40 40)"><path d="M29 8h22v17H29z" fill="none" stroke="#e88a4c" stroke-width="7" stroke-linejoin="round"/><path d="M40 26v25" stroke="#e88a4c" stroke-width="8"/><path d="M23 46h34v18Q40 85 23 64z" fill="#8ea99a" stroke="#5f8573" stroke-width="2"/><path d="M40 50v18" stroke="#bdd0c0" stroke-width="3"/></g></svg>`;
-  const icons = ['', spoon(false), spoon(true), shovel];
-  const rows = TOOLS.slice(1).map((tool, offset) => {
-    const index = offset + 1;
-    const row = document.createElement('div');
-    row.className = 'tool-card';
-    row.innerHTML = `<div class="tool-icon">${icons[index]}</div><div class="tool-info"><h3>${tool.name}</h3><p>${tool.description}</p><span class="tool-yield">+${tool.yield} за клик</span></div><button class="buy-tool" id="buy-tool-${index}" aria-label="Купить: ${tool.name}, ${tool.cost} камушков" disabled><span class="pebble small" aria-hidden="true"></span><span>${tool.cost}</span></button><span class="tool-note"></span>`;
-    row.querySelector('button').addEventListener('click', () => {
-      if (!game.buyTool(index)) return;
-      render();
-      celebrate(`${tool.name} в деле! Теперь +${tool.yield} за клик.`);
-      tone(570, .12);
-    });
-    $('tools').append(row);
-    return row;
-  });
-  function tone(frequency, duration = .05) {
-    if (!sound) return;
-    try {
-      audio ||= new (window.AudioContext || window.webkitAudioContext)();
-      if (audio.state === 'suspended') audio.resume();
-      const oscillator = audio.createOscillator(), gain = audio.createGain();
-      oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(frequency, audio.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(frequency * .6, audio.currentTime + duration);
-      gain.gain.setValueAtTime(.07, audio.currentTime);
-      gain.gain.exponentialRampToValueAtTime(.001, audio.currentTime + duration);
-      oscillator.connect(gain); gain.connect(audio.destination);
-      oscillator.start(); oscillator.stop(audio.currentTime + duration);
-    } catch (_) { sound = false; $('sound').textContent = 'Звук недоступен'; $('sound').setAttribute('aria-pressed', 'false'); }
-  }
-  function render() {
-    const s = game.getState(), stage = STAGES[s.stage], upgrade = UPGRADES[s.stage];
-    $('balance').textContent = number(s.balance);
-    $('total').textContent = number(s.total);
-    $('clicks').textContent = number(s.clicks);
-    $('yield').textContent = `+${s.yield} за клик`;
-    $('dig-yield').textContent = `+${s.yield}`;
-    $('dig-scene').setAttribute('aria-label', `Копать камушки: ${s.yield} за клик`);
-    $('dig-scene').dataset.stage = s.stage;
-    document.body.dataset.stage = s.stage;
-    $('location').textContent = stage.location;
-    $('chapter').textContent = `ГЛАВА 0${s.stage + 1} / 04`;
-    $('current-tool').textContent = TOOLS[s.tool].name;
-    $('pug-title').textContent = stage.title;
-    $('pug-description').textContent = stage.description;
-    $('pug-tag').textContent = stage.tag;
-    $('currency-label').textContent = s.stage === 3 ? 'Золотые камушки' : 'Твои камушки';
-    $('held-tool').innerHTML = icons[s.tool];
-    $('digging-arm').dataset.tool = s.tool;
-    $('scene-hint').textContent = s.clicks === 0 ? 'Нажми на гору. Лапа справится.' : s.stage === 3 ? 'Королевские камушки сами себя не накопают.' : 'Ещё один взмах — ближе к дворцу.';
-    rows.forEach((row, offset) => {
-      const index = offset + 1, tool = TOOLS[index], button = row.querySelector('button');
-      const owned = s.tool >= index, next = s.tool + 1 === index;
-      row.classList.toggle('owned', owned);
-      row.classList.toggle('available', next && s.balance >= tool.cost);
-      row.classList.toggle('locked', !owned && !next);
-      button.disabled = owned || !next || s.balance < tool.cost;
-      button.innerHTML = owned ? '<span class="owned-check">✓</span>' : `<span class="pebble small" aria-hidden="true"></span><span>${tool.cost}</span>`;
-      button.setAttribute('aria-label', owned ? `${tool.name}: куплено` : `Купить: ${tool.name}, ${tool.cost} камушков`);
-      row.querySelector('.tool-note').textContent = owned ? (s.tool === index ? 'В лапе' : 'Куплено') : !next ? `Сначала ${TOOLS[index - 1].name.toLowerCase()}` : s.balance < tool.cost ? `Ещё ${number(tool.cost - s.balance)} камушков` : 'Можно покупать';
-    });
-    $('journey-progress').style.width = `${s.stage / 3 * 75}%`;
-    document.querySelectorAll('[data-milestone]').forEach(el => {
-      const index = Number(el.dataset.milestone);
-      el.classList.toggle('current', index === s.stage);
-      el.classList.toggle('done', index < s.stage);
-      if (index === s.stage) el.setAttribute('aria-current', 'step'); else el.removeAttribute('aria-current');
-    });
-    if (upgrade) {
-      $('upgrade-name').textContent = upgrade.name;
-      $('upgrade-description').textContent = upgrade.description;
-      $('upgrade-symbol').textContent = upgrade.symbol;
-      $('upgrade-action').textContent = s.stage === 2 ? 'Во дворец' : 'Позаботиться';
-      $('upgrade-price').textContent = upgrade.cost;
-      $('upgrade-pug').disabled = s.balance < upgrade.cost;
-      $('upgrade-pug').setAttribute('aria-label', `${upgrade.name}: ${upgrade.cost} камушков`);
-      $('purchase-progress-fill').style.width = `${Math.min(1, s.balance / upgrade.cost) * 100}%`;
-      $('upgrade-remaining').textContent = s.balance < upgrade.cost ? `Ещё ${number(upgrade.cost - s.balance)} камушков до новой жизни` : 'Камушков достаточно. Мопс ждёт!';
-    } else {
-      $('upgrade-name').textContent = 'Жизнь удалась';
-      $('upgrade-description').textContent = 'У мопса есть всё. Кроме чувства меры.';
-      $('upgrade-symbol').textContent = '♛';
-      $('upgrade-action').textContent = 'Королевский максимум';
-      $('upgrade-price').textContent = '✓';
-      $('upgrade-pug').disabled = true;
-      $('upgrade-pug').setAttribute('aria-label', 'Все улучшения мопса куплены');
-      $('purchase-progress-fill').style.width = '100%';
-      $('upgrade-remaining').textContent = 'Дальше — только золотые камушки.';
-    }
-    $('victory').hidden = s.stage !== 3;
-  }
-  function celebrate(message) {
-    clearTimeout(toastTimer);
-    $('toast').textContent = message;
-    $('toast').classList.add('visible');
-    toastTimer = setTimeout(() => $('toast').classList.remove('visible'), 3300);
-  }
-  function floatPebbles(amount, event) {
-    if (reducedMotion.matches) return;
-    const rect = $('dig-scene').getBoundingClientRect();
-    const x = event && event.clientX > rect.left && event.clientX < rect.right ? event.clientX - rect.left : rect.width * .67;
-    const y = event && event.clientY > rect.top && event.clientY < rect.bottom ? event.clientY - rect.top : rect.height * .63;
-    if ($('particles').children.length > 60) return;
-    const floater = document.createElement('span');
-    floater.className = 'floating-number'; floater.textContent = `+${amount}`;
-    floater.style.left = `${x}px`; floater.style.top = `${y}px`;
-    $('particles').append(floater); setTimeout(() => floater.remove(), 750);
-    for (let i = 0; i < 4; i++) {
-      const bit = document.createElement('span'); bit.className = 'flying-pebble';
-      bit.style.left = `${rect.width * .56}px`; bit.style.top = `${rect.height * .69}px`;
-      bit.style.setProperty('--dx', `${(Math.random() - .5) * 130}px`);
-      bit.style.setProperty('--dy', `${-35 - Math.random() * 80}px`);
-      bit.style.setProperty('--spin', `${Math.random() * 250}deg`);
-      $('particles').append(bit); setTimeout(() => bit.remove(), 600);
-    }
-  }
-  function dig(event) {
-    const amount = game.dig(); render();
-    clearTimeout(animationTimer);
-    $('character').classList.remove('digging');
-    void $('character').offsetWidth;
-    $('character').classList.add('digging');
-    animationTimer = setTimeout(() => $('character').classList.remove('digging'), 280);
-    floatPebbles(amount, event); tone(320 + Math.random() * 80);
-  }
-  $('dig-scene').addEventListener('click', dig);
-  $('dig-button').addEventListener('click', dig);
-  document.addEventListener('keydown', event => {
-    if (event.code !== 'Space' || event.repeat || $('restart-dialog').open || /^(BUTTON|INPUT|TEXTAREA|SELECT|A)$/.test(document.activeElement.tagName)) return;
-    event.preventDefault(); dig();
-  });
-  $('upgrade-pug').addEventListener('click', () => {
-    const before = game.getState().stage;
-    if (!game.upgradePug()) return;
-    render(); celebrate(UPGRADES[before].message); tone(750, .2);
-  });
-  $('sound').addEventListener('click', () => {
-    sound = !sound;
-    $('sound').textContent = sound ? 'Звук: вкл.' : 'Звук: выкл.';
-    $('sound').setAttribute('aria-pressed', sound);
-    $('sound').setAttribute('aria-label', sound ? 'Выключить звук' : 'Включить звук');
-    if (sound) tone(440, .08);
-  });
-  $('restart').addEventListener('click', () => $('restart-dialog').showModal());
-  $('cancel-restart').addEventListener('click', () => $('restart-dialog').close());
-  $('confirm-restart').addEventListener('click', () => {
-    game.reset(); render(); $('particles').replaceChildren();
-    clearTimeout(animationTimer); $('character').classList.remove('digging');
-    $('restart-dialog').close(); celebrate('Новая история. С большой надеждой и маленькой лапой.');
-  });
-  render();
-  Promise.all(['backgrounds.png', 'pugs.png'].map(src => new Promise((resolve, reject) => {
-    const img = new Image(); img.onload = resolve; img.onerror = reject; img.src = src;
-  }))).then(() => $('art-loading').hidden = true).catch(() => {
-    $('art-loading').textContent = 'Картинки не загрузились. Попробуй обновить страницу.';
-  });
+(function(){'use strict';
+const $=id=>document.getElementById(id),KEY='pug-and-pebbles-v2';
+const words={ru:{shop:'Магазин',settings:'Настройки',currency:'камушки',eyebrow:'ДЛЯ БОЛЬШИХ ПЛАНОВ',tools:'Инструменты',pug:'Мопс',home:'Дом',language:'Язык',music:'Музыка',effects:'Звуки',close:'Закрыть',dig:'Копать камушки',hint:'Нажимай на камушки',loading:'Мопс уже на пути',loadingDetail:'Готовим камушки…',loadError:'Не удалось загрузить рисунки. Обнови страницу.',saved:'Прогресс сохраняется на этом устройстве',saveError:'Сохранение недоступно в этом браузере',autoSave:'Всё сохраняется автоматически',milestone:'Каждые 25 уровней инструмента — двойная сила',buy:'Купить',improve:'Улучшить',level:'ур.',locked:'Сначала предыдущий',perTap:'за нажатие',equipped:'В деле',next:'Следующая стадия',benefit:'Больше камушков за нажатие',trackCaption:'Забота делает жизнь лучше. Добыча тоже растёт.',infinite:'Королевская жизнь продолжается. Улучшения не заканчиваются.',ready:'Можно купить',remaining:'Осталось',gold:'Золотой камушек: добыча ×3 на 30 секунд',goldToast:'30 секунд — добыча втрое!',pugNames:['Чумазый мопс','Почти отмытый','Чистый худыш','Здоровый мопс','Упитанный мопс','Пухлый мопс','Солидный мопс','Круглый мопс','Мопс аристократ','Мопс король'],homeNames:['Свалка','Грязный навес','Латанный сарай','Скромный двор','Уютная будка','Каменный дом','Цветущий сад','Терраса виллы','Богатое поместье','Золотой дворец'],toolNames:['Лапа','Чайная ложка','Столовая ложка','Детская лопатка','Половник','Совок для корма','Садовая лопата','Ковш','Мини-экскаватор','Королевская лопата']},en:{shop:'Shop',settings:'Settings',currency:'pebbles',eyebrow:'FOR BIG LITTLE PLANS',tools:'Tools',pug:'Pug',home:'Home',language:'Language',music:'Music',effects:'Sound effects',close:'Close',dig:'Dig for pebbles',hint:'Tap the pebbles',loading:'Your pug is on the way',loadingDetail:'Preparing the pebbles…',loadError:'Artwork could not load. Refresh the page.',saved:'Progress is saved on this device',saveError:'Saving is unavailable in this browser',autoSave:'Everything saves automatically',milestone:'Every 25 tool levels doubles its power',buy:'Buy',improve:'Upgrade',level:'lv.',locked:'Get the previous tool',perTap:'per tap',equipped:'Equipped',next:'Next stage',benefit:'More pebbles per tap',trackCaption:'A little care goes a long way. Your yield grows too.',infinite:'Royal life goes on. Upgrades never end.',ready:'Ready to buy',remaining:'To go',gold:'Golden pebble: triple yield for 30 seconds',goldToast:'Triple yield for 30 seconds!',pugNames:['Scruffy pug','Almost clean','Clean little skinny','Healthy pug','Well-fed pug','Chubby pug','Substantial pug','Round pug','Aristocratic pug','King pug'],homeNames:['Dump','Dirty shelter','Patched shed','Humble yard','Cozy kennel','Stone house','Blooming garden','Villa terrace','Grand estate','Golden palace'],toolNames:['Paw','Teaspoon','Tablespoon','Toy spade','Ladle','Food scoop','Garden shovel','Bucket','Mini excavator','Royal shovel']}};
+let envelope={};try{envelope=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(_){}
+let settings={language:['ru','en'].includes(envelope.settings?.language)?envelope.settings.language:'ru',effects:envelope.settings?.effects!==false,music:envelope.settings?.music===true};
+const game=PugGame.createGame(envelope.game),sound=new PugSound(),world=new PugWorld($('world'),sound);let tab='tools',loaded=false,saveTimer=null,saveAvailable=true,toastTimer,bonusUntil=0,goldUntil=0,nextGold=performance.now()+75000,activeSince=performance.now();
+const t=()=>words[settings.language];
+function format(value){const n=PugGame.Amount.from(value);if(!n.m)return '0';if(n.e<3)return new Intl.NumberFormat(settings.language,{maximumFractionDigits:1}).format(n.toNumber());const rank=Math.floor(n.e/3);if(rank>4)return `${n.m.toFixed(2)}e${n.e}`;const suffix=settings.language==='ru'?['','тыс.','млн','млрд','трлн']:['','K','M','B','T'];return `${(n.m*10**(n.e-rank*3)).toFixed(1).replace(/\.0$/,'')} ${suffix[rank]}`;}
+function toast(text){$('toast').textContent=text;$('toast').classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('visible'),2400);}
+function persist(){clearTimeout(saveTimer);saveTimer=null;try{localStorage.setItem(KEY,JSON.stringify({game:game.serialize(),settings}));saveAvailable=true;}catch(_){saveAvailable=false;}$('save-note').textContent=saveAvailable?t().saved:t().saveError;$('settings-save-note').textContent=saveAvailable?t().autoSave:t().saveError;}
+function dirty(){if(!saveTimer)saveTimer=setTimeout(persist,750);}
+function stageName(kind,level){const names=t()[kind==='pug'?'pugNames':'homeNames'];return names[Math.min(level,9)]+(level>9?` +${level-9}`:'');}
+function render(){const s=game.getState();world.setState(s);$('balance').textContent=format(s.balance);$('shop-balance').textContent=format(s.balance);$('equipped-icon').innerHTML=PugIcons[PugGame.TOOLS[s.tool].key];$('equipped-name').textContent=t().toolNames[s.tool];$('click-power').textContent='+'+format(s.power.multiply(performance.now()<bonusUntil?3:1));$('pug-label').textContent=stageName('pug',s.pug);$('home-label').textContent=stageName('home',s.home);$('tap-hint').hidden=s.clicks>=5;document.body.dataset.gold=String(s.homeStage===9);$('shop-dot').hidden=!PugGame.TOOLS.some((_,i)=>i>0&&(i===1||s.levels[i-1])&&s.balance.compare(game.getToolPrice(i))>=0)&&!['pug','home'].some(k=>s.balance.compare(game.getTrackPrice(k))>=0);if($('shop-dialog').open)renderShop(false);}
+function translate(){const w=t();document.documentElement.lang=settings.language;document.title=settings.language==='ru'?'Мопс и камушки':'Pug & Pebbles';const map={'shop-open-label':'shop','shop-title':'shop','settings-title':'settings','wallet-label':'currency','shop-currency':'currency','shop-eyebrow':'eyebrow','tab-tools':'tools','tab-pug':'pug','tab-home':'home','language-label':'language','music-label':'music','effects-label':'effects','tap-hint':'hint','loading-title':'loading','loading-detail':'loadingDetail','shop-footnote':'milestone'};for(const [id,key]of Object.entries(map))$(id).textContent=w[key];$('settings-open').ariaLabel=w.settings;$('shop-close').ariaLabel=w.close;$('settings-close').ariaLabel=w.close;$('world').ariaLabel=w.dig;$('golden-kibble').ariaLabel=w.gold;document.querySelector('.shop-tabs').ariaLabel=w.shop;$('language').value=settings.language;$('music-toggle').checked=settings.music;$('effects-toggle').checked=settings.effects;sound.configure(settings.effects,settings.music);$('save-note').textContent=saveAvailable?w.saved:w.saveError;$('settings-save-note').textContent=saveAvailable?w.autoSave:w.saveError;renderShop(true);render();}
+function renderShop(rebuild){const s=game.getState(),w=t(),content=$('shop-content');if(tab==='tools'){
+ if(rebuild||!content.querySelector('.tool-grid'))content.innerHTML='<div class="tool-grid">'+PugGame.TOOLS.slice(1).map((tool,j)=>{const i=j+1;return `<article class="tool-card" id="tool-card-${i}"><div class="tool-topline"><span class="tool-icon" aria-hidden="true">${PugIcons[tool.key]}</span><span class="tool-level" id="tool-level-${i}"></span></div><h2>${w.toolNames[i]}</h2><p class="tool-production" id="tool-production-${i}"></p><button class="purchase-button" id="buy-tool-${i}" data-tool="${i}"><span id="tool-action-${i}"></span><span class="purchase-price"><span class="kibble" aria-hidden="true"></span><span id="tool-price-${i}"></span></span></button></article>`;}).join('')+'</div>';
+ for(let i=1;i<PugGame.TOOLS.length;i++){const lv=s.levels[i],cost=game.getToolPrice(i),locked=i>1&&!s.levels[i-1];$('tool-card-'+i).className='tool-card'+(locked?' locked':lv?' owned':'');$('tool-level-'+i).textContent=locked?w.locked:lv?`${w.level} ${lv}`:'';$('tool-production-'+i).textContent=`+${format(game.getToolPower(i,Math.max(1,lv+1)))} ${w.perTap}`;$('tool-price-'+i).textContent=format(cost);$('tool-action-'+i).textContent=lv?w.improve:w.buy;const b=$('buy-tool-'+i);b.disabled=locked||s.balance.compare(cost)<0;b.ariaLabel=`${lv?w.improve:w.buy}: ${w.toolNames[i]}, ${format(cost)} ${w.currency}`;}
+ }else{const lv=s[tab],stage=Math.min(9,lv+1),cost=game.getTrackPrice(tab);if(rebuild||!$('upgrade-'+tab)){content.innerHTML=`<article class="track-card"><div class="track-preview"><canvas id="track-canvas" aria-hidden="true"></canvas><span class="track-badge">${w.next}</span></div><div class="track-heading"><h2 id="track-name"></h2><span class="track-level" id="track-level"></span></div><p class="track-caption" id="track-caption"></p><div class="track-benefits"><span>${w.benefit}</span><strong id="track-boost"></strong></div><button class="purchase-button" id="upgrade-${tab}" data-upgrade="${tab}"><span>${w.improve}</span><span class="purchase-price"><span class="kibble" aria-hidden="true"></span><span id="track-price"></span></span></button><div class="track-progress"><span id="track-progress-fill"></span></div><p class="track-remaining" id="track-remaining"></p><div class="stage-dots" id="stage-dots" aria-hidden="true"></div></article>`;}
+ $('track-name').textContent=stageName(tab,lv+1);$('track-level').textContent=`${w.level} ${lv} → ${lv+1}`;$('track-caption').textContent=lv<9?w.trackCaption:w.infinite;const boosts=tab==='pug'?[1,1.04,1.1,1.2,1.35,1.6,1.9,2.3,2.8,3.5]:[1,1.03,1.08,1.15,1.25,1.4,1.6,1.9,2.3,3];$('track-boost').textContent='+'+((lv<9?boosts[lv+1]/boosts[lv]-1:tab==='pug'?.05:.04)*100).toFixed(1)+'%';$('track-price').textContent=format(cost);$('upgrade-'+tab).disabled=s.balance.compare(cost)<0;$('track-progress-fill').style.width=(s.balance.ratio(cost)*100)+'%';$('track-remaining').textContent=s.balance.compare(cost)>=0?w.ready:`${w.remaining}: ${format(cost.subtract(s.balance))}`;$('stage-dots').innerHTML=Array.from({length:10},(_,i)=>`<span class="${i<=Math.min(lv,9)?'active':''}"></span>`).join('');if(loaded)world.preview($('track-canvas'),tab,stage);}
+ $('shop-footnote').hidden=tab!=='tools';}
+function open(id){sound.unlock();$(id).showModal();if(id==='shop-dialog')renderShop(true);}
+$('shop-open').onclick=()=>open('shop-dialog');$('settings-open').onclick=()=>open('settings-dialog');for(const kind of ['shop','settings']){$(kind+'-close').onclick=()=>$(kind+'-dialog').close();$(kind+'-dialog').addEventListener('click',e=>{const r=e.currentTarget.getBoundingClientRect();if(e.target===e.currentTarget&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom))e.currentTarget.close();});}
+for(const button of document.querySelectorAll('[data-tab]'))button.onclick=()=>{tab=button.dataset.tab;for(const b of document.querySelectorAll('[data-tab]')){b.classList.toggle('selected',b===button);b.setAttribute('aria-pressed',String(b===button));}renderShop(true);$('shop-content').scrollTop=0;};
+$('shop-content').onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;let bought=false;if(b.dataset.tool)bought=game.buyTool(Number(b.dataset.tool));if(b.dataset.upgrade)bought=game.upgrade(b.dataset.upgrade);if(bought){sound.unlock();sound.play('buy');persist();render();}};
+function updateSettings(){settings={language:$('language').value,effects:$('effects-toggle').checked,music:$('music-toggle').checked};sound.unlock();translate();persist();}for(const id of ['language','effects-toggle','music-toggle'])$(id).onchange=updateSettings;
+function dig(x,y){if(!loaded||$('shop-dialog').open||$('settings-dialog').open)return;sound.unlock();const s=game.getState(),amount=game.dig(performance.now()<bonusUntil?3:1);world.dig(PugGame.TOOLS[s.tool].key,'+'+format(amount),x,y);sound.play('dig');render();dirty();}
+$('world').addEventListener('pointerdown',e=>{if(e.button!==0)return;if(e.clientX<innerWidth*.42){sound.unlock();world.animatePose('look');return;}dig(e.clientX,e.clientY);});$('world').addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();dig(innerWidth*.76,innerHeight*.6);}});
+$('golden-kibble').onclick=()=>{const now=performance.now();if(now>goldUntil)return;goldUntil=0;bonusUntil=now+30000;game.claimBonus();$('golden-kibble').hidden=true;sound.unlock();sound.play('gold');toast(t().goldToast);persist();render();};
+setInterval(()=>{const now=performance.now();if(document.hidden)return;if(now>=nextGold&&game.getState().clicks>=60&&!$('shop-dialog').open&&!$('settings-dialog').open){goldUntil=now+25000;nextGold=now+90000+Math.random()*45000;$('golden-kibble').hidden=false;}if(goldUntil&&now>goldUntil){goldUntil=0;$('golden-kibble').hidden=true;}$('bonus-indicator').hidden=now>=bonusUntil;if(now<bonusUntil)$('bonus-seconds').textContent=Math.ceil((bonusUntil-now)/1000)+'s';render();},1000);
+addEventListener('pagehide',persist);document.addEventListener('visibilitychange',()=>{if(document.hidden){persist();activeSince=performance.now();}else{nextGold+=performance.now()-activeSince;goldUntil=0;bonusUntil=0;$('golden-kibble').hidden=true;}});
+translate();world.load().then(()=>{loaded=true;render();$('loading').hidden=true;if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});}).catch(()=>{$('loading-detail').textContent=t().loadError;});
 })();

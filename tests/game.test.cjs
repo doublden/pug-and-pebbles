@@ -1,58 +1,14 @@
-const {test} = require('node:test');
-const assert = require('node:assert/strict');
-const {createGame, TOOLS, UPGRADES} = require('../game.js');
-test('starts with an empty balance, one pebble per paw dig', () => {
-  const game = createGame();
-  assert.deepEqual(game.getState(), {balance:0,total:0,clicks:0,tool:0,stage:0,yield:1});
-  assert.equal(game.dig(),1);
-  assert.equal(game.getState().balance,1);
-});
-test('tools unlock in sequence at their exact prices and pay 2, 3, 5', () => {
-  const game = createGame();
-  for(let i=0;i<29;i++) game.dig();
-  assert.equal(game.buyTool(1),false);
-  game.dig(); assert.equal(game.buyTool(1),true);
-  assert.equal(game.getState().balance,0); assert.equal(game.dig(),2);
-  assert.equal(game.buyTool(3),false);
-  while(game.getState().balance<90) game.dig();
-  assert.equal(game.buyTool(2),true); assert.equal(game.dig(),3);
-  while(game.getState().balance<180) game.dig();
-  assert.equal(game.buyTool(3),true); assert.equal(game.dig(),5);
-  assert.equal(game.buyTool(3),false); assert.equal(game.buyTool(4),false);
-});
-test('pug stages spend balance, preserve lifetime count, end at palace', () => {
-  const game = createGame();
-  assert.equal(game.upgradePug(),false);
-  for(let stage=0;stage<3;stage++) {
-    while(game.getState().balance<UPGRADES[stage].cost) game.dig();
-    const before=game.getState();
-    assert.equal(game.upgradePug(),true);
-    assert.equal(game.getState().stage,stage+1);
-    assert.equal(game.getState().balance,before.balance-UPGRADES[stage].cost);
-    assert.equal(game.getState().total,before.total);
-    assert.equal(game.getState().yield,1);
-  }
-  assert.equal(game.upgradePug(),false); assert.equal(game.dig(),1);
-});
-test('purchases cannot double-spend and state snapshots cannot mutate the game', () => {
-  const game = createGame();
-  for(let i=0;i<60;i++) game.dig();
-  assert.equal(game.upgradePug(),true); assert.equal(game.buyTool(1),false);
-  game.getState().balance=9999; assert.equal(game.getState().balance,0);
-  for(const bad of [-1,NaN,1.5,'1',undefined,99]) assert.equal(game.buyTool(bad),false);
-});
-test('full progression accounting and reset', () => {
-  const game = createGame();
-  for(let index=1;index<TOOLS.length;index++) {
-    while(game.getState().balance<TOOLS[index].cost) game.dig();
-    game.buyTool(index);
-  }
-  for(let stage=0;stage<UPGRADES.length;stage++) {
-    while(game.getState().balance<UPGRADES[stage].cost) game.dig();
-    game.upgradePug();
-  }
-  const s=game.getState();
-  assert.equal(s.tool,3); assert.equal(s.stage,3); assert.equal(s.yield,5);
-  assert.equal(s.balance,s.total-TOOLS.reduce((n,t)=>n+t.cost,0)-UPGRADES.reduce((n,u)=>n+u.cost,0));
-  game.reset(); assert.deepEqual(game.getState(),createGame().getState());
-});
+const test=require('node:test');const assert=require('node:assert/strict');const {Amount,createGame,toolPower,price,trackPrice}=require('../game.js');
+const funded=(value=1e15,overrides={})=>createGame({version:2,balance:new Amount(value).toJSON(),total:new Amount(value).toJSON(),clicks:0,levels:[1,0,0,0,0,0,0,0,0,0],pug:0,home:0,...overrides});
+test('first spoon requires exactly 30 clicks, later tools stay sequential',()=>{const g=createGame();for(let i=0;i<29;i++)g.dig();assert.equal(g.buyTool(1),false);g.dig();assert.equal(g.buyTool(2),false);assert.equal(g.buyTool(1),true);assert.equal(g.getState().balance.compare(0),0);assert.equal(g.dig().compare(2),0);});
+test('original tool yields 2, 3, 5 remain intact',()=>{const g=funded();for(const [i,p]of [[1,2],[2,3],[3,5]]){assert.equal(g.buyTool(i),true);assert.equal(g.getState().power.compare(p),0);}});
+test('spending preserves total and cannot overdraw',()=>{const g=funded(30);g.buyTool(1);assert.equal(g.buyTool(1),false);assert.equal(g.getState().total.compare(30),0);assert.equal(g.getState().balance.compare(0),0);assert.equal(g.upgrade('pug'),false);});
+test('every 25th level doubles normal level growth',()=>{const before=toolPower(1,24).toNumber(),after=toolPower(1,25).toNumber();assert.ok(Math.abs(after/before-2.15)<1e-10);assert.ok(price(30,25).compare(price(30,24))>0);});
+test('strongest owned tool stays equipped even if a newer tool is weaker',()=>{const g=funded();for(let i=0;i<10;i++)g.buyTool(1);g.buyTool(2);assert.equal(g.getState().tool,1);});
+test('dog and home evolve separately and both affect yield',()=>{const g=funded();g.upgrade('pug');assert.equal(g.getState().pugStage,1);assert.equal(g.getState().homeStage,0);assert.ok(Math.abs(g.dig().toNumber()-1.04)<1e-10);g.upgrade('home');assert.ok(Math.abs(g.dig().toNumber()-1.0712)<1e-10);});
+test('royalty is expensive and upgrades continue afterwards',()=>{assert.equal(trackPrice(8,'pug').compare(800000000000),0);assert.equal(trackPrice(8,'home').compare(2500000000000),0);const g=funded(1e18,{pug:9,home:9});assert.equal(g.upgrade('pug'),true);assert.equal(g.upgrade('home'),true);assert.equal(g.getState().pugStage,9);assert.equal(g.getState().homeStage,9);assert.equal(g.getState().pug,10);});
+test('currency, prices and yields survive well beyond Number maximum',()=>{const a=Amount.log(400);assert.equal(a.e,400);assert.equal(a.add(a).m,2);assert.equal(a.subtract(a).compare(0),0);assert.equal(JSON.parse(JSON.stringify(a)).e,400);const g=funded(1,{balance:{m:1,e:9000},total:{m:1,e:9000},levels:[1,15000,0,0,0,0,0,0,0,0]});assert.ok(g.getState().power.e>308);assert.equal(g.buyTool(1),true);assert.ok(g.getState().balance.e>=8999);});
+test('save roundtrip and returned snapshots cannot mutate game',()=>{const g=funded();g.buyTool(1);g.upgrade('pug');g.dig(3);const loaded=createGame(JSON.parse(JSON.stringify(g.serialize())));assert.deepEqual(loaded.serialize(),g.serialize());const s=g.getState();s.levels[1]=999;assert.equal(g.getState().levels[1],1);});
+test('corrupt currency and invalid commands are contained',()=>{for(const save of [null,{version:2,balance:{m:-1,e:0},total:{m:1,e:0}},{version:2,balance:{m:9,e:8},total:{m:1,e:0}}])assert.equal(createGame(save).getState().balance.compare(0),0);const g=createGame();for(const i of [-1,0,1.2,100,NaN])assert.equal(g.buyTool(i),false);assert.equal(g.upgrade('other'),false);assert.equal(g.dig(Infinity).compare(0),0);assert.equal(g.dig(0).compare(0),0);});
+
+test('fractional leftover currency is restored, including amounts below one',()=>{const g=funded(90.08);g.upgrade('pug');const loaded=createGame(g.serialize());assert.ok(Math.abs(loaded.getState().balance.toNumber()-.08)<1e-9);});
