@@ -4,7 +4,7 @@
     KEY = 'pug-and-pebbles-v2',
     BACKUP = 'pug-and-pebbles-v4-backup',
     LEGACY_BACKUP = 'pug-and-pebbles-v3-backup',
-    VERSION = '0.4.0',
+    VERSION = '0.4.1',
     SHARE_URL = 'https://doublden.github.io/pug-and-pebbles/?v=' + VERSION,
     instance = Math.random().toString(36).slice(2) + Date.now();
   function readEnvelope() {

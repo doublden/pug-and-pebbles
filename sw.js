@@ -1,4 +1,4 @@
-const CACHE = 'pug-pebbles-v4-20261014a';
+const CACHE = 'pug-pebbles-v4-20261014b';
 const CORE = [
   './',
   'index.html',

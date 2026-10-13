@@ -1811,6 +1811,8 @@ canvas.bird-face {
   animation: tip-feed 1.6s ease-in-out infinite;
 }
 .loader-pellets rect {
+  transform-box: fill-box;
+  transform-origin: center;
   animation: pour-feed 0.65s linear infinite;
 }
 .loader-pellets rect:nth-child(2) {
