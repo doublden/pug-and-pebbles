@@ -337,12 +337,12 @@
         moving = !preview && !this.world.uiPaused && cycle > 12 && cycle < 23;
       const w = preview
           ? Math.min(width * 0.66, height * 0.65)
-          : width * (width < height ? 0.32 : 0.19),
+          : width * (width < height ? 0.4 : 0.2375),
         bodyW = w * 0.6,
         bodyH = (bodyW * base.h) / base.w;
       const x =
-        (preview ? width * 0.08 : width * (width < height ? 0.6 : 0.78)) +
-        (moving ? Math.sin(((cycle - 12) / 11) * Math.PI * 2) * width * 0.045 : 0);
+        (preview ? width * 0.08 : width * (width < height ? 0.49 : 0.78)) +
+        (moving ? Math.sin(((cycle - 12) / 11) * Math.PI * 2) * width * 0.035 : 0);
       const y =
         height * (width < height ? 0.82 : 0.91) -
         bodyH +
@@ -432,12 +432,12 @@
       const mobile = width < height,
         cycle = (now / 1000) % 30,
         moving = !preview && !this.world.uiPaused && cycle > 12 && cycle < 23;
-      const travel = moving ? Math.sin(((cycle - 12) / 11) * Math.PI * 2) * width * 0.045 : 0;
+      const travel = moving ? Math.sin(((cycle - 12) / 11) * Math.PI * 2) * width * 0.035 : 0;
       const w = preview
           ? Math.min(width * 0.66, height * 0.65)
-          : width * (width < height ? 0.32 : 0.19),
+          : width * (width < height ? 0.4 : 0.2375),
         h = w * (f.canvas.height / f.canvas.width),
-        x = (width < height ? width * 0.6 : width * 0.78) + travel,
+        x = (width < height ? width * 0.49 : width * 0.78) + travel,
         y =
           height * (width < height ? 0.82 : 0.91) -
           h +

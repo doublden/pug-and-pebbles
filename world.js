@@ -393,13 +393,13 @@
           0.51, 0.52, 0.53, 0.54, 0.55, 0.56, 0.57, 0.6, 0.64, 0.68, 0.72, 0.77, 0.81, 0.85,
         ][stage],
         width = portrait
-          ? w * extent * 1.1
+          ? w * extent * 1.21
           : Math.min(w * (0.22 + stage * 0.012), h * (0.4 + stage * 0.037)),
         scale = Math.min(width / f.w, (h * (portrait ? 0.47 : 0.75)) / f.h),
         dw = f.w * scale,
         dh = f.h * scale,
-        cx = w * (portrait ? 0.67 : 0.7),
-        base = h * (portrait ? 0.735 : 0.9);
+        cx = w * (portrait ? 0.5 : 0.7),
+        base = h * (portrait ? 0.665 : 0.9);
       return { x: cx - dw / 2, y: base - dh, w: dw, h: dh, cx, base, f };
     }
     food(ctx, stage, w, h, now = 0, alpha = 1) {
@@ -544,42 +544,34 @@
       render(f.pose, 1 - mix, f.mid);
       render(g.pose, mix, g.mid);
     }
+    poseProgress(now = performance.now()) {
+      if (this.reduced || this.activePose() === 'idle') return 1;
+      const e = this.idleEvent;
+      return Math.max(0, e
+        ? Math.min(1, e.elapsed / 1100, (e.duration - e.elapsed) / 1100)
+        : Math.min(1, (now - this.poseStart) / 1100, (this.poseEnd - now) / 1100));
+    }
+    poseFrame(pose, p, now = performance.now()) {
+      if (pose === 'idle' || this.reduced) return pose;
+      const mid = this.images['mid-' + pose] ? 'mid-' + pose : null;
+      if (p < 1) return p < 0.3 ? 'idle' : mid && p < 0.7 ? mid : pose;
+      const elapsed = this.idleEvent?.elapsed ?? Math.max(0, now - this.poseStart - 1100);
+      if (pose === 'back' && this.images.rear)
+        return Math.floor(elapsed / 1200) % 2 ? 'back' : 'rear';
+      if (mid && ['scratch', 'pawlick', 'lick'].includes(pose))
+        return Math.floor(elapsed / 450) % 2 ? mid : pose;
+      return pose;
+    }
+    visiblePug(now = performance.now()) {
+      const pose = this.poseFrame(this.activePose(), this.poseProgress(now), now);
+      const mirror = !this.reduced && this.idleEvent &&
+        ['pee', 'backlook'].includes(this.idleEvent.kind) &&
+        Math.floor(this.idleEvent.elapsed / 1500) % 2 === 1;
+      return { pose, mirror: !!mirror };
+    }
     currentHead(now = performance.now()) {
-      const pose = this.activePose(),
-        stage = this.state.pugStage;
-      const head = (p) => this.prepare(p, stage).head;
-      const blend = (a, b, p) => ({
-        x: a.x + (b.x - a.x) * p,
-        y: a.y + (b.y - a.y) * p,
-        w: a.w + (b.w - a.w) * p,
-      });
-      let p = this.reduced
-        ? 1
-        : this.idleEvent
-          ? Math.min(
-              1,
-              this.idleEvent.elapsed / 850,
-              (this.idleEvent.duration - this.idleEvent.elapsed) / 850,
-            )
-          : pose === 'idle'
-            ? 1
-            : Math.min(1, (now - this.poseStart) / 850, (this.poseEnd - now) / 850);
-      p = Math.max(0, p);
-      let h;
-      if (pose === 'idle') h = head('idle');
-      else if (this.images['mid-' + pose])
-        h =
-          p < 0.5
-            ? blend(head('idle'), head('mid-' + pose), p * 2)
-            : blend(head('mid-' + pose), head(pose), (p - 0.5) * 2);
-      else h = blend(head('idle'), head(pose), p);
-      if (pose === 'back' && p === 1 && this.images.rear)
-        h = blend(head('rear'), head('back'), (1 + Math.cos(now / 1100)) / 2);
-      if (this.idleEvent && ['pee', 'backlook'].includes(this.idleEvent.kind) && !this.reduced) {
-        const turn = (1 - Math.cos((this.idleEvent.elapsed / 1500) * Math.PI)) / 2;
-        h = { ...h, x: h.x + (1 - h.x - h.x) * turn };
-      }
-      return { head: h, pose };
+      const { pose, mirror } = this.visiblePug(now), head = this.prepare(pose, this.state.pugStage).head;
+      return { head: mirror ? { ...head, x: 1 - head.x, tilt: -(head.tilt || 0) } : head, pose };
     }
     birdAnchor(target) {
       const l = target === 2 ? this.layout() : this.foodLayout();
@@ -587,11 +579,17 @@
         const { head, pose } = this.currentHead(),
           i = PugGame.HATS.findIndex((h) => h.id === this.state.hat);
         const hat =
-          i >= 0 ? this.extras.frame(pose === 'back' ? 'hatsSide' : 'hats', i, 4, 3) : null;
-        const above = hat
-          ? (((head.w * hat.h) / hat.w) * (hat.mount?.y || 0.98)) / (hat.mount?.span || 1)
-          : 0.045;
-        return { x: l.x + l.size * head.x, y: l.y + l.size * (head.y - above) };
+          i >= 0 ? this.extras.frame(pose === 'rear' ? 'hatsBack' : ['back', 'mid-back'].includes(pose) ? 'hatsSide' : 'hats', i, 4, 3) : null;
+        const rise = hat
+          ? head.w * (i === 4 ? 1 : 1.08) * hat.h / hat.w *
+            (hat.mount?.y ?? 0.98) / (hat.mount?.span || 1)
+          : 0,
+          tilt = head.tilt || 0,
+          offset = hat ? (pose === 'rear' ? 0.035 : 0.045) : -0.045;
+        return {
+          x: l.x + l.size * (head.x + rise * Math.sin(tilt)),
+          y: l.y + l.size * (head.y + offset - rise * Math.cos(tilt)),
+        };
       }
       return {
         x: l.x + l.w * (target === 0 ? 0.5 : 0.76),
@@ -656,7 +654,7 @@
     layout(now = performance.now()) {
       const portrait = this.w < this.h,
         size = portrait
-          ? Math.min(this.w * 0.585, this.h * 0.36)
+          ? Math.min(this.w * 0.5265, this.h * 0.324)
           : Math.min(this.w * 0.43, this.h * 0.68),
         base = portrait ? this.h * 0.79 : this.h * 0.91,
         x = portrait ? -this.w * 0.065 : this.w * 0.018;
@@ -698,8 +696,10 @@
     hitPug(px, py) {
       if (!this.ready) return false;
       const l = this.layout(),
-        f = this.prepare(this.activePose(), this.state.pugStage),
-        x = Math.floor(((px - l.x) / l.size) * f.cellWidth + f.pad),
+        visible = this.visiblePug(),
+        f = this.prepare(visible.pose, this.state.pugStage),
+        u = (px - l.x) / l.size,
+        x = Math.floor((visible.mirror ? 1 - u : u) * f.cellWidth + f.pad),
         y = Math.floor(((py - l.y) / l.size) * f.cellWidth + f.padY);
       return (
         x >= 0 &&
@@ -783,44 +783,10 @@
       this.drops = this.drops.slice(-220);
     }
     motionDog(ctx, stage, pose, l, p, alpha = 1) {
-      if (p === 1 && !this.reduced && ['scratch', 'pawlick', 'lick'].includes(pose))
-        p = 0.88 + 0.12 * (0.5 + 0.5 * Math.sin(performance.now() / (pose === 'scratch' ? 240 : 360)));
-      let a, b, mix;
-      if (pose === 'back' && this.images.rear && p === 1) {
-        a = 'rear'; b = 'back'; mix = (1 + Math.cos(performance.now() / 1100)) / 2;
-      } else if (!this.images['mid-' + pose]) {
-        a = 'idle'; b = pose; mix = p;
-      } else {
-        const sequence = p * 2;
-        a = sequence < 1 ? 'idle' : 'mid-' + pose;
-        b = sequence < 1 ? 'mid-' + pose : pose;
-        mix = sequence >= 2 ? 1 : sequence % 1;
-        mix = mix * mix * (3 - 2 * mix);
-      }
-      // Normalize the blend in an opaque offscreen surface. Drawing two translucent
-      // characters directly onto the scene makes both body and clothing flash.
-      this.motionCanvas ||= document.createElement('canvas');
-      const renderSize = Math.ceil(l.size * Math.min(this.dpr || 2, 2));
-      const apron = Math.ceil(renderSize * 0.14), extent = renderSize + apron * 2;
-      if (this.motionCanvas.width !== extent || this.motionCanvas.height !== extent) {
-        this.motionCanvas.width = extent; this.motionCanvas.height = extent;
-      }
-      const c = this.motionCanvas.getContext('2d');
-      c.clearRect(0, 0, extent, extent);
-      c.save();
-      c.globalCompositeOperation = 'source-over';
-      const f = this.prepare(a, stage).head, g = this.prepare(b, stage).head;
-      const hx = f.x + (g.x - f.x) * mix, hy = f.y + (g.y - f.y) * mix;
-      this.dog(c, stage, a, apron + (hx - f.x) * renderSize, apron + (hy - f.y) * renderSize, renderSize, 1 - mix, false);
-      c.globalCompositeOperation = 'lighter';
-      this.dog(c, stage, b, apron + (hx - g.x) * renderSize, apron + (hy - g.y) * renderSize, renderSize, mix, false);
-      c.restore();
-      ctx.save(); ctx.globalAlpha = alpha;
-      ctx.drawImage(this.motionCanvas, l.x - l.size * apron / renderSize, l.y - l.size * apron / renderSize, l.size * extent / renderSize, l.size * extent / renderSize);
-      const head = { x: f.x + (g.x - f.x) * mix, y: f.y + (g.y - f.y) * mix,
-        w: f.w + (g.w - f.w) * mix, tilt: (f.tilt || 0) + ((g.tilt || 0) - (f.tilt || 0)) * mix };
-      this.extras.hat(ctx, this.state.hat, l, mix < 0.5 ? a : b, performance.now(), head);
-      ctx.restore();
+      // Hold one fully opaque drawing: dissolving two different bodies blurred
+      // the face, doubled legs/medals and made every animation look smeared.
+      const frame = this.poseFrame(pose, p);
+      this.dog(ctx, stage, frame, l.x, l.y, l.size, alpha);
     }
     spitCoverage(now = performance.now()) {
       const c = this.coverageCanvas.getContext('2d', { willReadFrequently: true });
@@ -858,7 +824,7 @@
         s = this.state,
         l = this.layout(now),
         tr = this.transition,
-        mix = tr ? Math.min(1, (now - tr.start) / 900) : 1;
+        mix = tr ? Math.min(1, (now - tr.start) / 1300) : 1;
       this.background(c, s.homeStage, w, h);
       if (tr && mix < 1 && tr.from.homeStage !== s.homeStage) {
         c.globalAlpha = 1 - mix;
@@ -875,6 +841,17 @@
       );
       if (tr && mix < 1 && tr.from.homeStage !== s.homeStage)
         this.food(c, tr.from.homeStage, w, h, now, 1 - mix);
+      if (tr && mix < 1 && !this.reduced) {
+        c.save();
+        c.translate(l.x + l.size * 0.5, l.y + l.size * 0.45);
+        c.rotate(mix * 0.22);
+        c.fillStyle = `rgba(255,229,148,${Math.sin(mix * Math.PI) * 0.48})`;
+        for (let i = 0; i < 12; i++) {
+          c.rotate(Math.PI / 6); c.beginPath(); c.moveTo(0, 0);
+          c.lineTo(l.size * 1.5, -l.size * 0.09); c.lineTo(l.size * 1.5, l.size * 0.09); c.closePath(); c.fill();
+        }
+        c.restore();
+      }
       c.fillStyle = '#17120e24';
       c.beginPath();
       c.ellipse(
@@ -908,25 +885,15 @@
         this.dog(c, tr.from.pugStage, 'idle', l.x, l.y, l.size, 1 - mix);
       const weight = tr && mix < 1 && tr.from.pugStage !== s.pugStage ? mix : 1;
       if (e) {
-        const p = this.reduced ? 1 : Math.min(1, e.elapsed / 1000, (e.duration - e.elapsed) / 1000);
-        if (e.kind === 'pee' || e.kind === 'backlook') {
-          const turn = this.reduced ? 0 : (1 - Math.cos((e.elapsed / 1500) * Math.PI)) / 2;
-          this.motionDog(c, s.pugStage, active, l, Math.max(0, p), weight * (1 - turn));
-          c.save();
+        const visible = this.visiblePug(now);
+        if (visible.mirror) {
           c.translate(l.x + l.size * 0.5, 0);
           c.scale(-1, 1);
           c.translate(-l.x - l.size * 0.5, 0);
-          this.motionDog(c, s.pugStage, active, l, Math.max(0, p), weight * turn);
-          c.restore();
-        } else this.motionDog(c, s.pugStage, active, l, Math.max(0, p), weight);
+        }
+        this.motionDog(c, s.pugStage, active, l, this.poseProgress(now), weight);
       } else if (this.pose === 'idle') this.dog(c, s.pugStage, 'idle', l.x, l.y, l.size, weight);
-      else {
-        const p = Math.max(
-          0,
-          Math.min(1, (now - this.poseStart) / 850, (this.poseEnd - now) / 850),
-        );
-        this.motionDog(c, s.pugStage, this.pose, l, p, weight);
-      }
+      else this.motionDog(c, s.pugStage, this.pose, l, this.poseProgress(now), weight);
 
       c.restore();
       this.drawIdle(now, l);

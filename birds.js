@@ -130,7 +130,7 @@
         return true;
       },
       configure(options = {}) {
-        peckFactor = options.slowPeck ? 1.2 : 1;
+        peckFactor = Number.isFinite(options.peckFactor) ? Math.max(1, Math.min(1.35, options.peckFactor)) : options.slowPeck ? 1.2 : 1;
       },
       setSpeed(value) {
         speed = [1, 3, 10].includes(value) ? value : 1;

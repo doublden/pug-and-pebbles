@@ -86,26 +86,18 @@
       { key: 'royalscoop', base: 320000000, power: 8000, growth: 1.16 },
     ].map(Object.freeze),
   );
-  const PUG_COSTS = [
-    40, 90, 250, 650, 2500, 5000, 10000, 22000, 90000, 650000, 10000000, 240000000, 9000000000,
-    1000000000000,
-  ];
-  const HOME_COSTS = [
-    70, 140, 300, 500, 1500, 3500, 12000, 80000, 900000, 16000000, 400000000, 18000000000,
-    2500000000000,
-  ];
-  const PUG_BOOST = [
-    1, 1.02, 1.04, 1.07, 1.1, 1.12, 1.14, 1.17, 1.2, 1.35, 1.6, 1.9, 2.3, 2.8, 3.5,
-  ];
-  const HOME_BOOST = [1, 1.005, 1.01, 1.02, 1.03, 1.08, 1.11, 1.15, 1.25, 1.4, 1.6, 1.9, 2.3, 3];
+  const PUG_COSTS = [110, 450, 1600, 7000, 27000, 57000, 130000, 310000, 1500000, 11000000, 180000000, 4500000000, 180000000000, 20000000000000];
+  const HOME_COSTS = [170, 600, 2400, 10000, 16000, 40000, 150000, 1100000, 15000000, 270000000, 7200000000, 340000000000, 49000000000000];
+  const PUG_BOOST = [1, 1.08, 1.17, 1.29, 1.42, 1.5, 1.61, 1.75, 1.94, 2.2, 2.65, 3.25, 4.05, 5.15, 6.75];
+  const HOME_BOOST = [1, 1.07, 1.15, 1.25, 1.37, 1.47, 1.6, 1.76, 2.02, 2.36, 2.8, 3.38, 4.15, 5.35];
   const HATS = Object.freeze(
     [
-      { id: 'carrot', stage: 3, cost: 250, bonus: 'tap', factor: 1.05 },
-      { id: 'frog', stage: 4, cost: 900, bonus: 'bonusTime', factor: 1.1 },
-      { id: 'snowflake', stage: 5, cost: 3500, bonus: 'peckTime', factor: 1.2 },
-      { id: 'bunny', stage: 6, cost: 12000, bonus: 'brush', factor: 1.15 },
-      { id: 'ushanka', stage: 7, cost: 40000, bonus: 'birdLoss', factor: 0.85 },
-      { id: 'cap', stage: 8, cost: 160000, bonus: 'helper', factor: 1.1 },
+      { id: 'carrot', stage: 3, cost: 250, bonus: 'tap', factor: 1.12 },
+      { id: 'frog', stage: 4, cost: 900, bonus: 'bonusTime', factor: 1.2 },
+      { id: 'snowflake', stage: 5, cost: 3500, bonus: 'peckTime', factor: 1.35 },
+      { id: 'bunny', stage: 6, cost: 12000, bonus: 'brush', factor: 1.25 },
+      { id: 'ushanka', stage: 7, cost: 40000, bonus: 'birdLoss', factor: 0.75 },
+      { id: 'cap', stage: 8, cost: 160000, bonus: 'helper', factor: 1.2 },
       { id: 'pirate', award: 'pirate', bonus: 'rareCoin', factor: 1 },
       { id: 'umbrella', award: 'bigSneeze', bonus: 'cooldown', factor: 0.9 },
       { id: 'pan', award: 'perfectCatch', bonus: 'catch', factor: 1.15 },
@@ -114,6 +106,7 @@
   );
   const IDLE_KINDS = ['sleep', 'whistle', 'backlook', 'stretch', 'pee'];
   const MINI_COOLDOWN = 600000;
+  const MINI_SECONDS = Object.freeze({ brush: 20, catch: 30, match: 45 });
   const newLifeBoost = (lives) => 1 + 0.2 * (1 - Math.exp(-Math.min(lives, 1000000) / 10));
   const MAX_LEVEL = 1000000; // A validation ceiling, unreachable in a human lifetime.
   function price(base, level, growth = 1.18) {
@@ -408,6 +401,7 @@
         (kind === 'tool' && (!Number.isInteger(index) || index < 1 || index >= TOOLS.length))
       )
         return { count: 0, cost: new Amount() };
+      if (kind === 'pug' || kind === 'home') mode = 1;
       const lv = kind === 'tool' ? state.levels[index] : state[kind],
         locked =
           kind === 'tool'
@@ -499,6 +493,35 @@
       },
       getToolPower(i, level = state.levels[i]) {
         return toolPower(i, level);
+      },
+      toolGain(i, count = 1) {
+        if (
+          !Number.isInteger(i) || i < 1 || i >= TOOLS.length ||
+          !Number.isSafeInteger(count) || count < 0
+        ) return new Amount();
+        const index = bestTool(),
+          best = toolPower(index, state.levels[index]),
+          after = toolPower(i, state.levels[i] + count);
+        if (after.compare(best) <= 0) return new Amount();
+        const delta = after.subtract(best);
+        return Amount.log(
+          Math.log10(delta.m) + delta.e +
+          trackBoostLog(state.pug, 'pug') + trackBoostLog(state.home, 'home') +
+          Math.log10(newLifeBoost(state.lives)) + Math.log10(hatEffect('tap')),
+        );
+      },
+      shopAvailability() {
+        const tools = TOOLS.some((_, i) => i > 0 && (i === 1 || state.levels[i - 1]) && state.levels[i] < MAX_LEVEL && state.balance.compare(toolPrice(i, state.levels[i])) >= 0),
+          newTool = TOOLS.some((_, i) => i > 0 && !state.levels[i] && (i === 1 || state.levels[i - 1]) && state.balance.compare(toolPrice(i, 0)) >= 0),
+          pug = state.pug < MAX_LEVEL && state.balance.compare(trackPrice(state.pug, 'pug')) >= 0,
+          home = state.home < MAX_LEVEL && state.balance.compare(trackPrice(state.home, 'home')) >= 0,
+          hats = HATS.some(h => !h.award && !state.hats.includes(h.id) && state.pug >= h.stage && state.balance.compare(h.cost) >= 0),
+          helper = state.pug >= 4 && state.helper < MAX_LEVEL && state.balance.compare(helperPrice()) >= 0;
+        return { main: newTool || pug || home, tools, pug, home, hats, helper };
+      },
+      miniRewardLimit(kind) {
+        return Object.hasOwn(MINI_SECONDS, kind)
+          ? power().multiply(8 * MINI_SECONDS[kind]) : new Amount();
       },
       getAchievements() {
         return ACHIEVEMENTS.map((a) => ({
@@ -739,7 +762,7 @@
         if (!status || !status.unlocked || status.seconds || !Number.isSafeInteger(now) || now < 0)
           return false;
         state.miniNext[kind] = now + Math.round(MINI_COOLDOWN * hatEffect('cooldown'));
-        miniTicket = { kind, power: power(), factor: hatEffect(kind) };
+        miniTicket = { kind, power: power() };
         return true;
       },
       finishMini(kind, score, perfect = false) {
@@ -748,9 +771,7 @@
         const ticket = miniTicket;
         miniTicket = null;
         const fraction = Math.min(1, score),
-          amount = ticket.power.multiply(
-            (kind === 'brush' ? 30 : kind === 'match' ? 25 : 20) * fraction * ticket.factor,
-          );
+          amount = ticket.power.multiply(8 * MINI_SECONDS[kind] * fraction);
         credit(amount);
         if (fraction >= 0.6) state[kind + 'Wins']++;
         if (kind === 'catch' && fraction === 1 && perfect) state.perfectCatch = 1;
@@ -775,6 +796,7 @@
     HATS,
     IDLE_KINDS,
     MINI_COOLDOWN,
+    MINI_SECONDS,
     newLifeBoost,
     ACHIEVEMENTS,
     price,

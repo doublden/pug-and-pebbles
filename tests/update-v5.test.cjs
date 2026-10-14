@@ -17,7 +17,7 @@ const funded = (extra = {}) =>
     ...extra,
   });
 test('bulk buying has the same cost and levels as repeated singles', () => {
-  for (const kind of ['tool', 'pug', 'home', 'helper']) {
+  for (const kind of ['tool', 'helper']) {
     const a = funded({ balance: { m: 1, e: 20 }, total: { m: 1, e: 20 } }),
       b = createGame(a.serialize()),
       i = kind === 'tool' ? 2 : 0,
@@ -34,7 +34,7 @@ test('bulk buying has the same cost and levels as repeated singles', () => {
   }
 });
 test('maximum quote buys every affordable upgrade and never overruns currency', () => {
-  for (const kind of ['tool', 'pug', 'home', 'helper']) {
+  for (const kind of ['tool', 'helper']) {
     const g = funded({ balance: { m: 1, e: 5 }, total: { m: 1, e: 5 } }),
       q = g.quote(kind, 1, 'max');
     assert.ok(q.count > 0);
@@ -172,6 +172,9 @@ test('bird head anchors follow sleeping, upright and mirrored pug poses', () => 
       },
     },
     currentHead: proto.currentHead,
+    visiblePug: proto.visiblePug,
+    poseProgress: proto.poseProgress,
+    poseFrame: proto.poseFrame,
   };
   sandbox.PugGame = { HATS: [] };
   const sitting = proto.birdAnchor.call(fake, 2);

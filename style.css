@@ -2057,3 +2057,5 @@ canvas.mini-art {
   #rotate-screen > span { font-size: 62px; }
   .app-shell, dialog[open] { visibility: hidden; }
 }
+
+.shop-tabs button{position:relative}.shop-tabs button.can-buy::after{content:"";position:absolute;width:7px;height:7px;background:#b87642;border:2px solid #f7f1e4;border-radius:50%;top:5px;right:7px}

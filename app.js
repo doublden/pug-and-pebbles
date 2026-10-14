@@ -5,7 +5,7 @@
     BACKUP = 'pug-and-pebbles-v5-backup',
     LEGACY_BACKUP = 'pug-and-pebbles-v4-backup',
     OLDER_BACKUP = 'pug-and-pebbles-v3-backup',
-    VERSION = '0.6.0',
+    VERSION = '0.7.0',
     SHARE_URL = 'https://doublden.github.io/pug-and-pebbles/?v=' + VERSION,
     instance = Math.random().toString(36).slice(2) + Date.now();
   const session = PugSession.create(localStorage, 'pug-and-pebbles-session-v5', instance);
@@ -217,17 +217,13 @@
     $('newlife-open').title = game.canNewLife() ? '' : t().lifeLocked;
     document.body.dataset.gold = String(s.homeStage === 13);
     $('test-chip').hidden = !s.testMode;
-    $('shop-dot').hidden =
-      !(s.pug >= 4 && s.balance.compare(game.getHelperPrice()) >= 0) &&
-      !PugGame.HATS.some(
-        (h) =>
-          !h.award && s.pug >= h.stage && !s.hats.includes(h.id) && s.balance.compare(h.cost) >= 0,
-      ) &&
-      !PugGame.TOOLS.some(
-        (_, i) =>
-          i > 0 && (i === 1 || s.levels[i - 1]) && s.balance.compare(game.getToolPrice(i)) >= 0,
-      ) &&
-      !['pug', 'home'].some((k) => s.balance.compare(game.getTrackPrice(k)) >= 0);
+    const available = game.shopAvailability();
+    $('shop-dot').hidden = !available.main;
+    for (const button of document.querySelectorAll('[data-tab]')) {
+      const active = !!available[button.dataset.tab];
+      button.classList.toggle('can-buy', active);
+      button.setAttribute('aria-label', button.textContent + (active ? ' · ' + t().ready : ''));
+    }
     if ($('shop-dialog').open) renderShop(false);
   }
   function translate() {
@@ -286,7 +282,7 @@
     $('bulk-label').textContent = t().quantity;
     $('bulk-max').textContent = t().maximum;
     $('shop-options')?.setAttribute('aria-label', t().quantity);
-    document.querySelector('.shop-options').hidden = tab === 'hats';
+    document.querySelector('.shop-options').hidden = !['tools', 'helper'].includes(tab);
     const current = game.getState(),
       goals = ['pug', 'home', ...(current.pug >= 4 ? ['helper'] : [])].map((kind) => ({
         kind,
@@ -325,7 +321,7 @@
         $('tool-level-' + i).textContent = locked ? w.locked : lv ? `${w.level} ${lv}` : '';
         const next = game.getToolPower(i, Math.max(1, lv + quote.count));
         $('tool-production-' + i).textContent =
-          `${lv ? format(game.getToolPower(i)) + ' → ' : '+'}${format(next)} ${w.perTap}`;
+          lv ? '+' + format(game.toolGain(i, quote.count)) + ' ' + w.totalPerTap : '+' + format(next) + ' ' + w.perTap;
         $('tool-price-' + i).textContent = format(cost);
         $('tool-action-' + i).textContent = (lv ? w.improve : w.buy) + ' ×' + quote.count;
         const b = $('buy-tool-' + i);
@@ -336,7 +332,7 @@
       const lv = s[tab],
         last = t()[tab === 'pug' ? 'pugNames' : 'homeNames'].length - 1,
         stage = Math.min(last, lv + 1),
-        quote = game.quote(tab, 0, bulkMode),
+        quote = game.quote(tab, 0, 1),
         cost = quote.count ? quote.cost : game.getTrackPrice(tab);
       if (rebuild || !$('upgrade-' + tab))
         content.innerHTML = `<article class="track-card"><p class="track-current">${w.current}: <strong id="track-current-name"></strong></p><div class="track-preview"><canvas id="track-canvas" aria-hidden="true"></canvas><span class="track-badge">${w.next}</span></div><div class="track-heading"><h2 id="track-name"></h2><span class="track-level" id="track-level"></span></div><p class="track-caption" id="track-caption"></p><div class="track-benefits"><span>${w.benefit}</span><strong id="track-boost"></strong></div><button class="purchase-button" id="upgrade-${tab}" data-upgrade="${tab}"><span>${w.improve}</span><span class="purchase-price"><span class="kibble" aria-hidden="true"></span><span id="track-price"></span></span></button><div class="track-progress"><span id="track-progress-fill"></span></div><p class="track-remaining" id="track-remaining"></p><div class="stage-dots" id="stage-dots" aria-hidden="true"></div></article>`;
@@ -466,7 +462,7 @@
     }
     if (b.dataset.helper) bought = game.buyBulk('helper', 0, bulkMode);
     if (b.dataset.tool) bought = game.buyBulk('tool', Number(b.dataset.tool), bulkMode);
-    if (kind) bought = game.buyBulk(kind, 0, bulkMode);
+    if (kind) bought = game.buyBulk(kind, 0, 1);
     if (bought) {
       if (kind && !revealFrom) revealFrom = before;
       sound.unlock();
@@ -480,6 +476,7 @@
         const text = t().received + ': ' + stageName(kind, game.getState()[kind]);
         $('shop-message').textContent = text;
         $('shop-message').hidden = false;
+        $('shop-dialog').close();
         toast(text);
       }
     }
@@ -676,10 +673,10 @@
     $('bonus-value').textContent = '×' + bonusState.multiplier;
     $('bonus-seconds').textContent = bonusState.seconds + 's';
     runner.configure({
-      longBonus: game.hatEffect('bonusTime') > 1,
+      durationFactor: game.hatEffect('bonusTime'),
       rareCoin: game.hatEffect('rareCoin') === 1 && frameState.hat === 'pirate',
     });
-    birdRunner.configure({ slowPeck: game.hatEffect('peckTime') > 1 });
+    birdRunner.configure({ peckFactor: game.hatEffect('peckTime') });
     tickBirds(delta, playing);
     world.uiPaused = !playing;
     const idle = idleRunner.tick(delta, playing && world.idleReady());

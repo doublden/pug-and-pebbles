@@ -1,7 +1,7 @@
 (function (root) {
   'use strict';
   // Pure simulations share active time with their UI; leaving the page pauses play.
-  function brush() {
+  function brush(assistance = 1) {
     let elapsed = 0,
       distance = 0,
       last = null,
@@ -23,7 +23,7 @@
           const dt = time - last.time,
             d = Math.hypot(x - last.x, y - last.y);
           if (dt > 0 && dt <= 200 && d / dt > 0.12) {
-            distance += Math.min(d, width * 0.12);
+            distance += Math.min(d, width * 0.12) * Math.max(1, Math.min(1.25, assistance));
             cells.add(
               Math.min(5, Math.floor((x / width) * 6)) +
                 '-' +
@@ -55,7 +55,7 @@
       },
     };
   }
-  function catcher(random = Math.random) {
+  function catcher(random = Math.random, assistance = 1) {
     let elapsed = 0,
       next = 500,
       serial = 0,
@@ -72,7 +72,7 @@
         if (done) return this.status();
         elapsed += Math.max(0, Math.min(100, ms));
         if (serial < 24 && elapsed >= next) {
-          const travel = 2600 - serial * 20;
+          const travel = (2600 - serial * 20) * Math.max(1, Math.min(1.25, assistance));
           items.push({ id: ++serial, lane: Math.floor(random() * 4), start: elapsed, travel });
           next += 1150;
         }
@@ -83,12 +83,13 @@
             else missed++;
           }
         items = items.filter((i) => !i.finished);
-        done = missed >= 3 || (serial === 24 && !items.length);
+        done = elapsed >= 30000 || missed >= 3 || (serial === 24 && !items.length);
         return this.status();
       },
       status() {
         return {
           kind: 'catch',
+          seconds: Math.ceil(Math.max(0, 30000 - elapsed) / 1000),
           elapsed,
           lane,
           caught,

@@ -200,7 +200,8 @@
         "Готовность: сравнение старой/новой траектории для нескольких темпов игры, понятные цены и бонусы, корректные уведомления и отсутствие потери старых покупок.",
         "Done when old/new progression is compared at several play rates, prices/bonuses are clear, badges behave correctly, and existing purchases are preserved."
       ],
-      "status": "planned"
+      "status": "shipped",
+      "release": "0.7.0"
     },
     {
       "id": 5,
@@ -562,7 +563,7 @@
     }
   ],
   "research_requirement_completed": 22,
-  "active_release": "0.6.0",
+  "active_release": "0.7.0",
   "active_blocks": [],
   "followups": [
     {
@@ -574,7 +575,7 @@
         1,
         2
       ],
-      "status": "planned",
+      "status": "shipped",
       "req": [
         46
       ],
@@ -583,7 +584,8 @@
           "По отзыву о 0.6.0 увеличить удержание отдельных кадров; уменьшить длительное смешивание разных поз, из-за которого видны смазанные морды и двойные контуры. Подобрать темп по действию, не растягивать размытие. Проверить шапки и переходы во всех позах.",
           "Following 0.6.0 feedback, hold individual frames longer and reduce extended blending between different poses, which produces blurred faces and doubled outlines. Tune each action without stretching the blur; recheck hats and pose transitions."
         ]
-      ]
+      ],
+      "release": "0.7.0"
     },
     {
       "id": "3.1",
@@ -594,7 +596,7 @@
         1,
         2
       ],
-      "status": "planned",
+      "status": "shipped",
       "req": [
         47,
         48,
@@ -609,17 +611,15 @@
           "Пересчитать области касаний, крепления птиц, шапок и позиции Василия; корм должен удобно нажиматься в ранних/поздних стадиях и разных анимациях, без перекрытия кнопок. Повторить мобильную проверку.",
           "Recalculate touch bounds, bird/hat anchors and helper placement; food must be easy to tap at early/late stages and throughout animations without covering controls. Repeat mobile QA."
         ]
-      ]
+      ],
+      "release": "0.7.0"
     }
   ],
   "remaining_hours": [
-    41,
-    67
+    35,
+    57
   ],
   "recommended_order": [
-    "2.1",
-    "3.1",
-    4,
     5,
     6,
     7,

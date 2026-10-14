@@ -97,7 +97,7 @@
         return true;
       },
       configure(options = {}) {
-        bonusTime = options.longBonus ? 33000 : 30000;
+        bonusTime = 30000 * (Number.isFinite(options.durationFactor) ? Math.max(1, Math.min(1.2, options.durationFactor)) : options.longBonus ? 1.1 : 1);
         rare = !!options.rareCoin;
       },
       setSpeed(value) {

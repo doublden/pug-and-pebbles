@@ -105,8 +105,8 @@
         ['brush', 'catch', 'match']
           .map((kind) => {
             const status = game.miniStatus(kind),
-              limit = kind === 'brush' ? 30 : kind === 'match' ? 25 : 20;
-            return `<article class="mini-card"><canvas class="mini-art" data-mini-art="${kind}" width="420" height="150" aria-hidden="true"></canvas><h2>${w[kind === 'brush' ? 'brush' : kind === 'match' ? 'match3' : 'catchFood']}</h2><p>${w[kind === 'brush' ? 'brushMenu' : kind === 'catch' ? 'catchMenu' : 'matchMenu']}</p><p>${w.reward}: ≤ ${this.format(game.getState().power.multiply(limit * game.hatEffect(kind)))} · <span data-mini-wait="${kind}">${status.seconds ? w.cooldown + ' ' + Math.floor(status.seconds / 60) + ':' + String(status.seconds % 60).padStart(2, '0') : ''}</span></p><button class="setting-action" data-mini="${kind}" ${!status.unlocked || status.seconds ? 'disabled' : ''}>${w.start}</button></article>`;
+              limit = game.miniRewardLimit(kind);
+            return `<article class="mini-card"><canvas class="mini-art" data-mini-art="${kind}" width="420" height="150" aria-hidden="true"></canvas><h2>${w[kind === 'brush' ? 'brush' : kind === 'match' ? 'match3' : 'catchFood']}</h2><p>${w[kind === 'brush' ? 'brushMenu' : kind === 'catch' ? 'catchMenu' : 'matchMenu']}</p><p>${w.reward}: ≤ ${this.format(limit)} · <span data-mini-wait="${kind}">${status.seconds ? w.cooldown + ' ' + Math.floor(status.seconds / 60) + ':' + String(status.seconds % 60).padStart(2, '0') : ''}</span></p><button class="setting-action" data-mini="${kind}" ${!status.unlocked || status.seconds ? 'disabled' : ''}>${w.start}</button></article>`;
           })
           .join('');
       for (const canvas of document.querySelectorAll('[data-mini-art]')) {
@@ -155,10 +155,10 @@
         kind,
         simulation:
           kind === 'brush'
-            ? PugMinigames.brush()
+            ? PugMinigames.brush(game.hatEffect('brush'))
             : kind === 'match'
               ? PugMinigames.match3()
-              : PugMinigames.catcher(),
+              : PugMinigames.catcher(Math.random, game.hatEffect('catch')),
         finished: false,
       };
       this.fur = [];
@@ -247,7 +247,7 @@
             ? state.points + ' / 90'
             : state.caught + ' / 24';
       this.$('mini-clock').textContent =
-        a.kind !== 'catch' ? state.seconds + 's' : w.misses + ': ' + state.missed + ' / 3';
+        a.kind !== 'catch' ? state.seconds + 's' : state.seconds + 's · ' + w.misses + ': ' + state.missed + ' / 3';
       for (const b of document.querySelectorAll('[data-lane]'))
         b.classList.toggle('active', Number(b.dataset.lane) === state.lane);
       this.draw(now, state, score);

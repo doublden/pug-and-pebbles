@@ -1,4 +1,4 @@
-const CACHE = 'pug-pebbles-v6-20261014a';
+const CACHE = 'pug-pebbles-v7-20261014a';
 const CORE = [
   './',
   'index.html',
@@ -73,7 +73,7 @@ self.addEventListener('install', (event) =>
         cache.addAll(
           CORE.map(
             (file) =>
-              new Request(/\.(js|css)$/.test(file) ? file + '?v=0.6.0' : file, { cache: 'reload' }),
+              new Request(/\.(js|css)$/.test(file) ? file + '?v=0.7.0' : file, { cache: 'reload' }),
           ),
         ),
       )

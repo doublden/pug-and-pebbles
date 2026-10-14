@@ -2,7 +2,7 @@
 
 [Русский](ROADMAP.ru.md)
 
-Updated: 14 October 2026. Blocks 1–3 shipped in 0.6.0; new feedback adds follow-ups 2.1 and 3.1. Blocks 4–10 are planned. This change updates documentation only.
+Updated: 14 October 2026. Blocks 1–3 shipped in 0.6.0; follow-ups 2.1 + 3.1 and current block 4 economy ship together in 0.7.0. Blocks 5–10 remain planned.
 
 ## Sequence and estimates
 
@@ -10,10 +10,10 @@ Updated: 14 October 2026. Blocks 1–3 shipped in 0.6.0; new feedback adds follo
 |---|---|---:|---|
 | 1 | Mobile bugs and stability | 2–3 | shipped, 0.6.0 |
 | 2 | Hats and character attachment | 4–7 | shipped, 0.6.0 |
-| 2.1 | Crisp, slower animations | 1–2 | planned |
+| 2.1 | Crisp, slower animations | 1–2 | shipped, 0.7.0 |
 | 3 | Detailed locations, bowls and food | 4–6 | shipped, 0.6.0 |
-| 3.1 | Composition and character scale | 1–2 | planned |
-| 4 | Economy, shop and purchases | 4–6 | planned |
+| 3.1 | Composition and character scale | 1–2 | shipped, 0.7.0 |
+| 4 | Economy, shop and purchases | 4–6 | shipped, 0.7.0 |
 | 5 | Vasiliy, expeditions, weapons and inventory | 6–9 | planned |
 | 6 | Raccoon and giant crow boss fights | 6–10 | planned |
 | 7 | Yuppi, reactions, secrets and settings | 7–12 | planned |
@@ -21,7 +21,7 @@ Updated: 14 October 2026. Blocks 1–3 shipped in 0.6.0; new feedback adds follo
 | 9 | Beds and sleep scenes | 5–8 | planned |
 | 10 | Hidden late stage: Dubai and muscular pug | 8–12 | planned |
 
-Remaining scope including additions: approximately **41–67 active work hours**. Recommended first: 2.1 + 3.1 (2–4 hours), correcting blur and tap composition. Then 4 → 5 → 6 → 7 → 10 → 9, with per-release checks and block 8 final regression. These are provisional estimates, not release dates.
+Remaining scope: approximately **35–57 active work hours**. Recommended: 5 → 6 → 7 → 10 → 9, with per-release checks and block 8 final regression. Estimates are not release dates.
 
 ## 1. Mobile bugs and stability
 
@@ -51,7 +51,7 @@ Done when a hat × stage × pose visual matrix is available and motion transitio
 
 **1–2 hours; planned.
 
-- [ ] Following 0.6.0 feedback, hold individual frames longer and reduce extended blending between different poses, which produces blurred faces and doubled outlines. Tune each action without stretching the blur; recheck hats and pose transitions.
+- [x] Following 0.6.0 feedback, hold individual frames longer and reduce extended blending between different poses, which produces blurred faces and doubled outlines. Tune each action without stretching the blur; recheck hats and pose transitions.
 
 ## 3. Detailed locations, bowls and food
 
@@ -69,21 +69,21 @@ Done when mobile renders are inspected at 100%, food is detailed, composition is
 
 **1–2 hours; planned.
 
-- [ ] Relative to 0.6.0: enlarge Vasiliy and excavator by 25% linearly, preserving proportions; enlarge food by another 10%, raise it and move it toward the center; shrink the pug by another 10% without moving its anchor.
-- [ ] Recalculate touch bounds, bird/hat anchors and helper placement; food must be easy to tap at early/late stages and throughout animations without covering controls. Repeat mobile QA.
+- [x] Relative to 0.6.0: enlarge Vasiliy and excavator by 25% linearly, preserving proportions; enlarge food by another 10%, raise it and move it toward the center; shrink the pug by another 10% without moving its anchor.
+- [x] Recalculate touch bounds, bird/hat anchors and helper placement; food must be easy to tap at early/late stages and throughout animations without covering controls. Repeat mobile QA.
 
 ## 4. Economy, shop and purchases
 
-**Estimate: 4–6 hours.** Planned.
+**Estimate: 4–6 hours.** Shipped in 0.7.0. Future helper, boss and insect budgets are documented in ECONOMY.md; mechanics ship in blocks 5–7.
 
-- [ ] Make the first three or four pug/home upgrades more demanding and rewarding; improve ordinary hat usefulness. Target roughly 10% easier mid/late progression without a blanket price discount.
-- [ ] Calculate Vasiliy around one ordinary tap per second at hire; levels still improve him. Rebalance prices and expedition payouts together.
-- [ ] Pug/home progression is single-purchase only; retain ×1/×10/max for tools and Vasiliy. Successful pug/home purchases close the shop and show the transformation with sun rays.
-- [ ] The main shop badge signals only a first purchase of a new digging tool, the next home or pug stage. Category badges signal available purchases in that category, including ordinary upgrades. All requirements, including home boss clearance, must be met.
-- [ ] Keep the nearest-goal display; simulate combined income, costs, coins, combos, hats, Vasiliy and upcoming boss gates. Preserve separately approved secret-item formulas.
-- [ ] Tools: first purchase shows base power; upgrades show the actual increase to total ordinary tap power.
-- [ ] Full minigame victory: 8 × planned seconds × ordinary tap power captured at start; partial success is proportional, temporary boosts excluded.
-- [ ] Include butterfly 10P and bee 20P in the economy without temporary boosts; recalculate late-stage prices/bonuses and New life compatibility.
+- [x] Make the first three or four pug/home upgrades more demanding and rewarding; improve ordinary hat usefulness. Target roughly 10% easier mid/late progression without a blanket price discount.
+- [x] Calculate Vasiliy around one ordinary tap per second at hire; levels still improve him. Rebalance prices and expedition payouts together.
+- [x] Pug/home progression is single-purchase only; retain ×1/×10/max for tools and Vasiliy. Successful pug/home purchases close the shop and show the transformation with sun rays.
+- [x] The main shop badge signals only a first purchase of a new digging tool, the next home or pug stage. Category badges signal available purchases in that category, including ordinary upgrades. All requirements, including home boss clearance, must be met.
+- [x] Keep the nearest-goal display; simulate combined income, costs, coins, combos, hats, Vasiliy and upcoming boss gates. Preserve separately approved secret-item formulas.
+- [x] Tools: first purchase shows base power; upgrades show the actual increase to total ordinary tap power.
+- [x] Full minigame victory: 8 × planned seconds × ordinary tap power captured at start; partial success is proportional, temporary boosts excluded.
+- [x] Include butterfly 10P and bee 20P in the economy without temporary boosts; recalculate late-stage prices/bonuses and New life compatibility.
 
 Done when old/new progression is compared at several play rates, prices/bonuses are clear, badges behave correctly, and existing purchases are preserved.
 
@@ -165,7 +165,7 @@ Done: smooth sleep and return, saved secret unlocks, correct hats/weapons and ve
 - [ ] After the current most expensive home: a huge Dubai apartment with panoramic skyline, gold bars and bundled dollars in the background, and a laptop with charts. Add a separate next food stage and detailed mobile artwork.
 - [ ] After the current final pug form: a muscular pug with recognizable face, clearly drawn abs, biceps, triceps and powerful body; complete regular/rare motions, hat/weapon fit and sleep scenes.
 - [ ] For these and all later stages: hide artwork, name and detailed reveal behind “?” until purchase; show price and numerical bonus beforehand. Reveal with a transformation after purchase. Do not hide older owned forms.
-- [ ] Current-curve reference prices: muscular pug 2.8 trillion, Dubai 7.75 trillion pebbles; provisional +35% and +40% to their respective ordinary-production factors. Recalculate final prices in block 4 against new income and easier late progression.
+- [ ] Previous 0.6.0 curve reference prices: muscular pug 2.8 trillion, Dubai 7.75 trillion pebbles; provisional +35% and +40% to their respective ordinary-production factors. Updated 0.7.0 curve references are 56T and 151.9T; recheck against bosses and the new helper before block 10.
 - [ ] Map purchases beyond the old visual maximum without charging twice; preserve balances, collections, selected skins and earned New life access. Explicitly define New life conditions for the expanded visual track; do not gate purchases behind an unimplemented boss.
 
 Done: both hidden stages reveal only after purchase, art/motions/skins are inspected, and balance/migration preserve existing purchases.

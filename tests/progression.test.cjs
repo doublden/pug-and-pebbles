@@ -45,11 +45,11 @@ test('only equipped hat applies a bonus; removing and restoring work', () => {
   const g = funded();
   const before = g.getState().power;
   g.buyHat('carrot');
-  assert.equal(g.getState().power.compare(before.multiply(1.05)), 0);
+  assert.equal(g.getState().power.compare(before.multiply(1.12)), 0);
   g.buyHat('frog');
   assert.equal(g.getState().power.compare(before), 0);
   g.equipHat('carrot');
-  assert.equal(g.getState().power.compare(before.multiply(1.05)), 0);
+  assert.equal(g.getState().power.compare(before.multiply(1.12)), 0);
   assert.equal(g.equipHat('pirate'), false);
   g.equipHat(null);
   assert.equal(g.getState().power.compare(before), 0);
@@ -108,7 +108,7 @@ test('helper frame income is capped at one active second and ignores golden mult
   g.claimBonus(8);
   assert.equal(g.work(60).compare(normal), 0);
   g.buyHat('cap');
-  assert.equal(g.getState().helperRate.compare(normal.multiply(1.1)), 0);
+  assert.equal(g.getState().helperRate.compare(normal.multiply(1.2)), 0);
 });
 test('mini-game consumes saved cooldown on start, so reload and cancellation cannot farm rewards', () => {
   const g = funded();
@@ -126,11 +126,11 @@ test('mini-game rewards are bounded and use power at start, never boosted power 
   g.beginMini('brush', 0);
   g.upgrade('pug');
   g.devTool(11, 100);
-  assert.equal(g.finishMini('brush', 1000).compare(p.multiply(30)), 0);
+  assert.equal(g.finishMini('brush', 1000).compare(p.multiply(160)), 0);
   assert.equal(g.finishMini('brush', 1).compare(0), 0);
   const g2 = funded();
   g2.beginMini('catch', 0);
-  assert.equal(g2.finishMini('catch', 0.5).compare(g2.getState().power.multiply(10)), 0);
+  assert.equal(g2.finishMini('catch', 0.5).compare(g2.getState().power.multiply(120)), 0);
 });
 test('perfect catch unlocks saucepan; failed and partial runs never unlock it', () => {
   const g = funded();
@@ -182,9 +182,9 @@ test('frog extends coin time, pirate adds just one percentage point to x8', () =
   for (let i = 0; i < 10000; i++) if (choose(() => (i + 0.5) / 10000, true).value === 8) count++;
   assert.equal(count, 400);
 });
-test('winter hat caps loss at 85% of one tap', () => {
+test('winter hat caps loss at 75% of one tap', () => {
   const g = funded();
   g.buyHat('ushanka');
   const p = g.getState().power;
-  assert.equal(g.birdPeck().compare(p.multiply(0.85)), 0);
+  assert.equal(g.birdPeck().compare(p.multiply(0.75)), 0);
 });

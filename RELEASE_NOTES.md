@@ -1,3 +1,35 @@
+# 0.7.0 — Crisp motion, composition and economy / Чёткие позы, композиция и экономика
+
+## Русский
+
+Одно обновление: блоки 2.1 + 3.1 + 4.
+
+- Убрано долгое наложение разных поз мопса. Кадры удерживаются дольше, шапки и птицы следуют видимой позе.
+- Василий с экскаватором увеличен на 25%; корм ещё на 10%, выше и по центру; мопс ещё на 10% меньше с прежней точкой привязки.
+- Первые покупки мопса/дома требовательнее, бонусы стадий и обычных шапок заметнее. Поздний темп в сравнительной модели примерно на 11% доступнее без мини-игр; это не обещание длительности прохождения.
+- Дом/мопс покупаются по одной стадии; магазин закрывается, появляется превращение с лучами. ×1/×10/максимум остаются у копалок и Василия.
+- Главная точка магазина — только новая копалка, дом или мопс. У каждой категории своя точка; улучшения копалок показывают прибавку общей силы тапа.
+- Идеальные мини-игры: 160/240/360 обычных тапов, сила фиксируется на старте; частичный результат пропорционален. Ловля корма ограничена 30 секундами. Зайчик помогает вычёсывать, кастрюля замедляет падение, не увеличивая потолок награды.
+- Сохранены балансы, купленные уровни, коллекции, таймеры и уже отправленные экспедиции. Обновлён кэш веб-приложения; новых больших рисунков в этом выпуске нет.
+
+Проверка: 87 автоматических тестов; шесть мобильных размеров (включая 430×932), магазин/покупки, позы, касания и обновление кэша. Проверка в браузере не заменяет тест на физическом iPhone. Блоки 5–10 остаются в плане; новая система Василия и оружие здесь ещё не включены.
+
+## English
+
+One release combines blocks 2.1 + 3.1 + 4.
+
+- Crisp held pug frames replace long pose crossfades; hats and birds track the visible frame.
+- Vasiliy/excavator +25%; food another +10%, raised and centered; pug another −10%, preserving its anchor.
+- More demanding first pug/home purchases and stronger stage/ordinary-hat benefits. Comparison-model late progression is about 11% faster without mini-games, not a playtime promise.
+- Pug/home upgrades are single-step and close the shop with transformation rays. Tools/helper retain bulk buying.
+- Main badge only for a new tool, home or pug; category badges and actual total-tap upgrade gains.
+- Perfect mini-games award 160/240/360 ordinary taps using starting power; partial success scales proportionally. Catch food has a 30-second limit. Assistance hats improve the task without exceeding the payout cap.
+- Wallets, purchases, collections, cooldowns and dispatched expedition rewards survive. Updated PWA cache, no new large artwork payload.
+
+Validation: 87 automated tests, six mobile layouts including 430×932, shop flows, pose/touch checks and cache update. Browser-size testing is not a physical iPhone test. Blocks 5–10 remain planned; the new helper/weapon systems are not enabled here.
+
+---
+
 # 0.6.0 — Blocks 1–3 / Блоки 1–3
 
 - RU: разнесены счётчики комбо и бонуса; исправлена двойная голова Василия. Свайпы трёх в ряд, контрастные клетки, вертикальная сцена и пауза при повороте.

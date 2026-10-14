@@ -66,19 +66,19 @@ test('pug and home independently improve yield', () => {
   g.upgrade('pug');
   assert.equal(g.getState().pugStage, 1);
   assert.equal(g.getState().homeStage, 0);
-  assert.ok(Math.abs(g.dig().toNumber() - 1.02) < 1e-10);
+  assert.ok(Math.abs(g.dig().toNumber() - 1.08) < 1e-10);
   g.upgrade('home');
-  assert.ok(Math.abs(g.dig().toNumber() - 1.0251) < 1e-10);
+  assert.ok(Math.abs(g.dig().toNumber() - 1.1556) < 1e-10);
 });
 test('healthy purchase switches to stage 8 and survives reload', () => {
-  const g = funded(22000, { pug: 7 });
+  const g = funded(310000, { pug: 7 });
   assert.equal(g.upgrade('pug'), true);
   assert.equal(g.getState().balance.compare(0), 0);
   assert.equal(g.getState().pugStage, 8);
   assert.equal(createGame(g.serialize()).getState().pugStage, 8);
   assert.ok(g.getAchievements().find((a) => a.id === 'healthy').unlocked);
 });
-test('all v2 stages and tool purchases preserve old production and balances', () => {
+test('all v2 stages and tool purchases retain balances and never reduce old production', () => {
   const oldPug = [1, 1.04, 1.1, 1.2, 1.35, 1.6, 1.9, 2.3, 2.8, 3.5],
     oldHome = [1, 1.03, 1.08, 1.15, 1.25, 1.4, 1.6, 1.9, 2.3, 3];
   for (let pug = 0; pug < 10; pug++)
@@ -89,7 +89,7 @@ test('all v2 stages and tool purchases preserve old production and balances', ()
       assert.equal(s.pug, pug === 0 ? 0 : pug === 1 ? 2 : pug === 2 ? 4 : pug + 5);
       assert.equal(s.home, home === 0 ? 0 : home === 1 ? 4 : home === 2 ? 5 : home + 4);
       assert.ok(
-        Math.abs(PUG_BOOST[s.pug] * HOME_BOOST[s.home] - oldPug[pug] * oldHome[home]) < 1e-10,
+        PUG_BOOST[s.pug] * HOME_BOOST[s.home] >= oldPug[pug] * oldHome[home] - 1e-10,
       );
       assert.equal(s.balance.compare(98765), 0);
       assert.equal(s.levels[2], 4);
@@ -99,13 +99,13 @@ test('all v2 stages and tool purchases preserve old production and balances', ()
       assert.deepEqual(createGame(g.serialize()).serialize(), g.serialize());
     }
 });
-test('draft v3 saves map 13 pug / 12 homes once, preserving every multiplier', () => {
+test('draft v3 saves map 13 pug / 12 homes once, preserving or increasing production', () => {
   const p = [1, 1.04, 1.1, 1.12, 1.14, 1.17, 1.2, 1.35, 1.6, 1.9, 2.3, 2.8, 3.5],
     h = [1, 1.01, 1.03, 1.08, 1.11, 1.15, 1.25, 1.4, 1.6, 1.9, 2.3, 3];
   for (let pug = 0; pug < 13; pug++)
     for (let home = 0; home < 12; home++) {
       const g = funded(100, { version: 3, pug, home, levels: [1, 2, 1, 0, 0, 0, 0, 0, 0, 0] });
-      assert.ok(Math.abs(g.getState().power.toNumber() - 3 * p[pug] * h[home]) < 1e-8);
+      assert.ok(g.getState().power.toNumber() >= 3 * p[pug] * h[home] - 1e-8);
       assert.equal(g.getState().pug, pug === 0 ? 0 : pug === 1 ? 2 : pug + 2);
       assert.equal(g.getState().home, home === 0 ? 0 : home === 1 ? 2 : home + 2);
       assert.deepEqual(createGame(g.serialize()).serialize(), g.serialize());
@@ -116,12 +116,12 @@ test('legacy infinite upgrades preserve boost counts', () => {
   assert.equal(g.getState().pug, 30);
   assert.equal(g.getState().home, 32);
   assert.ok(
-    Math.abs(g.getState().power.toNumber() / (3.5 * 1.05 ** 16 * 3 * 1.04 ** 19) - 1) < 1e-10,
+    g.getState().power.toNumber() >= 3.5 * 1.05 ** 16 * 3 * 1.04 ** 19,
   );
 });
 test('trillion-priced royalty still allows further upgrades', () => {
-  assert.equal(trackPrice(13, 'pug').compare(1e12), 0);
-  assert.equal(trackPrice(12, 'home').compare(2.5e12), 0);
+  assert.equal(trackPrice(13, 'pug').compare(20e12), 0);
+  assert.equal(trackPrice(12, 'home').compare(49e12), 0);
   const g = funded(1e18, { pug: 14, home: 13 });
   assert.ok(g.upgrade('pug'));
   assert.ok(g.upgrade('home'));
@@ -174,7 +174,7 @@ test('bad saves and commands cannot corrupt currency', () => {
   assert.equal(g.dig(9).compare(0), 0);
 });
 test('fractional leftover below one persists', () => {
-  const g = funded(40.08);
+  const g = funded(110.08);
   g.upgrade('pug');
   assert.ok(Math.abs(createGame(g.serialize()).getState().balance.toNumber() - 0.08) < 1e-9);
 });
