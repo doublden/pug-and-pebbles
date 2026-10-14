@@ -13,23 +13,25 @@
     />
     <title>Мопс и камушки</title>
     <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-    <link rel="apple-touch-icon" href="icon-192.png" />
-    <link rel="stylesheet" href="style.css" />
-    <script src="game.js" defer></script>
-    <script src="icons.js" defer></script>
-    <script src="locale.js" defer></script>
-    <script src="bonuses.js" defer></script>
-    <script src="birds.js" defer></script>
-    <script src="idle.js" defer></script>
-    <script src="audio.js" defer></script>
-    <script src="sprites.js" defer></script>
-    <script src="minigames.js" defer></script>
-    <script src="extras.js" defer></script>
-    <script src="world.js" defer></script>
-    <script src="collections.js" defer></script>
-    <script src="mini-ui.js" defer></script>
-    <script src="app.js" defer></script>
+    <link rel="icon" type="image/png" href="favicon-v5.png" />
+    <link rel="apple-touch-icon" href="icon-180-v5.png" />
+    <link rel="stylesheet" href="style.css?v=0.5.0" />
+    <script src="session.js?v=0.5.0"></script>
+    <script src="combo.js?v=0.5.0"></script>
+    <script src="game.js?v=0.5.0" defer></script>
+    <script src="icons.js?v=0.5.0" defer></script>
+    <script src="locale.js?v=0.5.0" defer></script>
+    <script src="bonuses.js?v=0.5.0" defer></script>
+    <script src="birds.js?v=0.5.0" defer></script>
+    <script src="idle.js?v=0.5.0" defer></script>
+    <script src="audio.js?v=0.5.0" defer></script>
+    <script src="sprites.js?v=0.5.0" defer></script>
+    <script src="minigames.js?v=0.5.0" defer></script>
+    <script src="extras.js?v=0.5.0" defer></script>
+    <script src="world.js?v=0.5.0" defer></script>
+    <script src="collections.js?v=0.5.0" defer></script>
+    <script src="mini-ui.js?v=0.5.0" defer></script>
+    <script src="app.js?v=0.5.0" defer></script>
   </head>
   <body>
     <main id="app" class="app-shell">
@@ -72,6 +74,9 @@
         <canvas id="bird-canvas" class="bird-face" aria-hidden="true"></canvas>
       </button>
       <p class="tap-hint" id="tap-hint">Нажимай на камушки</p>
+      <div id="combo-indicator" class="combo-indicator" hidden>
+        <strong id="combo-rate"></strong><span id="combo-caption"></span>
+      </div>
       <div class="bottom-hud">
         <div class="scene-labels">
           <span id="pug-label">Чумазый мопс</span><span id="home-label">Свалка</span>
@@ -82,7 +87,11 @@
             <div><span id="equipped-name">Лапа</span><strong id="click-power">+1</strong></div>
           </div>
           <button id="minigames-open" class="round-button games-button" aria-label="Мини-игры">
-            ♧</button
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M7 7h10c3 0 5 10 3 11-1 1-4-3-5-3H9c-1 0-4 4-5 3C2 17 4 7 7 7Z M7 10v5 M4.5 12.5h5 M15 11h.1 M18 14h.1"
+              />
+            </svg></button
           ><button id="shop-open" class="shop-button">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M5 8h14l1 13H4zM8 8V6a4 4 0 0 1 8 0v2" /></svg
@@ -151,6 +160,14 @@
         ><button data-tab="hats" aria-pressed="false" id="tab-hats">Шляпы</button
         ><button data-tab="helper" aria-pressed="false" id="tab-helper">Василий</button>
       </nav>
+      <div class="shop-options">
+        <label id="bulk-label"></label>
+        <div id="bulk-options">
+          <button data-bulk="1" class="selected">×1</button><button data-bulk="10">×10</button
+          ><button data-bulk="max" id="bulk-max"></button>
+        </div>
+      </div>
+      <div id="nearest-goal" class="nearest-goal"></div>
       <div class="shop-content" id="shop-content"></div>
       <p class="shop-footnote" id="shop-footnote">Каждые 25 уровней инструмента — двойная сила</p>
       <div class="save-note" id="save-note">Прогресс сохраняется на этом устройстве</div>
@@ -201,8 +218,15 @@
         <button class="setting-action danger" id="reset-open" data-i18n="reset">
           Начать заново
         </button>
+        <button class="setting-action" id="sound-test" data-i18n="soundTest"></button
+        ><a
+          class="settings-note"
+          href="AUDIO_CREDITS.md"
+          target="_blank"
+          data-i18n="audioCredits"
+        ></a>
         <p id="settings-save-note" class="settings-note">Всё сохраняется автоматически</p>
-        <p class="version-note">Pug & Pebbles · 0.4.1</p>
+        <p class="version-note">Pug & Pebbles · 0.5.0</p>
       </div>
     </dialog>
     <dialog id="achievements-dialog" class="sheet awards-sheet" aria-labelledby="awards-title">
@@ -366,6 +390,8 @@
     <dialog id="newlife-dialog" class="sheet confirmation-sheet" aria-labelledby="newlife-title">
       <header class="sheet-header"><h1 id="newlife-title" data-i18n="newLife"></h1></header>
       <p id="newlife-copy"></p>
+      <button id="newlife-proceed" class="setting-action" data-i18n="lifeProceed"></button>
+      <p id="newlife-warning" hidden></p>
       <div class="confirmation-actions">
         <button id="newlife-cancel" class="setting-action" data-i18n="cancel"></button
         ><button id="newlife-confirm" class="setting-action" data-i18n="newLifeConfirm"></button>

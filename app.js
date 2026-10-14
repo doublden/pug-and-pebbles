@@ -2,14 +2,17 @@
   'use strict';
   const $ = (id) => document.getElementById(id),
     KEY = 'pug-and-pebbles-v2',
-    BACKUP = 'pug-and-pebbles-v4-backup',
-    LEGACY_BACKUP = 'pug-and-pebbles-v3-backup',
-    VERSION = '0.4.1',
+    BACKUP = 'pug-and-pebbles-v5-backup',
+    LEGACY_BACKUP = 'pug-and-pebbles-v4-backup',
+    OLDER_BACKUP = 'pug-and-pebbles-v3-backup',
+    VERSION = '0.5.0',
     SHARE_URL = 'https://doublden.github.io/pug-and-pebbles/?v=' + VERSION,
     instance = Math.random().toString(36).slice(2) + Date.now();
+  const session = PugSession.create(localStorage, 'pug-and-pebbles-session-v5', instance);
+  session.claim();
   function readEnvelope() {
     const candidates = [];
-    for (const key of [KEY, BACKUP, LEGACY_BACKUP])
+    for (const key of [KEY, BACKUP, LEGACY_BACKUP, OLDER_BACKUP])
       try {
         const e = JSON.parse(localStorage.getItem(key) || 'null');
         if (e?.game && PugGame.createGame(e.game).restoreStatus !== 'invalid') candidates.push(e);
@@ -40,6 +43,8 @@
   }
   const sound = new PugSound(),
     world = new PugWorld($('world'), sound, $('slobber'));
+  const combo = PugCombo.create();
+  let bulkMode = 1;
   let tab = 'tools',
     loaded = false,
     coinReady = false,
@@ -54,17 +59,25 @@
     eventSpeed = 1,
     lastTick = performance.now(),
     lastHud = 0,
+    lastWork = 0,
     fartRemaining = 120000 + Math.random() * 120000,
     bonusState = { coin: null, multiplier: 1, seconds: 0 },
     hasUnread = false,
     revealFrom = null;
-  const collections = new PugCollections({ getGame: () => game, words: () => t(), world, format });
+  const collections = new PugCollections({
+    getGame: () => game,
+    words: () => t(),
+    world,
+    format,
+    bulk: () => bulkMode,
+  });
   const miniUI = new PugMiniUI({
     getGame: () => game,
     words: () => t(),
     world,
     format,
     sound,
+    isActive: () => session.owns(),
     changed: () => {
       earned();
       render();
@@ -107,6 +120,7 @@
   function adopt(e) {
     envelope = e;
     revision = e.revision || 0;
+    if (miniUI.active) miniUI.close(false);
     game = PugGame.createGame(e.game);
     settings = cleanSettings(e.settings);
     translate();
@@ -115,6 +129,7 @@
   function persist() {
     clearTimeout(saveTimer);
     saveTimer = null;
+    if (!session.owns()) return;
     try {
       const latest = readEnvelope();
       if ((latest.revision || 0) > revision && latest.instance !== instance) {
@@ -123,7 +138,7 @@
         return;
       }
       const e = {
-        version: 5,
+        version: 6,
         release: VERSION,
         revision: revision + 1,
         instance,
@@ -178,7 +193,14 @@
     $('equipped-icon').innerHTML = PugIcons[PugGame.TOOLS[s.tool].key];
     $('equipped-name').textContent = t().toolNames[s.tool];
     $('click-power').textContent =
-      '+' + format(s.power.multiply(bonusState.multiplier * (developerUnlocked ? devTap : 1)));
+      '+' +
+      format(
+        s.power.multiply(
+          bonusState.multiplier *
+            combo.status(performance.now()).multiplier *
+            (developerUnlocked ? devTap : 1),
+        ),
+      );
     $('pug-label').textContent = stageName('pug', s.pug);
     $('home-label').textContent = stageName('home', s.home);
     $('tap-hint').hidden = s.clicks >= 5;
@@ -191,7 +213,7 @@
       ': +' +
       ((s.lifeBoost - 1) * 100).toFixed(2) +
       '%';
-    $('newlife-open').disabled = !game.canNewLife();
+    $('newlife-open').disabled = false;
     $('newlife-open').title = game.canNewLife() ? '' : t().lifeLocked;
     document.body.dataset.gold = String(s.homeStage === 13);
     $('test-chip').hidden = !s.testMode;
@@ -261,6 +283,20 @@
     render();
   }
   function renderShop(rebuild) {
+    $('bulk-label').textContent = t().quantity;
+    $('bulk-max').textContent = t().maximum;
+    $('shop-options')?.setAttribute('aria-label', t().quantity);
+    document.querySelector('.shop-options').hidden = tab === 'hats';
+    const current = game.getState(),
+      goals = ['pug', 'home', ...(current.pug >= 4 ? ['helper'] : [])].map((kind) => ({
+        kind,
+        cost: kind === 'helper' ? game.getHelperPrice() : game.getTrackPrice(kind),
+      }));
+    goals.sort((a, b) => a.cost.compare(b.cost));
+    const goal = goals[0],
+      name = goal.kind === 'helper' ? t().helper : stageName(goal.kind, current[goal.kind] + 1);
+    $('nearest-goal').innerHTML =
+      `<span>${t().nearestGoal}: <strong>${name}</strong></span><div class="track-progress"><span style="width:${current.balance.ratio(goal.cost) * 100}%"></span></div><small>${current.balance.compare(goal.cost) >= 0 ? t().ready : t().remaining + ': ' + format(goal.cost.subtract(current.balance))}</small>`;
     const s = game.getState(),
       w = t(),
       content = $('shop-content');
@@ -282,33 +318,35 @@
           '</div>';
       for (let i = 1; i < PugGame.TOOLS.length; i++) {
         const lv = s.levels[i],
-          cost = game.getToolPrice(i),
+          quote = game.quote('tool', i, bulkMode),
+          cost = quote.count ? quote.cost : game.getToolPrice(i),
           locked = i > 1 && !s.levels[i - 1];
         $('tool-card-' + i).className = 'tool-card' + (locked ? ' locked' : lv ? ' owned' : '');
         $('tool-level-' + i).textContent = locked ? w.locked : lv ? `${w.level} ${lv}` : '';
-        const next = game.getToolPower(i, Math.max(1, lv + 1));
+        const next = game.getToolPower(i, Math.max(1, lv + quote.count));
         $('tool-production-' + i).textContent =
           `${lv ? format(game.getToolPower(i)) + ' → ' : '+'}${format(next)} ${w.perTap}`;
         $('tool-price-' + i).textContent = format(cost);
-        $('tool-action-' + i).textContent = lv ? w.improve : w.buy;
+        $('tool-action-' + i).textContent = (lv ? w.improve : w.buy) + ' ×' + quote.count;
         const b = $('buy-tool-' + i);
-        b.disabled = locked || s.balance.compare(cost) < 0;
+        b.disabled = locked || !quote.count || s.balance.compare(cost) < 0;
         b.ariaLabel = `${lv ? w.improve : w.buy}: ${w.toolNames[i]}, ${format(cost)} ${w.currency}`;
       }
     } else {
       const lv = s[tab],
         last = t()[tab === 'pug' ? 'pugNames' : 'homeNames'].length - 1,
         stage = Math.min(last, lv + 1),
-        cost = game.getTrackPrice(tab);
+        quote = game.quote(tab, 0, bulkMode),
+        cost = quote.count ? quote.cost : game.getTrackPrice(tab);
       if (rebuild || !$('upgrade-' + tab))
         content.innerHTML = `<article class="track-card"><p class="track-current">${w.current}: <strong id="track-current-name"></strong></p><div class="track-preview"><canvas id="track-canvas" aria-hidden="true"></canvas><span class="track-badge">${w.next}</span></div><div class="track-heading"><h2 id="track-name"></h2><span class="track-level" id="track-level"></span></div><p class="track-caption" id="track-caption"></p><div class="track-benefits"><span>${w.benefit}</span><strong id="track-boost"></strong></div><button class="purchase-button" id="upgrade-${tab}" data-upgrade="${tab}"><span>${w.improve}</span><span class="purchase-price"><span class="kibble" aria-hidden="true"></span><span id="track-price"></span></span></button><div class="track-progress"><span id="track-progress-fill"></span></div><p class="track-remaining" id="track-remaining"></p><div class="stage-dots" id="stage-dots" aria-hidden="true"></div></article>`;
       $('track-current-name').textContent = stageName(tab, lv);
-      $('track-name').textContent = stageName(tab, lv + 1);
-      $('track-level').textContent = `${w.level} ${lv} → ${lv + 1}`;
+      $('track-name').textContent = stageName(tab, lv + Math.max(1, quote.count));
+      $('track-level').textContent = `${w.level} ${lv} → ${lv + quote.count}`;
       $('track-caption').textContent = lv < last ? w.trackCaption : w.infinite;
       $('track-boost').textContent = '+' + (game.getTrackGain(tab) * 100).toFixed(1) + '%';
       $('track-price').textContent = format(cost);
-      $('upgrade-' + tab).disabled = s.balance.compare(cost) < 0;
+      $('upgrade-' + tab).disabled = !quote.count || s.balance.compare(cost) < 0;
       $('track-progress-fill').style.width = s.balance.ratio(cost) * 100 + '%';
       $('track-remaining').textContent =
         s.balance.compare(cost) >= 0
@@ -349,6 +387,33 @@
     }
     if (id === 'developer-dialog') renderDev();
   }
+  $('bulk-options').onclick = (e) => {
+    const b = e.target.closest('[data-bulk]');
+    if (!b) return;
+    bulkMode = b.dataset.bulk === 'max' ? 'max' : Number(b.dataset.bulk);
+    for (const el of document.querySelectorAll('[data-bulk]'))
+      el.classList.toggle('selected', el === b);
+    renderShop(true);
+  };
+  $('sound-test').onclick = () => {
+    sound.unlock();
+    sound.play('sneeze');
+    setTimeout(() => sound.play('fart', Math.floor(Math.random() * 4)), 650);
+    setTimeout(() => sound.play('pet'), 2100);
+  };
+  // Resume audio synchronously inside every trusted first-touch gesture (including tutorial).
+  document.addEventListener(
+    'pointerdown',
+    () => {
+      if (!session.owns()) {
+        session.claim(true);
+        const latest = readEnvelope();
+        if ((latest.revision || 0) > revision) adopt(latest);
+      }
+      sound.unlock();
+    },
+    { capture: true, passive: true },
+  );
   $('shop-open').onclick = () => open('shop-dialog');
   $('settings-open').onclick = () => open('settings-dialog');
   $('achievements-open').onclick = () => open('achievements-dialog');
@@ -393,13 +458,21 @@
         : game.buyHat(b.dataset.hat);
     }
     if (b.dataset.hatRemove) bought = game.equipHat(null);
-    if (b.dataset.helper) bought = game.buyHelper();
-    if (b.dataset.tool) bought = game.buyTool(Number(b.dataset.tool));
-    if (kind) bought = game.upgrade(kind);
+    if (b.dataset.expedition) {
+      bought = game.sendExpedition(Number(b.dataset.expedition));
+    }
+    if (b.dataset.collect) {
+      bought = game.claimExpedition().m > 0;
+    }
+    if (b.dataset.helper) bought = game.buyBulk('helper', 0, bulkMode);
+    if (b.dataset.tool) bought = game.buyBulk('tool', Number(b.dataset.tool), bulkMode);
+    if (kind) bought = game.buyBulk(kind, 0, bulkMode);
     if (bought) {
       if (kind && !revealFrom) revealFrom = before;
       sound.unlock();
       sound.play('buy');
+      if (kind === 'pug') sound.play('pet');
+      if (b.dataset.helper) world.extras.react(performance.now());
       render();
       earned();
       persist();
@@ -445,7 +518,10 @@
     if (!loaded || modalOpen()) return;
     sound.unlock();
     const s = game.getState(),
-      amount = game.dig(bonusState.multiplier * (developerUnlocked ? devTap : 1));
+      amount = game.dig(
+        bonusState.multiplier * (developerUnlocked ? devTap : 1),
+        combo.tap(performance.now()).multiplier,
+      );
     world.dig(PugGame.TOOLS[s.tool].key, '+' + format(amount), x, y);
     sound.play('dig');
     earned();
@@ -462,7 +538,7 @@
   }
   $('food-hit').addEventListener('pointerdown', (e) => {
     if (e.button !== 0 || modalOpen()) return;
-    if (world.hitPug(e.clientX, e.clientY)) sneeze();
+    if (world.hitPug(e.clientX, e.clientY) && !world.hitHelper(e.clientX, e.clientY)) sneeze();
     else dig(e.clientX, e.clientY);
   });
   $('food-hit').onclick = (e) => {
@@ -473,11 +549,12 @@
   };
   $('world').addEventListener('pointerdown', (e) => {
     if (e.button !== 0 || modalOpen()) return;
-    if (world.hitPug(e.clientX, e.clientY)) {
+    if (world.hitPug(e.clientX, e.clientY) && !world.hitHelper(e.clientX, e.clientY)) {
       sneeze();
       return;
     }
-    if (world.hitFood(e.clientX, e.clientY)) dig(e.clientX, e.clientY);
+    if (world.hitFood(e.clientX, e.clientY) || world.hitHelper(e.clientX, e.clientY))
+      dig(e.clientX, e.clientY);
   });
   $('world').addEventListener('keydown', (e) => {
     if (e.code === 'Space' || e.code === 'Enter') {
@@ -558,13 +635,23 @@
     }
   }
   function tick(now) {
+    requestAnimationFrame(tick);
     miniUI.tick(now);
+    const frameState = game.getState();
+    const speed = combo.status(now);
+    $('combo-indicator').hidden = !speed.rate || modalOpen();
+    $('combo-indicator').dataset.tier = speed.tier;
+    $('combo-rate').textContent = speed.rate;
+    $('combo-caption').textContent =
+      t().combo + (speed.tier ? ' +' + Math.round((speed.multiplier - 1) * 100) + '%' : '');
     const delta = Math.max(0, now - lastTick);
     lastTick = now;
-    const playing = loaded && !document.hidden && !modalOpen();
+    const owner = session.owns();
+    if (owner && !document.hidden) session.heartbeat();
+    const playing = owner && loaded && !document.hidden && !modalOpen();
     bonusState = runner.tick(
       delta,
-      playing && coinReady && (game.getState().clicks >= 10 || game.getState().testMode),
+      playing && coinReady && (frameState.clicks >= 10 || frameState.testMode),
       innerWidth,
       innerHeight,
     );
@@ -586,7 +673,7 @@
     $('bonus-seconds').textContent = bonusState.seconds + 's';
     runner.configure({
       longBonus: game.hatEffect('bonusTime') > 1,
-      rareCoin: game.hatEffect('rareCoin') === 1 && game.getState().hat === 'pirate',
+      rareCoin: game.hatEffect('rareCoin') === 1 && frameState.hat === 'pirate',
     });
     birdRunner.configure({ slowPeck: game.hatEffect('peckTime') > 1 });
     tickBirds(delta, playing);
@@ -596,21 +683,25 @@
     if (
       idle.event &&
       idle.event.elapsed >= idle.event.duration * 0.9 &&
-      !game.getState().idleSeen.includes(idle.event.kind)
+      !frameState.idleSeen.includes(idle.event.kind)
     ) {
       game.seeIdle(idle.event.kind);
       earned();
       dirty();
     }
     if (
+      owner &&
       loaded &&
       !document.hidden &&
       (!modalOpen() || $('shop-dialog').open) &&
-      game.getState().helper
+      frameState.helper
     ) {
-      game.work(Math.min(delta, 1000) / 1000);
-      dirty();
-    }
+      if (now - lastWork >= 100) {
+        game.work(Math.min(now - lastWork, 1000) / 1000);
+        lastWork = now;
+        dirty();
+      }
+    } else lastWork = now;
     if (playing) {
       fartRemaining -= Math.min(delta, 1000) * eventSpeed;
       if (fartRemaining <= 0) {
@@ -631,7 +722,6 @@
       }
       render();
     }
-    requestAnimationFrame(tick);
   }
   function renderTutorial() {
     const w = t();
@@ -702,6 +792,25 @@
   });
   $('reset-confirm').onclick = () => {
     game = PugGame.createGame();
+    combo.reset();
+    revealFrom = null;
+    world.transition = null;
+    world.hasState = false;
+    world.pose = 'idle';
+    world.poseEnd = 0;
+    world.nextPose = performance.now() + 6000;
+    world.returning = null;
+    world.hit = null;
+    world.sneezeAt = -1000;
+    tab = 'tools';
+    bulkMode = 1;
+    for (const b of document.querySelectorAll('[data-tab]')) {
+      const selected = b.dataset.tab === tab;
+      b.classList.toggle('selected', selected);
+      b.setAttribute('aria-pressed', String(selected));
+    }
+    for (const b of document.querySelectorAll('[data-bulk]'))
+      b.classList.toggle('selected', b.dataset.bulk === '1');
     runner = PugBonuses.create();
     birdRunner = PugBirds.create();
     idleRunner = PugIdle.create();
@@ -826,14 +935,38 @@
     render();
   };
   $('newlife-open').onclick = () => {
-    if (!game.canNewLife()) return;
     $('settings-dialog').close();
+    const s = game.getState(),
+      next = PugGame.newLifeBoost(s.lives + 1),
+      delta = (next / s.lifeBoost - 1) * 100;
     $('newlife-copy').textContent =
+      t().lifeAbout +
+      ' ' +
+      t().lifeNext +
+      ': +' +
+      ((next - 1) * 100).toFixed(2) +
+      '% (+' +
+      delta.toFixed(2) +
+      '% ' +
+      t().benefit +
+      ').';
+    $('newlife-proceed').hidden = false;
+    $('newlife-proceed').disabled = !game.canNewLife();
+    $('newlife-proceed').textContent = game.canNewLife() ? t().lifeProceed : t().lifeLocked;
+    $('newlife-confirm').hidden = true;
+    $('newlife-warning').hidden = true;
+    $('newlife-dialog').showModal();
+  };
+  $('newlife-proceed').onclick = () => {
+    if (!game.canNewLife()) return;
+    $('newlife-warning').hidden = false;
+    $('newlife-warning').textContent =
       t().lifeConfirm +
       '+' +
       ((PugGame.newLifeBoost(game.getState().lives + 1) - 1) * 100).toFixed(2) +
       '%';
-    $('newlife-dialog').showModal();
+    $('newlife-proceed').hidden = true;
+    $('newlife-confirm').hidden = false;
   };
   $('newlife-cancel').onclick = () => {
     $('newlife-dialog').close();
@@ -841,6 +974,14 @@
   };
   $('newlife-confirm').onclick = () => {
     if (!game.newLife()) return;
+    world.hasState = false;
+    world.pose = 'idle';
+    world.poseEnd = 0;
+    world.nextPose = performance.now() + 6000;
+    world.returning = null;
+    world.hit = null;
+    combo.reset();
+    revealFrom = null;
     runner = PugBonuses.create();
     birdRunner = PugBirds.create();
     idleRunner = PugIdle.create();
@@ -896,9 +1037,13 @@
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) persist();
     lastTick = performance.now();
+    lastWork = lastTick;
+    combo.reset();
+    idleRunner.touch();
+    world.setIdle(null);
   });
   addEventListener('storage', (e) => {
-    if (e.key === KEY || e.key === BACKUP || e.key === LEGACY_BACKUP) {
+    if (e.key === KEY || e.key === BACKUP || e.key === LEGACY_BACKUP || e.key === OLDER_BACKUP) {
       const latest = readEnvelope();
       if ((latest.revision || 0) > revision && latest.instance !== instance) {
         adopt(latest);
@@ -910,10 +1055,10 @@
   translate();
   const birdImage = new Image();
   birdImage.onload = () => (birdReady = true);
-  birdImage.src = 'birds-v3.webp';
+  birdImage.src = 'birds-mobile-v5.webp';
   const coinImage = new Image();
   coinImage.onload = () => (coinReady = true);
-  coinImage.src = 'pet-coins-v3.webp';
+  coinImage.src = 'pet-coins-mobile-v5.webp';
   world
     .load((percent) => {
       $('loading-percent').textContent = percent + '%';
@@ -925,12 +1070,16 @@
       $('loading').hidden = true;
       persist();
       if (!settings.tutorialDone) showTutorial();
-      if ('serviceWorker' in navigator)
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('controllerchange', () =>
+          navigator.serviceWorker.controller?.postMessage({ type: 'WARM' }),
+        );
         navigator.serviceWorker
-          .register('sw.js')
+          .register('sw.js', { updateViaCache: 'none' })
           .then(() => navigator.serviceWorker.ready)
           .then((reg) => reg.active?.postMessage({ type: 'WARM' }))
           .catch(() => {});
+      }
       requestAnimationFrame(tick);
     })
     .catch(() => {

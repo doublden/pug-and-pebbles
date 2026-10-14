@@ -1042,7 +1042,7 @@ body[data-gold='true'] .kibble {
 .coin-face {
   position: absolute;
   inset: 0;
-  background-image: url('pet-coins-v3.webp');
+  background-image: url('pet-coins-mobile-v5.webp');
   background-size: 300% 200%;
   border-radius: 50%;
 }
@@ -1218,7 +1218,7 @@ body[data-gold='true'] .kibble {
 .tutorial-visual .intro-pug {
   width: 155px;
   height: 155px;
-  background-image: url('pug-idle-v3.webp');
+  background-image: url('pug-idle-mobile-v5.webp');
   background-size: 400% 400%;
   background-position: 0 0;
 }
@@ -1229,7 +1229,7 @@ body[data-gold='true'] .kibble {
 .tutorial-visual .intro-coin {
   width: 130px;
   height: 130px;
-  background: url('pet-coins-v3.webp') 0 0/300% 200%;
+  background: url('pet-coins-mobile-v5.webp') 0 0/300% 200%;
   border-radius: 50%;
   position: relative;
 }
@@ -1598,7 +1598,7 @@ body[data-gold='true'] .kibble {
 .bird-face {
   position: absolute;
   inset: 0;
-  background: url('birds-v3.webp') 0 0/400% 600%;
+  background: url('birds-mobile-v5.webp') 0 0/400% 600%;
   pointer-events: none;
 }
 .bird:focus-visible {
@@ -1609,7 +1609,7 @@ body[data-gold='true'] .kibble {
 .intro-bird {
   width: 120px;
   height: 120px;
-  background: url('birds-v3.webp') 0 20%/400% 600%;
+  background: url('birds-mobile-v5.webp') 0 20%/400% 600%;
 }
 
 canvas.bird-face {
@@ -1899,4 +1899,137 @@ canvas.bird-face {
   .shop-tabs button {
     flex-basis: 48px;
   }
+}
+
+/* v5: compact touch-first progression controls */
+.shop-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 20px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+#bulk-options {
+  display: flex;
+  gap: 4px;
+}
+#bulk-options button {
+  min-height: 44px;
+  padding: 7px 10px;
+  border: 1px solid #bcb8a4;
+  border-radius: 12px;
+  background: #eeecdf;
+  color: #454534;
+}
+#bulk-options button.selected {
+  background: #465743;
+  color: white;
+}
+.nearest-goal {
+  margin: 0 20px 8px;
+  font-size: 12px;
+}
+.nearest-goal .track-progress {
+  margin: 5px 0;
+  height: 5px;
+}
+.nearest-goal small {
+  color: #6d705c;
+}
+.combo-indicator {
+  position: fixed;
+  z-index: 3;
+  top: calc(env(safe-area-inset-top) + 105px);
+  left: 20px;
+  background: #f8f2e7dd;
+  padding: 6px 10px;
+  border-radius: 14px;
+  color: #7e5238;
+  font-size: 12px;
+  pointer-events: none;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.combo-indicator strong {
+  font-size: 21px;
+}
+.combo-indicator[data-tier='1'] {
+  color: #b73529;
+}
+.combo-indicator[data-tier='2'] {
+  color: #a46f00;
+  background: #fff0b8ed;
+}
+.combo-indicator[data-tier='3'] {
+  color: #fdcf49;
+  background: #562a1dea;
+  text-shadow: 0 0 8px #f36f17;
+  animation: combo-glow 0.35s ease-in-out infinite alternate;
+}
+@keyframes combo-glow {
+  to {
+    box-shadow: 0 0 14px #e88722;
+    transform: scale(1.025);
+  }
+}
+.games-button svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mini-art {
+  height: 76px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ddd6ad, #c6d3af);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  margin-bottom: 8px;
+}
+#expeditions {
+  margin-top: 18px;
+  border-top: 1px solid #c6c9b8;
+  padding-top: 12px;
+}
+#expeditions .setting-action {
+  margin-top: 8px;
+}
+#newlife-warning {
+  padding: 15px;
+  color: #704139;
+  background: #f2e0d7;
+  border-radius: 12px;
+}
+@media (max-width: 360px) {
+  .shop-options {
+    padding: 6px 12px;
+    flex-wrap: wrap;
+  }
+  .nearest-goal {
+    margin: 0 12px 6px;
+  }
+  .combo-indicator {
+    left: 12px;
+    top: calc(env(safe-area-inset-top) + 95px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .combo-indicator {
+    animation: none;
+  }
+}
+
+canvas.mini-art {
+  width: 100%;
+  height: 110px;
+  object-fit: contain;
+  background: #dce3ca;
 }

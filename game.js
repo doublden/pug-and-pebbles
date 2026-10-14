@@ -206,13 +206,15 @@
         idleSeen: [],
         brushWins: 0,
         catchWins: 0,
-        miniNext: { brush: 0, catch: 0 },
+        miniNext: { brush: 0, catch: 0, match: 0 },
+        matchWins: 0,
+        expedition: null,
       },
       restoreStatus = 'new';
     const safeCount = (v) => (Number.isSafeInteger(v) && v >= 0 ? v : 0);
     if (saved) {
       restoreStatus = 'invalid';
-      if ([2, 3, 4, 5].includes(saved.version))
+      if ([2, 3, 4, 5, 6].includes(saved.version))
         try {
           const balance = Amount.from(saved.balance),
             total = Amount.from(saved.total);
@@ -285,9 +287,22 @@
             idleSeen: array(saved.idleSeen, IDLE_KINDS),
             brushWins: safeCount(saved.brushWins),
             catchWins: safeCount(saved.catchWins),
+            matchWins: safeCount(saved.matchWins),
+            expedition:
+              saved.expedition &&
+              [900, 3600, 10800].includes(saved.expedition.duration) &&
+              Number.isSafeInteger(saved.expedition.ends) &&
+              saved.expedition.ends >= 0
+                ? {
+                    duration: saved.expedition.duration,
+                    ends: saved.expedition.ends,
+                    reward: Amount.from(saved.expedition.reward),
+                  }
+                : null,
             miniNext: {
               brush: safeCount(saved.miniNext?.brush),
               catch: safeCount(saved.miniNext?.catch),
+              match: safeCount(saved.miniNext?.match),
             },
           });
           restoreStatus = legacy ? 'migrated' : 'restored';
@@ -348,6 +363,96 @@
       state.balance = state.balance.subtract(cost);
       return true;
     };
+    const bulkCost = (kind, index, count) => {
+      let level = kind === 'tool' ? state.levels[index] : state[kind],
+        total = new Amount();
+      const next = (lv) =>
+        kind === 'tool'
+          ? toolPrice(index, lv)
+          : kind === 'helper'
+            ? price(500, lv, 1.35).multiply(hatEffect('helperPrice'))
+            : trackPrice(lv, kind);
+      while (count && next(level).e < 12) {
+        total = total.add(next(level++));
+        count--;
+      }
+      // Finite visual track prices are not geometric; consume those first.
+      const end = kind === 'pug' ? PUG_COSTS.length : kind === 'home' ? HOME_COSTS.length : 0;
+      while (count && level < end) {
+        total = total.add(next(level++));
+        count--;
+      }
+      if (count) {
+        const first = next(level),
+          growth =
+            kind === 'tool'
+              ? TOOLS[index].growth
+              : kind === 'helper'
+                ? 1.35
+                : kind === 'pug'
+                  ? 2.8
+                  : 3.1;
+        const log = count * Math.log10(growth);
+        const factorLog =
+          log > 15
+            ? log - Math.log10(growth - 1)
+            : Math.log10(Math.expm1(count * Math.log(growth)) / (growth - 1));
+        total = total.add(Amount.log(Math.log10(first.m) + first.e + factorLog));
+      }
+      return total;
+    };
+    const quoteCache = new Map();
+    const quote = (kind, index = 0, mode = 1) => {
+      if (
+        !['tool', 'pug', 'home', 'helper'].includes(kind) ||
+        (kind === 'tool' && (!Number.isInteger(index) || index < 1 || index >= TOOLS.length))
+      )
+        return { count: 0, cost: new Amount() };
+      const lv = kind === 'tool' ? state.levels[index] : state[kind],
+        locked =
+          kind === 'tool'
+            ? index > 1 && !state.levels[index - 1]
+            : kind === 'helper'
+              ? state.pug < 4
+              : false;
+      if (lv >= MAX_LEVEL) return { count: 0, cost: new Amount() };
+      if (locked) {
+        const count = mode === 10 ? 10 : 1;
+        return { count, cost: bulkCost(kind, index, count), locked: true };
+      }
+      const cacheKey = kind + '-' + index + '-' + mode,
+        cached = quoteCache.get(cacheKey);
+      if (
+        cached &&
+        cached.level === lv &&
+        cached.hat === state.hat &&
+        (mode !== 'max' ||
+          (cached.q.cost.compare(state.balance) <= 0 && cached.next.compare(state.balance) > 0))
+      )
+        return cached.q;
+      let count;
+      if (mode === 'max') {
+        let lo = 0,
+          hi = MAX_LEVEL - lv;
+        while (lo < hi) {
+          const mid = Math.ceil((lo + hi) / 2);
+          if (bulkCost(kind, index, mid).compare(state.balance) <= 0) lo = mid;
+          else hi = mid - 1;
+        }
+        count = lo;
+      } else count = Math.min(mode === 10 ? 10 : 1, MAX_LEVEL - lv);
+      const q = Object.freeze({ count, cost: bulkCost(kind, index, count) });
+      quoteCache.set(cacheKey, {
+        level: lv,
+        hat: state.hat,
+        q,
+        next:
+          mode === 'max' && lv + count < MAX_LEVEL
+            ? bulkCost(kind, index, count + 1)
+            : Amount.log(1e8),
+      });
+      return q;
+    };
     return Object.freeze({
       restoreStatus,
       getState() {
@@ -356,6 +461,7 @@
           hats: [...state.hats],
           idleSeen: [...state.idleSeen],
           miniNext: { ...state.miniNext },
+          expedition: state.expedition ? { ...state.expedition } : null,
           helperRate: helperRate(),
           lifeBoost: newLifeBoost(state.lives),
           levels: [...state.levels],
@@ -369,13 +475,14 @@
       serialize() {
         return {
           ...state,
-          version: 5,
+          version: 6,
           balance: state.balance.toJSON(),
           total: state.total.toJSON(),
           helperTotal: state.helperTotal.toJSON(),
           hats: [...state.hats],
           idleSeen: [...state.idleSeen],
           miniNext: { ...state.miniNext },
+          expedition: state.expedition ? { ...state.expedition } : null,
           levels: [...state.levels],
           achievements: [...state.achievements],
         };
@@ -407,14 +514,17 @@
         pending = [];
         return ids;
       },
-      dig(multiplier = 1) {
+      dig(multiplier = 1, combo = 1) {
         if (
           !Number.isFinite(multiplier) ||
           multiplier < 1 ||
-          multiplier > (state.testMode ? 800 : 8)
+          multiplier > (state.testMode ? 800 : 8) ||
+          !Number.isFinite(combo) ||
+          combo < 1 ||
+          combo > 1.2
         )
           return new Amount();
-        const amount = power().multiply(multiplier);
+        const amount = power().multiply(multiplier * combo);
         credit(amount);
         state.clicks = Math.min(Number.MAX_SAFE_INTEGER, state.clicks + 1);
         checkAchievements();
@@ -465,7 +575,7 @@
       },
       devMiniReady() {
         state.testMode = true;
-        state.miniNext = { brush: 0, catch: 0 };
+        state.miniNext = { brush: 0, catch: 0, match: 0 };
         miniTicket = null;
       },
       devTool(index, level) {
@@ -509,6 +619,36 @@
         state.hat = id;
         return true;
       },
+      quote,
+      buyBulk(kind, index = 0, mode = 1) {
+        const q = quote(kind, index, mode);
+        if (q.locked || !q.count || !spend(q.cost)) return 0;
+        if (kind === 'tool') state.levels[index] += q.count;
+        else state[kind] += q.count;
+        checkAchievements();
+        return q.count;
+      },
+      expeditionOffer(duration) {
+        if (![900, 3600, 10800].includes(duration)) return null;
+        // 15–25% above the passive production sacrificed. Snapshot excludes later upgrades.
+        return helperRate().multiply(duration * { 900: 1.15, 3600: 1.2, 10800: 1.25 }[duration]);
+      },
+      sendExpedition(duration, now = Date.now()) {
+        if (!state.helper || state.expedition || !Number.isSafeInteger(now) || now < 0)
+          return false;
+        const reward = this.expeditionOffer(duration);
+        if (!reward) return false;
+        state.expedition = { duration, ends: now + duration * 1000, reward };
+        return true;
+      },
+      claimExpedition(now = Date.now()) {
+        if (!state.expedition || !Number.isSafeInteger(now) || now < state.expedition.ends)
+          return new Amount();
+        const amount = state.expedition.reward;
+        state.expedition = null;
+        credit(amount);
+        return amount;
+      },
       getHelperPrice: helperPrice,
       buyHelper() {
         if (state.pug < 4 || state.helper >= MAX_LEVEL || !spend(helperPrice())) return false;
@@ -517,7 +657,7 @@
         return true;
       },
       work(seconds) {
-        if (!Number.isFinite(seconds) || seconds <= 0) return new Amount();
+        if (state.expedition || !Number.isFinite(seconds) || seconds <= 0) return new Amount();
         const amount = helperRate().multiply(Math.min(seconds, 1));
         credit(amount);
         state.helperTotal = state.helperTotal.add(amount);
@@ -547,7 +687,9 @@
           idleSeen: [...state.idleSeen],
           brushWins: state.brushWins,
           catchWins: state.catchWins,
+          matchWins: state.matchWins,
           miniNext: { ...state.miniNext },
+          expedition: state.expedition ? { ...state.expedition } : null,
           total: state.total,
           helperTotal: state.helperTotal,
         };
@@ -559,6 +701,7 @@
           pug: 0,
           home: 0,
           helper: 0,
+          expedition: null,
         };
         miniTicket = null;
         checkAchievements();
@@ -569,6 +712,7 @@
           Number.isInteger(covered) &&
           Number.isInteger(total) &&
           total > 0 &&
+          !state.bigSneeze &&
           covered / total >= 0.995
         ) {
           state.bigSneeze = 1;
@@ -584,7 +728,7 @@
         }
       },
       miniStatus(kind, now = Date.now()) {
-        if (!['brush', 'catch'].includes(kind)) return null;
+        if (!['brush', 'catch', 'match'].includes(kind)) return null;
         return {
           unlocked: state.pug >= 2,
           seconds: Math.max(0, Math.ceil((state.miniNext[kind] - now) / 1000)),
@@ -604,7 +748,9 @@
         const ticket = miniTicket;
         miniTicket = null;
         const fraction = Math.min(1, score),
-          amount = ticket.power.multiply((kind === 'brush' ? 30 : 20) * fraction * ticket.factor);
+          amount = ticket.power.multiply(
+            (kind === 'brush' ? 30 : kind === 'match' ? 25 : 20) * fraction * ticket.factor,
+          );
         credit(amount);
         if (fraction >= 0.6) state[kind + 'Wins']++;
         if (kind === 'catch' && fraction === 1 && perfect) state.perfectCatch = 1;

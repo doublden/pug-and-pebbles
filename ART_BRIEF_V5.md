@@ -1,0 +1,19 @@
+# Artwork v5 / Рисунки v5
+
+Built-in imagegen was used for the final icon and sprite changes. Native Canvas joint animation consumes isolated excavator parts. Source PNGs remain in the local `assets/source-v5/` folder; only compressed runtime assets ship.
+
+| Runtime asset                                                             | Prompt / constraints                                                                                                                                                                                        |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `icon-180-v5.png`, `icon-192-v5.png`, `icon-512-v5.png`, `favicon-v5.png` | Recognizable smiling fawn pug from the supplied photo, detailed cartoon-realistic close-up, warm cream backdrop, rounded-square iOS presentation. Preserve face; add small playful “Mortik” at upper right. |
+| `hats-v5.webp`                                                            | Redraw all ten original hats as compact wide rounded pug headwear, same identities/materials, 4×3 grid, ten sprites, true alpha.                                                                            |
+| `hats-side-v5.webp`                                                       | Ten matching side views, same grid/order. The backward cap visor extends behind the head.                                                                                                                   |
+| `hats-back-v5.webp`                                                       | Ten matching rear views. No front stars/eyes/skull emblems. The backward cap now shows the projecting visor and has no adjustment strap on this side.                                                       |
+| `pug-rear-v5.webp`                                                        | Fifteen standing rear-facing pug stages, preserved progression and grid. Back of skull and ears only. Last two stages show red/gold collar bands with no chest medallion.                                   |
+| `vasiliy-rig-v5.webp`                                                     | 4×4 grid of isolated body, horizontal boom links, empty/full buckets and neutral/blink/look/yawn/eye-roll cat heads; final cell empty. Same tabby driver and yellow machine as existing illustration.       |
+| `vasiliy-v5.webp`                                                         | Companion digging and facial keyframes, preserved machine registration, genuine alpha. Retained locally for comparison.                                                                                     |
+
+All active old atlases have mobile v5 WebP variants. No original private animal photos are included in the public repository. Hat attachments use each normalized pose's skull/face geometry rather than a single fixed screen position; each drawn pose carries its own hat through transformations.
+
+Additional built-in edit prompt: remove ONLY the golden crowns from every cell in the 24-pose king sheet (4 columns × 6 rows), restore rounded beige fur skulls and forehead wrinkles, preserve identity, poses, body, tail, ears, collar and chest medallion, keep a plain rear collar without a rear medallion, preserve grid registration and genuine alpha. Final runtime file: `pug-king-hats-v5.webp`; source: local `assets/source-v5/king-poses-no-crown.png`.
+
+Проверка шапок: 3 600 сочетаний (10 шапок × 15 стадий × 24 основных/промежуточных кадра), контакт обода с силуэтом головы. Дополнительно визуально просмотрены 720 контрольных кадров на стадиях 0, 7 и 14. Для лежачих кадров и исключений используются измеренные точки черепа; обод каждой шапки измеряется отдельно, включая вид сбоку и сзади.

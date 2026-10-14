@@ -85,18 +85,19 @@
           'backgrounds',
         ],
         files = {
-          backgrounds: 'backgrounds-v3.webp',
-          homes: 'homes-middle-v3.webp',
-          early: 'homes-early-v3.webp',
-          poverty: 'homes-poverty-v3.webp',
+          backgrounds: 'backgrounds-mobile-v5.webp',
+          homes: 'homes-middle-mobile-v5.webp',
+          early: 'homes-early-mobile-v5.webp',
+          poverty: 'homes-poverty-mobile-v5.webp',
         },
         home = homes[this.state.homeStage],
         critical = [
           [home, files[home]],
-          ['food', 'food-v3.webp'],
-          ['idle', 'pug-idle-v3.webp'],
+          ['food', 'food-mobile-v5.webp'],
+          ['idle', 'pug-idle-mobile-v5.webp'],
         ];
-      if ([1, 3].includes(this.state.pugStage)) critical.push(['pugsEarly', 'pugs-early-v3.webp']);
+      if ([1, 3].includes(this.state.pugStage))
+        critical.push(['pugsEarly', 'pugs-early-mobile-v5.webp']);
       let finished = 0;
       progress(0);
       await Promise.all(
@@ -109,11 +110,16 @@
       this.frame(0);
       const extra = [
         ...Object.entries(files),
-        ['pugsEarly', 'pugs-early-v3.webp'],
-        ['birds', 'birds-v3.webp'],
-        ['birdMid', 'birds-mid-v4.webp'],
-        ['hats', 'hats-v4.webp'],
+        ['pugsEarly', 'pugs-early-mobile-v5.webp'],
+        ['birds', 'birds-mobile-v5.webp'],
+        ['birdMid', 'birds-mid-mobile-v5.webp'],
+        ['hats', 'hats-v5.webp'],
+        ['hatsSide', 'hats-side-v5.webp'],
+        ['hatsBack', 'hats-back-v5.webp'],
+        ['rear', 'pug-rear-v5.webp'],
+        ['kingHats', 'pug-king-hats-v5.webp'],
         ['helper', 'vasiliy-v4.webp'],
+        ['helperRig', 'vasiliy-rig-v5.webp'],
         ...[
           'look',
           'scratch',
@@ -127,12 +133,17 @@
           'back',
           'stretch',
         ].flatMap((p) => [
-          [p, `pug-${p}-v3.webp`],
-          ['mid-' + p, `pug-${p}-mid-v4.webp`],
+          [p, `pug-${p}-mobile-v5.webp`],
+          ['mid-' + p, `pug-${p}-mid-mobile-v5.webp`],
         ]),
       ];
+      this.catalog = Object.fromEntries(extra);
       this.extraLoad = (async () => {
-        for (const [key, file] of extra) {
+        for (const [key, file] of extra.filter(
+          ([k]) =>
+            !['look', 'scratch', 'yawn', 'lick', 'left', 'pawlick', 'splay'].includes(k) &&
+            !k.startsWith('mid-'),
+        )) {
           await new Promise((resolve) =>
             (window.requestIdleCallback || ((f) => setTimeout(f, 0)))(resolve, { timeout: 500 }),
           );
@@ -151,28 +162,33 @@
     }
     prepare(pose, stage) {
       if (!this.images[pose]) pose = 'idle';
-      const key = pose + '-' + stage;
+      const kingHat = stage === 14 && this.state.hat && this.images.kingHats;
+
+      const key = pose + '-' + stage + (kingHat ? '-hat' : '');
       if (this.frames.has(key)) return this.frames.get(key);
       const mid = pose.startsWith('mid-'),
-        special = mid || ['sleep', 'whistle', 'back', 'stretch'].includes(pose),
+        special = mid || ['sleep', 'whistle', 'back', 'rear', 'stretch'].includes(pose),
         early = !special && this.images.pugsEarly && (stage === 1 || stage === 3),
-        sprite = early
-          ? (stage === 1 ? 0 : 8) +
-            ['idle', 'look', 'scratch', 'yawn', 'lick', 'left', 'pawlick', 'splay'].indexOf(pose)
-          : special
-            ? stage
-            : stage === 0
-              ? 0
-              : stage === 2
-                ? 1
-                : stage - 2,
-        img = early ? this.images.pugsEarly : this.images[pose],
+        sprite = kingHat
+          ? PugExtras.kingPoses.indexOf(pose)
+          : early
+            ? (stage === 1 ? 0 : 8) +
+              ['idle', 'look', 'scratch', 'yawn', 'lick', 'left', 'pawlick', 'splay'].indexOf(pose)
+            : special
+              ? stage
+              : stage === 0
+                ? 0
+                : stage === 2
+                  ? 1
+                  : stage - 2,
+        img = kingHat ? this.images.kingHats : early ? this.images.pugsEarly : this.images[pose],
         col = sprite % 4,
         row = Math.floor(sprite / 4),
         sx = Math.round((col * img.width) / 4),
         w = Math.round(((col + 1) * img.width) / 4) - sx,
-        rows =
-          pose === 'sleep'
+        rows = kingHat
+          ? [0, 1, 2, 3, 4, 5, 6].map((y) => (y * img.height) / 6)
+          : pose === 'sleep'
             ? [350, 558, 763, 978, 1254].map((y) => (y / 1254) * img.height)
             : [0, 1, 2, 3, 4].map((y) => (y * img.height) / 4),
         sy = Math.round(rows[row]),
@@ -198,11 +214,19 @@
       canvas.width = raw.width;
       canvas.height = w + padY * 2;
       const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      ctx.drawImage(raw, 0, Math.round(padY + w * 0.94 - bottom));
+      const scale = kingHat ? 1.2 : 1;
+      ctx.drawImage(
+        raw,
+        (pad + w * 0.5) * (1 - scale),
+        Math.round(padY + w * 0.94 - bottom * scale),
+        raw.width * scale,
+        raw.height * scale,
+      );
       const normalized = ctx.getImageData(0, 0, canvas.width, canvas.height),
         alpha = new Uint8Array(canvas.width * canvas.height);
       for (let i = 0; i < alpha.length; i++) alpha[i] = normalized.data[i * 4 + 3];
       const frame = { canvas, alpha, cellWidth: w, cellHeight: w, pad, padY };
+      frame.head = this.extras.head(normalized, w, pad, padY, pose, kingHat ? -1 : stage);
       this.frames.set(key, frame);
       if (this.frames.size > 48) this.frames.delete(this.frames.keys().next().value);
       return frame;
@@ -471,14 +495,59 @@
       render(f.pose, 1 - mix, f.mid);
       render(g.pose, mix, g.mid);
     }
+    currentHead(now = performance.now()) {
+      const pose = this.activePose(),
+        stage = this.state.pugStage;
+      const head = (p) => this.prepare(p, stage).head;
+      const blend = (a, b, p) => ({
+        x: a.x + (b.x - a.x) * p,
+        y: a.y + (b.y - a.y) * p,
+        w: a.w + (b.w - a.w) * p,
+      });
+      let p = this.reduced
+        ? 1
+        : this.idleEvent
+          ? Math.min(
+              1,
+              this.idleEvent.elapsed / 600,
+              (this.idleEvent.duration - this.idleEvent.elapsed) / 600,
+            )
+          : pose === 'idle'
+            ? 1
+            : Math.min(1, (now - this.poseStart) / 550, (this.poseEnd - now) / 550);
+      p = Math.max(0, p);
+      let h;
+      if (pose === 'idle') h = head('idle');
+      else if (this.images['mid-' + pose])
+        h =
+          p < 0.5
+            ? blend(head('idle'), head('mid-' + pose), p * 2)
+            : blend(head('mid-' + pose), head(pose), (p - 0.5) * 2);
+      else h = blend(head('idle'), head(pose), p);
+      if (pose === 'back' && p === 1 && this.images.rear)
+        h = blend(head('rear'), head('back'), (1 + Math.cos(now / 1100)) / 2);
+      if (this.idleEvent && ['pee', 'backlook'].includes(this.idleEvent.kind) && !this.reduced) {
+        const turn = (1 - Math.cos((this.idleEvent.elapsed / 1500) * Math.PI)) / 2;
+        h = { ...h, x: h.x + (1 - h.x - h.x) * turn };
+      }
+      return { head: h, pose };
+    }
     birdAnchor(target) {
       const l = target === 2 ? this.layout() : this.foodLayout();
-      return target === 2
-        ? { x: l.x + l.size * 0.53, y: l.y + l.size * 0.13 }
-        : {
-            x: l.x + l.w * (target === 0 ? 0.5 : 0.76),
-            y: l.y + l.h * (target === 0 ? 0.07 : 0.25),
-          };
+      if (target === 2) {
+        const { head, pose } = this.currentHead(),
+          i = PugGame.HATS.findIndex((h) => h.id === this.state.hat);
+        const hat =
+          i >= 0 ? this.extras.frame(pose === 'back' ? 'hatsSide' : 'hats', i, 4, 3) : null;
+        const above = hat
+          ? (((head.w * hat.h) / hat.w) * (hat.mount?.y || 0.98)) / (hat.mount?.span || 1)
+          : 0.045;
+        return { x: l.x + l.size * head.x, y: l.y + l.size * (head.y - above) };
+      }
+      return {
+        x: l.x + l.w * (target === 0 ? 0.5 : 0.76),
+        y: l.y + l.h * (target === 0 ? 0.07 : 0.25),
+      };
     }
     burstBird(type, x, y) {
       const now = performance.now();
@@ -506,6 +575,7 @@
     dog(ctx, stage, pose, x, y, size, alpha = 1) {
       const f = this.prepare(pose, stage);
       ctx.globalAlpha = alpha;
+      ctx.save();
       ctx.drawImage(
         f.canvas,
         x - (f.pad / f.cellWidth) * size,
@@ -513,6 +583,9 @@
         (size * f.canvas.width) / f.cellWidth,
         (size * f.canvas.height) / f.cellWidth,
       );
+      ctx.restore();
+      ctx.globalAlpha = alpha;
+      this.extras.hat(ctx, this.state.hat, { x, y, size }, pose, performance.now(), f.head);
       ctx.globalAlpha = 1;
       return f;
     }
@@ -535,7 +608,7 @@
       const portrait = this.w < this.h,
         size = portrait
           ? Math.min(this.w * 0.65, this.h * 0.4)
-          : Math.min(this.w * 0.43, this.h * 0.77),
+          : Math.min(this.w * 0.43, this.h * 0.68),
         base = portrait ? this.h * 0.79 : this.h * 0.91,
         x = portrait ? -this.w * 0.055 : this.w * 0.018;
       let l = {
@@ -569,6 +642,10 @@
       }
       return l;
     }
+    hitHelper(x, y) {
+      const b = this.extras.helperBounds;
+      return !!b && x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
+    }
     hitPug(px, py) {
       if (!this.ready) return false;
       const l = this.layout(),
@@ -584,7 +661,34 @@
       );
     }
     animatePose(pose, now = performance.now()) {
-      if (this.reduced || !this.images[pose]) return;
+      if (this.reduced) return;
+      if (!this.images[pose] && this.catalog?.[pose]) {
+        this.nextPose = now + 5000;
+        Promise.all([
+          this.image(pose, this.catalog[pose]),
+          this.image('mid-' + pose, this.catalog['mid-' + pose]),
+        ])
+          .then(() => {
+            if (!this.uiPaused) {
+              const regular = ['look', 'scratch', 'yawn', 'lick', 'left', 'pawlick', 'splay'];
+              this.recentPoses = [
+                ...(this.recentPoses || []).filter((p) => p !== pose),
+                pose,
+              ].slice(-2);
+              for (const old of regular)
+                if (!this.recentPoses.includes(old)) {
+                  delete this.images[old];
+                  delete this.images['mid-' + old];
+                  this.loadingImages.delete(old);
+                  this.loadingImages.delete('mid-' + old);
+                }
+              this.animatePose(pose, performance.now());
+            }
+          })
+          .catch(() => {});
+        return;
+      }
+      if (!this.images[pose]) return;
       this.pose = pose;
       this.poseStart = now;
       this.poseEnd =
@@ -600,6 +704,8 @@
                 : 2300);
       this.nextPose = this.poseEnd + 6000 + Math.random() * 10000;
       if (pose === 'scratch') this.sound.play('scratch');
+      else if (['look', 'left', 'lick'].includes(pose) && Math.random() < 0.35)
+        this.sound.play('pet');
     }
     fart() {
       this.animatePose(Math.random() < 0.5 ? 'left' : 'look');
@@ -608,7 +714,7 @@
     sneeze() {
       const now = performance.now(),
         l = this.layout();
-      this.sneezeCombo = now - this.sneezeAt < 550 ? Math.min(5, (this.sneezeCombo || 0) + 1) : 1;
+      this.sneezeCombo = now - this.sneezeAt < 550 ? Math.min(12, (this.sneezeCombo || 0) + 1) : 1;
       this.sneezeAt = now;
       this.sound.play('sneeze');
       for (let i = 0; i < 18; i++)
@@ -619,19 +725,24 @@
           x: Math.random(),
           y: Math.random(),
           r:
-            Math.min(this.w, this.h) *
-            (0.06 + Math.random() * 0.065) *
-            (1 + this.sneezeCombo * 0.2),
+            Math.min(this.w, this.h) * (0.09 + Math.random() * 0.09) * (1 + this.sneezeCombo * 0.2),
           stretch: 1 + Math.random() * 0.5,
           angle: Math.random() * Math.PI,
-          life: 5000 + Math.random() * 1500,
+          shape: Math.floor(Math.random() * 3),
+          life: 950 + Math.random() * 100,
         });
-      this.drops = this.drops.slice(-700);
+      this.drops = this.drops.slice(-220);
     }
     motionDog(ctx, stage, pose, l, p, alpha = 1) {
       if (p === 1 && !this.reduced && ['scratch', 'pawlick', 'lick'].includes(pose))
         p =
           0.82 + 0.18 * (0.5 + 0.5 * Math.sin(performance.now() / (pose === 'scratch' ? 95 : 180)));
+      if (pose === 'back' && this.images.rear && p === 1) {
+        const turn = (1 + Math.cos(performance.now() / 1100)) / 2;
+        this.dog(ctx, stage, 'rear', l.x, l.y, l.size, alpha * (1 - turn));
+        this.dog(ctx, stage, 'back', l.x, l.y, l.size, alpha * turn);
+        return;
+      }
       const mid = 'mid-' + pose,
         hasMid = this.images[mid];
       if (!hasMid) {
@@ -656,15 +767,15 @@
       c.clearRect(0, 0, 64, 96);
       for (const d of this.drops) {
         const age = now - d.start;
-        if (age < 230 || age > d.life) continue;
+        if (age < 100 || age > d.life) continue;
         c.save();
         c.translate(d.x * 64, d.y * 96);
         c.scale(64 / this.w, 96 / this.h);
         c.rotate(d.angle);
-        c.globalAlpha = Math.min(1, (d.life - age) / 900) * 0.96;
+        c.globalAlpha = Math.min(1, (d.life - age) / 160) * 0.96;
         c.fillStyle = '#e0eee7';
         c.beginPath();
-        c.ellipse(0, 0, d.r, d.r * d.stretch, 0, 0, Math.PI * 2);
+        this.dropPath(c, d);
         c.fill();
         c.restore();
       }
@@ -718,7 +829,7 @@
       c.fill();
       if (!this.uiPaused && !this.idleEvent && !this.reduced && now > this.nextPose) {
         const poses = ['look', 'scratch', 'yawn', 'lick', 'left', 'pawlick', 'splay'].filter(
-          (p) => this.images[p],
+          (p) => this.catalog?.[p],
         );
         if (poses.length) this.animatePose(poses[Math.floor(Math.random() * poses.length)], now);
       }
@@ -756,10 +867,10 @@
         );
         this.motionDog(c, s.pugStage, this.pose, l, p, weight);
       }
-      this.extras.hat(c, s.hat, l, active, now);
+
       c.restore();
       this.drawIdle(now, l);
-      this.extras.helper(c, now, w, h, s.helper);
+      this.extras.helper(c, now, w, h, s.expedition ? 0 : s.helper);
       if (tr && mix < 1 && !this.reduced) {
         c.strokeStyle = `rgba(245,225,157,${(1 - mix) * 0.65})`;
         c.lineWidth = 3;
@@ -884,6 +995,17 @@
         c.restore();
       }
     }
+    dropPath(c, d) {
+      const r = d.r,
+        h = r * d.stretch;
+      c.moveTo(0, -h);
+      c.bezierCurveTo(r * 0.3, -h * 0.3, r * 1.2, -h * 0.4, r, h * 0.2);
+      c.bezierCurveTo(r * 1.3, h * 0.8, r * 0.2, h * 1.1, -r * 0.25, h);
+      c.bezierCurveTo(-r, h * 1.2, -r * 1.1, h * 0.1, -r * 0.8, -h * 0.2);
+      if (d.shape === 1) c.bezierCurveTo(-r * 0.5, -h * 0.4, -r * 0.5, -h * 1.8, 0, -h);
+      else c.bezierCurveTo(-r, -h * 0.8, -r * 0.1, -h * 0.5, 0, -h);
+      c.closePath();
+    }
     drawSpit(now) {
       const c = this.spitCtx;
       if (!c) return;
@@ -891,10 +1013,10 @@
       this.drops = this.drops.filter((d) => now - d.start < d.life);
       for (const d of this.drops) {
         const age = now - d.start,
-          p = this.reduced ? 1 : Math.min(1, age / 230),
+          p = this.reduced ? 1 : Math.min(1, age / 100),
           x = d.fromX + (d.x * this.w - d.fromX) * p,
           y = d.fromY + (d.y * this.h - d.fromY) * p,
-          fade = Math.min(1, (d.life - age) / 900);
+          fade = Math.min(1, (d.life - age) / 160);
         c.save();
         c.translate(x, y);
         c.rotate(d.angle);
@@ -904,7 +1026,7 @@
         c.shadowColor = '#213a3944';
         c.shadowBlur = 0;
         c.beginPath();
-        c.ellipse(0, 0, d.r, d.r * d.stretch, 0, 0, Math.PI * 2);
+        this.dropPath(c, d);
         c.fill();
         c.shadowBlur = 0;
         c.strokeStyle = '#eefcf077';
@@ -926,19 +1048,28 @@
       }
     }
     frame(now) {
-      if (!document.hidden && (!this.last || now - this.last > 15)) {
+      requestAnimationFrame((t) => this.frame(t));
+      if (!document.hidden && (!this.last || now - this.last > (this.uiPaused ? 100 : 15))) {
         this.last = now;
         this.draw(now);
       }
-      requestAnimationFrame((t) => this.frame(t));
     }
     preview(canvas, kind, stage) {
       if (!this.ready) return;
+      const key = [
+        kind,
+        stage,
+        this.state.homeStage,
+        this.state.hat,
+        Object.keys(this.images).length,
+      ].join('-');
+      if (canvas.dataset.preview === key) return;
+      canvas.dataset.preview = key;
       const c = canvas.getContext('2d'),
         w = 640,
         h = 360;
-      canvas.width = w;
-      canvas.height = h;
+      if (canvas.width !== w) canvas.width = w;
+      if (canvas.height !== h) canvas.height = h;
       const home = kind === 'home' ? stage : this.state.homeStage;
       this.background(c, home, w, h);
       this.food(c, home, w, h);

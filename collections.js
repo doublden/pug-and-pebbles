@@ -65,15 +65,34 @@
         });
       } else {
         if (rebuild || !this.$('helper-buy'))
-          content.innerHTML = `<article class="track-card"><h2>${w.helper}</h2><div class="helper-preview"><canvas id="helper-preview" width="600" height="260" aria-hidden="true"></canvas></div><p class="collection-note">${w.helperText}</p><p id="helper-level" class="collection-note"></p><p class="helper-rate" id="helper-rate"></p><button id="helper-buy" class="purchase-button" data-helper="true"></button></article>`;
+          content.innerHTML = `<article class="track-card"><h2>${w.helper}</h2><div class="helper-preview"><canvas id="helper-preview" width="600" height="260" aria-hidden="true"></canvas></div><p class="collection-note">${w.helperText}</p><p id="helper-level" class="collection-note"></p><p class="helper-rate" id="helper-rate"></p><button id="helper-buy" class="purchase-button" data-helper="true"></button><section id="expeditions"></section></article>`;
         this.$('helper-level').textContent = s.pug < 4 ? w.helperGate : w.level + ' ' + s.helper;
         this.$('helper-rate').textContent = this.format(s.helperRate) + ' ' + w.perSecond;
         const button = this.$('helper-buy');
-        button.disabled = s.pug < 4 || s.balance.compare(game.getHelperPrice()) < 0;
+        const quote = game.quote('helper', 0, this.bulk());
+        button.disabled = s.pug < 4 || !quote.count || s.balance.compare(quote.cost) < 0;
         button.textContent =
-          (s.helper ? w.improve : w.hire) + ' · ' + this.format(game.getHelperPrice());
+          (s.helper ? w.improve : w.hire) +
+          ' ×' +
+          quote.count +
+          ' · ' +
+          this.format(quote.count ? quote.cost : game.getHelperPrice());
+        const ex = s.expedition,
+          left = ex ? Math.max(0, Math.ceil((ex.ends - Date.now()) / 1000)) : 0;
+        this.$('expeditions').innerHTML =
+          `<h2>${w.expeditions}</h2><p class="collection-note">${w.expeditionRule}</p>` +
+          (ex
+            ? `<p>${w.away}: ${Math.floor(left / 3600)}:${String(Math.floor(left / 60) % 60).padStart(2, '0')}:${String(left % 60).padStart(2, '0')}</p><button class="setting-action" data-collect="true" ${left ? 'disabled' : ''}>${w.collect} · ${this.format(ex.reward)}</button>`
+            : [900, 3600, 10800]
+                .map(
+                  (d, i) =>
+                    `<button class="setting-action" data-expedition="${d}" ${!s.helper ? 'disabled' : ''}>${w.expeditionTimes[i]} · +${this.format(game.expeditionOffer(d))}</button>`,
+                )
+                .join(''));
         const canvas = this.$('helper-preview'),
           c = canvas.getContext('2d');
+        if (!rebuild && canvas.dataset.drawn) return;
+        canvas.dataset.drawn = 'true';
         c.clearRect(0, 0, 600, 260);
         const f = this.world.extras.frame('helper', 0, 4, 2);
         if (f) {

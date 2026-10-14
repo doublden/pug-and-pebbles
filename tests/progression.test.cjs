@@ -27,7 +27,7 @@ test('v4 saves preserve purchases and receive empty v5 collections exactly once'
   assert.equal(g.getState().pug, 4);
   assert.deepEqual(g.getState().levels, old.levels);
   assert.deepEqual(g.getState().hats, []);
-  assert.equal(g.serialize().version, 5);
+  assert.equal(g.serialize().version, 6);
   assert.deepEqual(createGame(g.serialize()).serialize(), g.serialize());
 });
 test('ten hats: six gated purchases and four event-only unlocks', () => {

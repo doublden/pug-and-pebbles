@@ -3,6 +3,17 @@
   class Sound {
     constructor() {
       this.ctx = null;
+      this.samples = {};
+      this.sampleBytes = {};
+      this.activeSamples = new Set();
+      this.sampleLoad = Promise.all(
+        ['sneeze', 'fart', 'snort'].map(async (kind) => {
+          try {
+            const r = await fetch(`sounds/${kind}.wav`);
+            if (r.ok) this.sampleBytes[kind] = await r.arrayBuffer();
+          } catch (_) {}
+        }),
+      );
       this.effects = true;
       this.music = false;
       this.effectsVolume = 80;
@@ -13,6 +24,10 @@
     }
     unlock() {
       try {
+        if (navigator.audioSession && (this.effects || this.music))
+          try {
+            navigator.audioSession.type = 'playback';
+          } catch (_) {}
         if (!this.ctx) {
           this.ctx = new (window.AudioContext || window.webkitAudioContext)();
           this.limiter = this.ctx.createDynamicsCompressor();
@@ -28,7 +43,19 @@
           this.effectsBus.connect(this.limiter);
           this.applyVolumes();
         }
-        if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
+        if (this.ctx.state !== 'running') this.ctx.resume().catch(() => {});
+        if (!this.decoding) {
+          this.decoding = true;
+          this.sampleLoad.then(() =>
+            Promise.all(
+              Object.entries(this.sampleBytes).map(async ([kind, bytes]) => {
+                try {
+                  this.samples[kind] = await this.ctx.decodeAudioData(bytes.slice(0));
+                } catch (_) {}
+              }),
+            ),
+          );
+        }
         if (!this.timer) this.schedule();
       } catch (_) {}
     }
@@ -43,6 +70,10 @@
         ? Math.max(0, Math.min(100, musicVolume))
         : 75;
       this.applyVolumes();
+      if (!this.effects && !this.music && navigator.audioSession)
+        try {
+          navigator.audioSession.type = 'auto';
+        } catch (_) {}
       if (changed) this.schedule();
     }
     applyVolumes() {
@@ -101,8 +132,47 @@
         g.disconnect();
       };
     }
+    sample(kind, variant = 0) {
+      const buffer = this.samples[kind];
+      if (!buffer || !this.ctx || this.ctx.state !== 'running' || document.hidden) return false;
+      if (this.activeSamples.size >= 6) {
+        const oldest = this.activeSamples.values().next().value;
+        oldest.stop();
+        this.activeSamples.delete(oldest);
+      }
+      const source = this.ctx.createBufferSource(),
+        gain = this.ctx.createGain();
+      source.buffer = buffer;
+      source.playbackRate.value =
+        kind === 'fart' ? [1.65, 1.2, 0.9, 0.68][variant % 4] : 0.92 + Math.random() * 0.16;
+      gain.gain.value = 0.23;
+      source.connect(gain);
+      gain.connect(this.effectsBus);
+      this.activeSamples.add(source);
+      source.onended = () => {
+        this.activeSamples.delete(source);
+        source.disconnect();
+        gain.disconnect();
+      };
+      source.start();
+      return true;
+    }
     play(kind, variant = 0) {
       if (!this.effects) return;
+      if (this.ctx && this.ctx.state !== 'running') {
+        this.ctx
+          .resume()
+          .then(() => {
+            if (this.ctx.state === 'running') this.play(kind, variant);
+          })
+          .catch(() => {});
+        return;
+      }
+      if (
+        ['sneeze', 'fart', 'pet'].includes(kind) &&
+        this.sample(kind === 'pet' ? 'snort' : kind, variant)
+      )
+        return;
       if (kind === 'sneeze') {
         this.noise(0.13, 0.04, 500);
         this.noise(0.26, 0.085, 3000, 0.1);
@@ -200,8 +270,8 @@
       ];
       this.timer = setInterval(() => {
         const f = notes[this.step++ % notes.length];
-        if (f) this.tone(f, 1.7, 0.012, 'sine', 0, true);
-        if (this.step % 8 === 1) this.tone(98, 2.8, 0.008, 'sine', 0, true);
+        if (f) this.tone(f, 1.7, 0.022, 'sine', 0, true);
+        if (this.step % 8 === 1) this.tone(98, 2.8, 0.015, 'sine', 0, true);
       }, 440);
     }
   }

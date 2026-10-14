@@ -24,12 +24,44 @@
       });
       const canvas = this.$('mini-canvas');
       canvas.onpointerdown = (e) => {
+        if (this.active?.kind === 'match' && !this.active.finished) {
+          const box = canvas.getBoundingClientRect(),
+            g = this.matchGrid();
+          const x = e.clientX - box.left,
+            y = e.clientY - box.top;
+          const col = Math.floor((x - g.x) / g.cell),
+            row = Math.floor((y - g.y) / g.cell);
+          if (col < 0 || col > 5 || row < 0 || row > 5) return;
+          const index = row * 6 + col;
+          if (this.selected !== null && this.active.simulation.swap(this.selected, index)) {
+            this.selected = null;
+            this.sound.play('dig');
+          } else this.selected = index;
+          this.pointer = e.pointerId;
+          canvas.setPointerCapture(e.pointerId);
+          this.swipeStart = { index, x, y };
+          return;
+        }
         if (this.active?.kind !== 'brush') return;
         this.pointer = e.pointerId;
         canvas.setPointerCapture(e.pointerId);
         this.move(e);
       };
       canvas.onpointermove = (e) => {
+        if (e.pointerId === this.pointer && this.active?.kind === 'match' && this.swipeStart) {
+          const box = canvas.getBoundingClientRect(),
+            dx = e.clientX - box.left - this.swipeStart.x,
+            dy = e.clientY - box.top - this.swipeStart.y,
+            g = this.matchGrid();
+          if (Math.max(Math.abs(dx), Math.abs(dy)) > g.cell * 0.3) {
+            const a = this.swipeStart.index,
+              b = a + (Math.abs(dx) > Math.abs(dy) ? Math.sign(dx) : Math.sign(dy) * 6);
+            if (this.active.simulation.swap(a, b)) this.sound.play('dig');
+            this.swipeStart = null;
+            this.selected = null;
+          }
+          return;
+        }
         if (e.pointerId === this.pointer) this.move(e);
       };
       canvas.onpointerup = canvas.onpointercancel = (e) => {
@@ -61,13 +93,48 @@
         game = this.getGame();
       this.$('mini-menu').innerHTML =
         `<p class="collection-note">${w.miniLimit}</p>` +
-        ['brush', 'catch']
+        ['brush', 'catch', 'match']
           .map((kind) => {
             const status = game.miniStatus(kind),
-              limit = kind === 'brush' ? 30 : 20;
-            return `<article class="mini-card"><h2>${w[kind === 'brush' ? 'brush' : 'catchFood']}</h2><p>${w.reward}: ≤ ${this.format(game.getState().power.multiply(limit * game.hatEffect(kind)))} · ${status.seconds ? w.cooldown + ' ' + Math.ceil(status.seconds / 60) + ' ' + w.minutes : ''}</p><button class="setting-action" data-mini="${kind}" ${!status.unlocked || status.seconds ? 'disabled' : ''}>${w.start}</button></article>`;
+              limit = kind === 'brush' ? 30 : kind === 'match' ? 25 : 20;
+            return `<article class="mini-card"><canvas class="mini-art" data-mini-art="${kind}" width="420" height="150" aria-hidden="true"></canvas><h2>${w[kind === 'brush' ? 'brush' : kind === 'match' ? 'match3' : 'catchFood']}</h2><p>${w[kind === 'brush' ? 'brushMenu' : kind === 'catch' ? 'catchMenu' : 'matchMenu']}</p><p>${w.reward}: ≤ ${this.format(game.getState().power.multiply(limit * game.hatEffect(kind)))} · <span data-mini-wait="${kind}">${status.seconds ? w.cooldown + ' ' + Math.floor(status.seconds / 60) + ':' + String(status.seconds % 60).padStart(2, '0') : ''}</span></p><button class="setting-action" data-mini="${kind}" ${!status.unlocked || status.seconds ? 'disabled' : ''}>${w.start}</button></article>`;
           })
           .join('');
+      for (const canvas of document.querySelectorAll('[data-mini-art]')) {
+        const c = canvas.getContext('2d'),
+          kind = canvas.dataset.miniArt;
+        c.fillStyle = '#dce3ca';
+        c.fillRect(0, 0, 420, 150);
+        if (kind !== 'match') {
+          this.world.dog(c, this.getGame().getState().pugStage, 'idle', 40, 5, 150);
+          c.font = '65px system-ui';
+          c.fillText(kind === 'brush' ? '🪮' : '🥣', 260, 115);
+          if (kind === 'catch') {
+            c.font = '28px system-ui';
+            c.fillText('🦴', 310, 38);
+          }
+        } else {
+          c.font = '36px system-ui';
+          for (let i = 0; i < 9; i++)
+            c.fillText(['🦴', '🎾', '🧸'][i % 3], 140 + (i % 3) * 50, 45 + Math.floor(i / 3) * 45);
+        }
+      }
+    }
+    updateMenu() {
+      for (const kind of ['brush', 'catch', 'match']) {
+        const s = this.getGame().miniStatus(kind),
+          wait = document.querySelector(`[data-mini-wait="${kind}"]`),
+          button = document.querySelector(`[data-mini="${kind}"]`);
+        if (wait)
+          wait.textContent = s.seconds
+            ? this.words().cooldown +
+              ' ' +
+              Math.floor(s.seconds / 60) +
+              ':' +
+              String(s.seconds % 60).padStart(2, '0')
+            : '';
+        if (button) button.disabled = !s.unlocked || !!s.seconds;
+      }
     }
     start(kind) {
       const game = this.getGame();
@@ -77,13 +144,22 @@
       const w = this.words();
       this.active = {
         kind,
-        simulation: kind === 'brush' ? PugMinigames.brush() : PugMinigames.catcher(),
+        simulation:
+          kind === 'brush'
+            ? PugMinigames.brush()
+            : kind === 'match'
+              ? PugMinigames.match3()
+              : PugMinigames.catcher(),
         finished: false,
       };
       this.fur = [];
+      this.selected = null;
+      this.swipeStart = null;
       this.pointer = null;
-      this.$('mini-title').textContent = w[kind === 'brush' ? 'brush' : 'catchFood'];
-      this.$('mini-help').textContent = w[kind === 'brush' ? 'brushHelp' : 'catchHelp'];
+      this.$('mini-title').textContent =
+        w[kind === 'brush' ? 'brush' : kind === 'match' ? 'match3' : 'catchFood'];
+      this.$('mini-help').textContent =
+        w[kind === 'brush' ? 'brushHelp' : kind === 'match' ? 'matchHelp' : 'catchHelp'];
       this.$('catch-controls').hidden = kind !== 'catch';
       this.$('mini-result').hidden = true;
       this.$('mini-dialog').showModal();
@@ -91,13 +167,13 @@
       this.previous = performance.now();
       this.sound.unlock();
     }
-    close() {
+    close(notify = true) {
       this.getGame().cancelMini();
       this.active = null;
       this.pointer = null;
       this.fur = [];
       this.$('mini-dialog').close();
-      this.changed();
+      if (notify) this.changed();
     }
     resize() {
       const canvas = this.$('mini-canvas'),
@@ -139,9 +215,15 @@
       }
     }
     tick(now) {
+      if (this.$('minigames-dialog').open && (!this.lastMenu || now - this.lastMenu > 1000)) {
+        this.lastMenu = now;
+        this.updateMenu();
+      }
       if (!this.$('mini-dialog').open || !this.active) return;
+      if (this.lastDraw && now - this.lastDraw < 30) return;
+      this.lastDraw = now;
       this.resize();
-      const delta = document.hidden ? 0 : Math.max(0, now - this.previous);
+      const delta = document.hidden || !this.isActive() ? 0 : Math.max(0, now - this.previous);
       this.previous = now;
       const a = this.active,
         w = this.words();
@@ -149,9 +231,13 @@
       a.state = state;
       const score = a.kind === 'brush' ? a.simulation.score(this.width) : state.score;
       this.$('mini-score').textContent =
-        a.kind === 'brush' ? Math.floor(score * 100) + '%' : state.caught + ' / 24';
+        a.kind === 'brush'
+          ? Math.floor(score * 100) + '%'
+          : a.kind === 'match'
+            ? state.points + ' / 90'
+            : state.caught + ' / 24';
       this.$('mini-clock').textContent =
-        a.kind === 'brush' ? state.seconds + 's' : w.misses + ': ' + state.missed + ' / 3';
+        a.kind !== 'catch' ? state.seconds + 's' : w.misses + ': ' + state.missed + ' / 3';
       for (const b of document.querySelectorAll('[data-lane]'))
         b.classList.toggle('active', Number(b.dataset.lane) === state.lane);
       this.draw(now, state, score);
@@ -164,12 +250,39 @@
         this.changed();
       }
     }
+    matchGrid() {
+      const cell = Math.min(this.width * 0.96, this.height * 0.94) / 6;
+      return { cell, x: (this.width - cell * 6) / 2, y: (this.height - cell * 6) / 2 };
+    }
     draw(now, s, score) {
       const canvas = this.$('mini-canvas'),
         c = canvas.getContext('2d'),
         w = this.width,
         h = this.height;
       c.clearRect(0, 0, w, h);
+      if (this.active.kind === 'match') {
+        const g = this.matchGrid(),
+          art = ['🦴', '🎾', '🧸', '🐾', '🥣'];
+        for (let i = 0; i < 36; i++) {
+          const x = g.x + (i % 6) * g.cell,
+            y = g.y + Math.floor(i / 6) * g.cell;
+          c.fillStyle = i === this.selected ? '#e6c772' : '#e5e3d3';
+          c.beginPath();
+          c.roundRect(x + 2, y + 2, g.cell - 4, g.cell - 4, 8);
+          c.fill();
+          const p = s.animation?.cells.includes(i) ? s.animation.p : 0;
+          c.save();
+          c.globalAlpha = 1 - p;
+          c.translate(x + g.cell / 2, y + g.cell / 2);
+          c.scale(1 - p * 0.5, 1 - p * 0.5);
+          c.font = `${g.cell * 0.55}px system-ui`;
+          c.textAlign = 'center';
+          c.textBaseline = 'middle';
+          c.fillText(art[s.board[i]], 0, 0);
+          c.restore();
+        }
+        return;
+      }
       if (this.active.kind === 'brush') {
         const size = Math.min(w * 0.94, h * 0.9);
         this.world.dog(
