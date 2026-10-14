@@ -4,7 +4,7 @@
   "short_name": "Mortik",
   "description": "Мопс, камушки и большие планы. A little pug with big plans.",
   "lang": "ru",
-  "start_url": "./?v=0.8.0",
+  "start_url": "./?v=0.8.1",
   "scope": "./",
   "display": "standalone",
   "background_color": "#eae7d7",

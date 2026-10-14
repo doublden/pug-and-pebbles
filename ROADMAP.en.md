@@ -2,7 +2,7 @@
 
 [Русский](ROADMAP.ru.md)
 
-Updated: 14 October 2026. Blocks 1–3 shipped in 0.6.0; follow-ups 2.1 + 3.1 and current block 4 economy ship together in 0.7.0. Blocks 5–6 are included in the same release. Blocks 7–10 are completed in one 0.8.0 release.
+Updated: 14 October 2026. Blocks 1–3 shipped in 0.6.0; follow-ups 2.1 + 3.1 and current block 4 economy ship together in 0.7.0. Blocks 5–6 are included in the same release. Blocks 7–10 are completed in one 0.8.1 release.
 
 ## Sequence and estimates
 
@@ -16,10 +16,10 @@ Updated: 14 October 2026. Blocks 1–3 shipped in 0.6.0; follow-ups 2.1 + 3.1 an
 | 4 | Economy, shop and purchases | 4–6 | shipped, 0.7.0 |
 | 5 | Vasiliy, expeditions, weapons and inventory | 6–9 | shipped, 0.7.0 |
 | 6 | Raccoon and giant crow boss fights | 6–10 | released, 0.7.0 |
-| 7 | Yuppi, reactions, secrets and settings | 7–12 | shipped, 0.8.0 |
-| 8 | Final verification, optimization and release | 3–6 | shipped, 0.8.0 |
-| 9 | Beds and sleep scenes | 5–8 | shipped, 0.8.0 |
-| 10 | Hidden late stage: Dubai and muscular pug | 8–12 | shipped, 0.8.0 |
+| 7 | Yuppi, reactions, secrets and settings | 7–12 | shipped, 0.8.1 |
+| 8 | Final verification, optimization and release | 3–6 | shipped, 0.8.1 |
+| 9 | Beds and sleep scenes | 5–8 | shipped, 0.8.1 |
+| 10 | Hidden late stage: Dubai and muscular pug | 8–12 | shipped, 0.8.1 |
 
 All approved blocks are complete. Further ideas and a Telegram Mini App require separate approval.
 
@@ -119,7 +119,7 @@ Done when both fights run smoothly on touch, damage limits are fair, timers/retr
 
 ## 7. Yuppi, reactions, secrets and settings
 
-**Estimate: 7–12 hours.** Shipped in 0.8.0.
+**Estimate: 7–12 hours.** Shipped in 0.8.1.
 
 - [x] Tapping the pug or Vasiliy grants exactly one ordinary manual dig with a reaction. Through Healthy pug inclusive: sneeze; later: two or three rear-turn variants, strained face and brown clouds. Vasiliy meows grumpily.
 - [x] Provide varied realistic sneezes/snorts/farts/meows, including three or four fart/meow recordings. Clouds can cover the screen, disappear quickly and pass touch input through. Add effect intensity and overlapping-sound limits.
@@ -139,7 +139,7 @@ Done when secrets unlock from real events, rewards are capped/persistent, fast t
 
 ## 8. Final verification, optimization and release
 
-**Estimate: 3–6 hours.** Shipped in 0.8.0.
+**Estimate: 3–6 hours.** Shipped in 0.8.1.
 
 - [x] Check 0.5.0 and supported legacy saves, New life, full reset, weapons/secrets, multiple tabs and duplicate rewards. Each block verifies its changes before final regression.
 - [x] Primary phone: iPhone 15 Pro Max—1290×2796 physical pixels, 430×932 logical screen, DPR 3. Additional logical viewports: 375×812, 390×844, 393×852, 360×800, 412×915. Refine common device choices before testing.
@@ -151,7 +151,7 @@ Done when checks/limitations are recorded, migrations preserve purchases, the pu
 
 ## 9. Beds and sleep scenes
 
-**Estimate: 5–8 hours.** Shipped in 0.8.0.
+**Estimate: 5–8 hours.** Shipped in 0.8.1.
 
 - [x] Six ordinary beds and three secret beds unlocked by raccoon, crow and Paladin sword; one equipped bed in the background.
 - [x] The pug smoothly walks to its bed, sleeps briefly and returns; balance small unique bonuses, only the equipped bed applies.
@@ -160,7 +160,7 @@ Done: smooth sleep and return, saved secret unlocks, correct hats/weapons and ve
 
 ## 10. Hidden late stage: Dubai and muscular pug
 
-**Estimate: 8–12 hours.** Shipped in 0.8.0.
+**Estimate: 8–12 hours.** Shipped in 0.8.1.
 
 - [x] After the current most expensive home: a huge Dubai apartment with panoramic skyline, gold bars and bundled dollars in the background, and a laptop with charts. Add a separate next food stage and detailed mobile artwork.
 - [x] After the current final pug form: a muscular pug with recognizable face, clearly drawn abs, biceps, triceps and powerful body; complete regular/rare motions, hat/weapon fit and sleep scenes.
@@ -189,4 +189,4 @@ A Telegram Mini App is a possible separate phase after the main version and is e
 Original animal photos and personal screenshots remain local references; only game illustrations and documentation are published.
 
 
-0.8.0 validation: automated tests and browser checks, 5,376 geometric hat attachment checks, six logical screen sizes. Physical iPhone/Android devices were not tested; real Safari installation and phone audio still need owner verification.
+0.8.1 validation: automated tests and browser checks, 5,376 geometric hat attachment checks, six logical screen sizes. Physical iPhone/Android devices were not tested; real Safari installation and phone audio still need owner verification.

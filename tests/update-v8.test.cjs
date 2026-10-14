@@ -79,7 +79,7 @@ test('public script order supplies guest rules, scene and UI before callers; PWA
     assert.ok(sw.includes(file));
   assert.equal(manifest.orientation, 'portrait');
   assert.equal(manifest.display, 'standalone');
-  assert.ok(manifest.start_url.includes('0.8.0'));
+  assert.ok(manifest.start_url.includes('0.8.1'));
   assert.equal(index.includes('href="AUDIO_CREDITS.md"'), false);
 });
 test('sixteen hours of natural event simulation stays bounded and developer forces replace previous guests', () => {
@@ -135,4 +135,22 @@ test('entering combat clears the fullscreen saliva/cloud canvas before rendering
     0,
   );
   assert.deepEqual(calls, ['clear', 'boss']);
+});
+
+test('complete build manifest includes and hashes every script and stylesheet loaded by the entrypoint', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(base, 'BUILD_MANIFEST.json'))),
+    index = fs.readFileSync(path.join(base, 'index.html'), 'utf8'),
+    required = [...index.matchAll(/(?:src|href)="([^"?]+\.(?:js|css))(?:\?[^"]*)?"/g)].map(
+      (m) => m[1],
+    );
+  assert.ok(required.includes('world.js'));
+  assert.equal(manifest.version, '0.8.1');
+  for (const file of required) {
+    const bytes = fs.readFileSync(path.join(base, file)),
+      sha = crypto
+        .createHash('sha1')
+        .update(Buffer.concat([Buffer.from('blob ' + bytes.length + '\0'), bytes]))
+        .digest('hex');
+    assert.equal(manifest.runtime[file], sha, file);
+  }
 });

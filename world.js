@@ -11,6 +11,7 @@
       this.loadingImages = new Map();
       this.artRetryAt = new Map();
       this.extras = new PugExtras(this);
+      this.scene = new PugScene(this);
       this.coverageCanvas = document.createElement('canvas');
       this.coverageCanvas.width = 64;
       this.coverageCanvas.height = 96;
@@ -96,7 +97,7 @@
           early: 'homes-early-mobile-v5.webp',
           poverty: 'homes-poverty-mobile-v5.webp',
         },
-        home = homes[this.state.homeStage],
+        home = homes[Math.min(13, this.state.homeStage)],
         critical = [
           [home, files[home]],
           ['location-' + this.state.homeStage, this.artPath('background', this.state.homeStage)],
@@ -110,11 +111,16 @@
       progress(0);
       await Promise.all(
         critical.map(async ([key, file]) => {
-          try { await this.image(key, file); }
-          catch (error) { if (!key.startsWith('location-') && !key.startsWith('food-')) throw error; }
+          try {
+            await this.image(key, file);
+          } catch (error) {
+            if (!key.startsWith('location-') && !key.startsWith('food-')) throw error;
+          }
           progress(Math.round((++finished / critical.length) * 100));
         }),
       );
+      if (this.state.pugStage === 15) await this.scene.preloadPug().catch(() => {});
+      this.scene?.load();
       this.ready = true;
       this.frame(0);
       const extra = [
@@ -169,25 +175,47 @@
         i.src = 'data:image/svg+xml,' + encodeURIComponent(svg);
       }
     }
-    artPath(kind, stage) { return `artwork-v6/${kind}-${String(stage).padStart(2, '0')}.webp`; }
+    artPath(kind, stage) {
+      if (stage === 14) return `assets-v8/${kind}-14.webp`;
+      return `artwork-v6/${kind}-${String(stage).padStart(2, '0')}.webp`;
+    }
     ensureSceneArt(stage) {
-      if (!Number.isInteger(stage) || stage < 0 || stage > 13) return;
-      for (const [prefix, kind] of [['location-', 'background'], ['food-', 'food']]) {
+      if (!Number.isInteger(stage) || stage < 0 || stage > 14) return;
+      for (const [prefix, kind] of [
+        ['location-', 'background'],
+        ['food-', 'food'],
+      ]) {
         const key = prefix + stage;
         if (this.images[key] || this.loadingImages.has(key)) continue;
         if (performance.now() < (this.artRetryAt.get(key) || 0)) continue;
-        this.image(key, this.artPath(kind, stage)).then(() => {
-          this.backgroundFrames.clear();
-          const keep = new Set([stage, this.state.homeStage, this.state.foodStage, this.transition?.from.homeStage, this.transition?.from.foodStage]);
-          const keys = Object.keys(this.images).filter(k => k.startsWith(prefix));
-          for (const old of keys.slice(0, Math.max(0, keys.length - 4))) {
-            if (keep.has(Number(old.slice(prefix.length)))) continue;
-            delete this.images[old]; this.loadingImages.delete(old);
-          }
-        }).catch(() => { /* Keep the previously loaded scene when offline. */ });
+        this.image(key, this.artPath(kind, stage))
+          .then(() => {
+            this.backgroundFrames.clear();
+            const keep = new Set([
+              stage,
+              this.state.homeStage,
+              this.state.foodStage,
+              this.transition?.from.homeStage,
+              this.transition?.from.foodStage,
+            ]);
+            const keys = Object.keys(this.images).filter((k) => k.startsWith(prefix));
+            for (const old of keys.slice(0, Math.max(0, keys.length - 4))) {
+              if (keep.has(Number(old.slice(prefix.length)))) continue;
+              delete this.images[old];
+              this.loadingImages.delete(old);
+            }
+          })
+          .catch(() => {
+            /* Keep the previously loaded scene when offline. */
+          });
       }
     }
     prepare(pose, stage) {
+      if (stage === 15) {
+        const muscle = this.scene.muscleFrame(pose);
+        if (muscle) return muscle;
+        stage = 14;
+      }
       if (!this.images[pose]) pose = 'idle';
       const kingHat = stage === 14 && this.state.hat && this.images.kingHats;
 
@@ -259,9 +287,13 @@
       return frame;
     }
     setState(state) {
-      state={...state,pugStage:state.pugAppearance ?? state.pugStage,
-        homeStage:state.homeAppearance ?? state.homeStage,foodStage:state.foodAppearance ?? state.homeStage,
-        tool:state.toolAppearance ?? state.tool};
+      state = {
+        ...state,
+        pugStage: state.pugAppearance ?? state.pugStage,
+        homeStage: state.homeAppearance ?? state.homeStage,
+        foodStage: state.foodAppearance ?? state.homeStage,
+        tool: state.toolAppearance ?? state.tool,
+      };
       if (
         this.hasState &&
         (state.pugStage !== this.state.pugStage || state.homeStage !== this.state.homeStage)
@@ -274,12 +306,18 @@
       this.hasState = true;
       this.state = state;
       if (this.ready) {
+        if (state.pugStage === 15) this.scene.preloadPug().catch(() => {});
         this.ensureSceneArt(state.homeStage);
-        if(state.foodStage!==state.homeStage)this.ensureSceneArt(state.foodStage);
-        if(state.weaponsUnlocked && state.showWeapon){
-          const id=PugInventoryRules.WEAPONS[state.weaponEquipped].id,key='weapon-'+id;
-          if(!this.images[key]&&!this.loadingImages.has(key)&&performance.now()>=(this.artRetryAt.get(key)||0))
-            this.image(key,'weapons/'+id+'.svg').catch(()=>{});
+        if (state.foodStage !== state.homeStage) this.ensureSceneArt(state.foodStage);
+        if (state.weaponsUnlocked && state.showWeapon) {
+          const id = PugInventoryRules.WEAPONS[state.weaponEquipped].id,
+            key = 'weapon-' + id;
+          if (
+            !this.images[key] &&
+            !this.loadingImages.has(key) &&
+            performance.now() >= (this.artRetryAt.get(key) || 0)
+          )
+            this.image(key, 'weapons/' + id + '.svg').catch(() => {});
         }
       }
     }
@@ -294,14 +332,24 @@
       if (detailed) {
         // Preserve architecture proportions; stretch only empty foreground ground.
         const split = detailed.height * 0.5;
-        const topHeight = Math.min(h * 0.57, split * w / detailed.width);
+        const topHeight = Math.min(h * 0.57, (split * w) / detailed.width);
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(detailed, 0, 0, detailed.width, split, 0, 0, w, topHeight);
-        ctx.drawImage(detailed, 0, split, detailed.width, detailed.height - split, 0, topHeight, w, h - topHeight);
+        ctx.drawImage(
+          detailed,
+          0,
+          split,
+          detailed.width,
+          detailed.height - split,
+          0,
+          topHeight,
+          w,
+          h - topHeight,
+        );
         return;
       }
-      if (!['backgrounds', 'poverty', 'early', 'homes'].some(k => this.images[k])) {
-        const fallback = Object.keys(this.images).find(k => k.startsWith('location-'));
+      if (!['backgrounds', 'poverty', 'early', 'homes'].some((k) => this.images[k])) {
+        const fallback = Object.keys(this.images).find((k) => k.startsWith('location-'));
         if (fallback) ctx.drawImage(this.images[fallback], 0, 0, w, h);
         return;
       }
@@ -321,8 +369,8 @@
           ['homes', 5, 3, 2],
           ['backgrounds', 3, 2, 2],
         ],
-        a = this.images[mapping[stage][0]]
-          ? mapping[stage]
+        a = this.images[mapping[Math.min(stage, 13)][0]]
+          ? mapping[Math.min(stage, 13)]
           : Object.values(mapping).find((m) => this.images[m[0]]),
         img = this.images[a[0]],
         sw = img.width / a[2],
@@ -370,7 +418,9 @@
         sx = individual ? 0 : Math.round(((stage % 4) * img.width) / 4),
         sy = individual ? 0 : Math.round((Math.floor(stage / 4) * img.height) / 4),
         w = individual ? img.width : Math.round((((stage % 4) + 1) * img.width) / 4) - sx,
-        h = individual ? img.height : Math.round(((Math.floor(stage / 4) + 1) * img.height) / 4) - sy,
+        h = individual
+          ? img.height
+          : Math.round(((Math.floor(stage / 4) + 1) * img.height) / 4) - sy,
         pad = 24,
         canvas = document.createElement('canvas');
       canvas.width = w + pad * 2;
@@ -401,7 +451,7 @@
       const f = this.foodFrame(stage),
         portrait = w < h,
         extent = [
-          0.51, 0.52, 0.53, 0.54, 0.55, 0.56, 0.57, 0.6, 0.64, 0.68, 0.72, 0.77, 0.81, 0.85,
+          0.51, 0.52, 0.53, 0.54, 0.55, 0.56, 0.57, 0.6, 0.64, 0.68, 0.72, 0.77, 0.81, 0.85, 0.87,
         ][stage],
         width = portrait
           ? w * extent * 1.21
@@ -558,30 +608,37 @@
     poseProgress(now = performance.now()) {
       if (this.reduced || this.activePose() === 'idle') return 1;
       const e = this.idleEvent;
-      return Math.max(0, e
-        ? Math.min(1, e.elapsed / 1100, (e.duration - e.elapsed) / 1100)
-        : Math.min(1, (now - this.poseStart) / 1100, (this.poseEnd - now) / 1100));
+      return Math.max(
+        0,
+        e
+          ? Math.min(1, e.elapsed / 1100, (e.duration - e.elapsed) / 1100)
+          : Math.min(1, (now - this.poseStart) / 1100, (this.poseEnd - now) / 1100),
+      );
     }
     poseFrame(pose, p, now = performance.now()) {
       if (pose === 'idle' || this.reduced) return pose;
-      const mid = this.images['mid-' + pose] ? 'mid-' + pose : null;
+      const mid = this.state?.pugStage === 15 || this.images['mid-' + pose] ? 'mid-' + pose : null;
       if (p < 1) return p < 0.3 ? 'idle' : mid && p < 0.7 ? mid : pose;
       const elapsed = this.idleEvent?.elapsed ?? Math.max(0, now - this.poseStart - 1100);
-      if (pose === 'back' && this.images.rear)
+      if (pose === 'back' && (this.state?.pugStage === 15 || this.images.rear))
         return Math.floor(elapsed / 1200) % 2 ? 'back' : 'rear';
       if (mid && ['scratch', 'pawlick', 'lick'].includes(pose))
         return Math.floor(elapsed / 450) % 2 ? mid : pose;
       return pose;
     }
     visiblePug(now = performance.now()) {
-      const pose = this.poseFrame(this.activePose(), this.poseProgress(now), now);
-      const mirror = !this.reduced && this.idleEvent &&
+      const pose =
+        this.scene?.fartPose(now) || this.poseFrame(this.activePose(), this.poseProgress(now), now);
+      const mirror =
+        !this.reduced &&
+        this.idleEvent &&
         ['pee', 'backlook'].includes(this.idleEvent.kind) &&
         Math.floor(this.idleEvent.elapsed / 1500) % 2 === 1;
       return { pose, mirror: !!mirror };
     }
     currentHead(now = performance.now()) {
-      const { pose, mirror } = this.visiblePug(now), head = this.prepare(pose, this.state.pugStage).head;
+      const { pose, mirror } = this.visiblePug(now),
+        head = this.prepare(pose, this.state.pugStage).head;
       return { head: mirror ? { ...head, x: 1 - head.x, tilt: -(head.tilt || 0) } : head, pose };
     }
     birdAnchor(target) {
@@ -589,12 +646,11 @@
       if (target === 2) {
         const { head, pose } = this.currentHead(),
           i = PugGame.HATS.findIndex((h) => h.id === this.state.hat);
-        const hat =
-          i >= 0 ? this.extras.frame(pose === 'rear' ? 'hatsBack' : ['back', 'mid-back'].includes(pose) ? 'hatsSide' : 'hats', i, 4, 3) : null;
+        const hat = i >= 0 ? this.extras.hatFrame(this.state.hat, pose) : null;
         const rise = hat
-          ? head.w * (i === 4 ? 1 : 1.08) * hat.h / hat.w *
-            (hat.mount?.y ?? 0.98) / (hat.mount?.span || 1)
-          : 0,
+            ? (((head.w * (i === 4 ? 1 : 1.08) * hat.h) / hat.w) * (hat.mount?.y ?? 0.98)) /
+              (hat.mount?.span || 1)
+            : 0,
           tilt = head.tilt || 0,
           offset = hat ? (pose === 'rear' ? 0.035 : 0.045) : -0.045;
         return {
@@ -634,8 +690,11 @@
       const f = this.prepare(pose, stage);
       ctx.globalAlpha = alpha;
       ctx.save();
-      const rear=pose==='rear'||pose.includes('back')||['sleep','stretch','mid-sleep','mid-stretch'].includes(pose);
-      if(!rear)this.extras.weapon(ctx,{x,y,size},pose,f.head);
+      const rear =
+        pose === 'rear' ||
+        pose.includes('back') ||
+        ['sleep', 'stretch', 'mid-sleep', 'mid-stretch'].includes(pose);
+      if (!rear) this.extras.weapon(ctx, { x, y, size }, pose, f.head);
       ctx.drawImage(
         f.canvas,
         x - (f.pad / f.cellWidth) * size,
@@ -643,18 +702,22 @@
         (size * f.canvas.width) / f.cellWidth,
         (size * f.canvas.height) / f.cellWidth,
       );
-      if(rear)this.extras.weapon(ctx,{x,y,size},pose,f.head);
+      if (rear) this.extras.weapon(ctx, { x, y, size }, pose, f.head);
       ctx.restore();
       ctx.globalAlpha = alpha;
-      if (withHat) this.extras.hat(ctx, this.state.hat, { x, y, size }, pose, performance.now(), f.head);
+      if (withHat)
+        this.extras.hat(ctx, this.state.hat, { x, y, size }, pose, performance.now(), f.head);
       ctx.globalAlpha = 1;
       return f;
     }
     idleReady() {
-      return ['sleep', 'whistle', 'back', 'stretch'].every((p) => this.images[p]);
+      return (
+        this.state?.pugStage === 15 ||
+        ['sleep', 'whistle', 'back', 'stretch'].every((p) => this.images[p])
+      );
     }
     setIdle(event) {
-      if (this.idleEvent?.kind === 'pee' && !event) {
+      if (['pee', 'sleep'].includes(this.idleEvent?.kind) && !event) {
         this.returning = { from: this.layout(), start: performance.now() };
         this.sound.play('return');
       }
@@ -663,7 +726,15 @@
     }
     activePose() {
       const e = this.idleEvent;
-      return e ? (e.kind === 'pee' || e.kind === 'backlook' ? 'back' : e.kind) : this.pose;
+      return e
+        ? e.kind === 'pee' || e.kind === 'backlook'
+          ? 'back'
+          : e.kind === 'hiccup'
+            ? 'yawn'
+            : e.kind === 'zoomies'
+              ? 'left'
+              : e.kind
+        : this.pose;
     }
     layout(now = performance.now()) {
       const portrait = this.w < this.h,
@@ -689,6 +760,11 @@
         };
         l.y = l.base - l.size - (this.reduced ? 0 : Math.sin(p * Math.PI * 9) * 4 * (1 - p));
       }
+      l = this.scene?.sleepLayout(l) || l;
+      if (this.idleEvent?.kind === 'zoomies' && !this.reduced) {
+        l.x += Math.sin(this.idleEvent.elapsed / 350) * this.w * 0.035;
+        l.y -= Math.abs(Math.sin(this.idleEvent.elapsed / 175)) * 8;
+      }
       if (this.returning) {
         const p = Math.min(1, (now - this.returning.start) / 260),
           f = this.returning.from,
@@ -704,6 +780,7 @@
       return l;
     }
     hitHelper(x, y) {
+      if (!this.state.helper || this.state.expedition) return false;
       const b = this.extras.helperBounds;
       return !!b && x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
     }
@@ -725,7 +802,15 @@
     }
     animatePose(pose, now = performance.now()) {
       if (this.reduced) return;
-      if (!this.images[pose] && this.catalog?.[pose]) {
+      if (this.state.pugStage === 15 && !this.worldMusclePoseReady(pose)) {
+        this.nextPose = now + 5000;
+        this.scene
+          .preloadPug(pose)
+          .then(() => this.animatePose(pose, performance.now()))
+          .catch(() => {});
+        return;
+      }
+      if (this.state.pugStage !== 15 && !this.images[pose] && this.catalog?.[pose]) {
         this.nextPose = now + 5000;
         Promise.all([
           this.image(pose, this.catalog[pose]),
@@ -751,7 +836,7 @@
           .catch(() => {});
         return;
       }
-      if (!this.images[pose]) return;
+      if (this.state.pugStage !== 15 && !this.images[pose]) return;
       this.pose = pose;
       this.poseStart = now;
       this.poseEnd =
@@ -770,18 +855,23 @@
       else if (['look', 'left', 'lick'].includes(pose) && Math.random() < 0.35)
         this.sound.play('pet');
     }
+    worldMusclePoseReady(pose) {
+      const i = PugScene.poses.indexOf(pose);
+      return i >= 0 && !!this.images['muscle-' + Math.floor(i / 4)];
+    }
     fart() {
       this.animatePose(Math.random() < 0.5 ? 'left' : 'look');
       this.sound.play('fart', Math.floor(Math.random() * 4));
     }
-    sneeze() {
+    sneeze(kind = 'spit') {
       const now = performance.now(),
         l = this.layout();
       this.sneezeCombo = now - this.sneezeAt < 550 ? Math.min(12, (this.sneezeCombo || 0) + 1) : 1;
       this.sneezeAt = now;
-      this.sound.play('sneeze');
+      this.sound.play(kind === 'cloud' ? 'fart' : 'sneeze', Math.floor(Math.random() * 4));
       for (let i = 0; i < 18; i++)
         this.drops.push({
+          kind,
           start: now,
           fromX: l.x + l.size * 0.5,
           fromY: l.y + l.size * 0.34,
@@ -802,12 +892,12 @@
       const frame = this.poseFrame(pose, p, now);
       this.dog(ctx, stage, frame, l.x, l.y, l.size, alpha);
     }
-    spitCoverage(now = performance.now()) {
+    spitCoverage(now = performance.now(), kind = 'spit') {
       const c = this.coverageCanvas.getContext('2d', { willReadFrequently: true });
       c.clearRect(0, 0, 64, 96);
       for (const d of this.drops) {
         const age = now - d.start;
-        if (age < 100 || age > d.life) continue;
+        if ((d.kind || 'spit') !== kind || age < 100 || age > d.life) continue;
         c.save();
         c.translate(d.x * 64, d.y * 96);
         c.scale(64 / this.w, 96 / this.h);
@@ -840,21 +930,32 @@
         tr = this.transition,
         mix = tr ? Math.min(1, (now - tr.start) / 1300) : 1;
       this.background(c, s.homeStage, w, h);
-      if(this.bossActive){PugBattleRender.draw(this,now);return;}
+      if (this.bossActive) {
+        this.spitCtx?.clearRect(0, 0, w, h);
+        PugBattleRender.draw(this, now);
+        return;
+      }
       if (tr && mix < 1 && tr.from.homeStage !== s.homeStage) {
         c.globalAlpha = 1 - mix;
         this.background(c, tr.from.homeStage, w, h);
         c.globalAlpha = 1;
       }
+      this.scene.bed(c);
       this.food(
         c,
         s.foodStage ?? s.homeStage,
         w,
         h,
         now,
-        tr && mix < 1 && (tr.from.foodStage ?? tr.from.homeStage) !== (s.foodStage ?? s.homeStage) ? mix : 1,
+        tr && mix < 1 && (tr.from.foodStage ?? tr.from.homeStage) !== (s.foodStage ?? s.homeStage)
+          ? mix
+          : 1,
       );
-      if (tr && mix < 1 && (tr.from.foodStage ?? tr.from.homeStage) !== (s.foodStage ?? s.homeStage))
+      if (
+        tr &&
+        mix < 1 &&
+        (tr.from.foodStage ?? tr.from.homeStage) !== (s.foodStage ?? s.homeStage)
+      )
         this.food(c, tr.from.foodStage ?? tr.from.homeStage, w, h, now, 1 - mix);
       if (tr && mix < 1 && !this.reduced) {
         c.save();
@@ -862,8 +963,13 @@
         c.rotate(mix * 0.22);
         c.fillStyle = `rgba(255,229,148,${Math.sin(mix * Math.PI) * 0.48})`;
         for (let i = 0; i < 12; i++) {
-          c.rotate(Math.PI / 6); c.beginPath(); c.moveTo(0, 0);
-          c.lineTo(l.size * 1.5, -l.size * 0.09); c.lineTo(l.size * 1.5, l.size * 0.09); c.closePath(); c.fill();
+          c.rotate(Math.PI / 6);
+          c.beginPath();
+          c.moveTo(0, 0);
+          c.lineTo(l.size * 1.5, -l.size * 0.09);
+          c.lineTo(l.size * 1.5, l.size * 0.09);
+          c.closePath();
+          c.fill();
         }
         c.restore();
       }
@@ -899,18 +1005,16 @@
       if (tr && mix < 1 && tr.from.pugStage !== s.pugStage)
         this.dog(c, tr.from.pugStage, 'idle', l.x, l.y, l.size, 1 - mix);
       const weight = tr && mix < 1 && tr.from.pugStage !== s.pugStage ? mix : 1;
-      if (e) {
-        const visible = this.visiblePug(now);
-        if (visible.mirror) {
-          c.translate(l.x + l.size * 0.5, 0);
-          c.scale(-1, 1);
-          c.translate(-l.x - l.size * 0.5, 0);
-        }
-        this.motionDog(c, s.pugStage, active, l, this.poseProgress(now), weight, now);
-      } else if (this.pose === 'idle') this.dog(c, s.pugStage, 'idle', l.x, l.y, l.size, weight);
-      else this.motionDog(c, s.pugStage, this.pose, l, this.poseProgress(now), weight, now);
+      const visible = this.visiblePug(now);
+      if (visible.mirror) {
+        c.translate(l.x + l.size * 0.5, 0);
+        c.scale(-1, 1);
+        c.translate(-l.x - l.size * 0.5, 0);
+      }
+      this.dog(c, s.pugStage, visible.pose, l.x, l.y, l.size, weight);
 
       c.restore();
+      if (e?.kind === 'sleep') this.scene.bed(c, true);
       this.drawIdle(now, l);
       this.extras.helper(c, now, w, h, s.expedition ? 0 : s.helper);
       if (tr && mix < 1 && !this.reduced) {
@@ -983,6 +1087,7 @@
         c.stroke();
         c.restore();
       }
+      if (!this.uiPaused) this.scene.draw(c, now);
       this.drawSpit(now);
     }
     drawIdle(now, l) {
@@ -1019,7 +1124,15 @@
           this.sound.play('whistle');
         }
       }
+      if (['hiccup', 'zoomies'].includes(e.kind) && this.idleSoundId !== e.id) {
+        this.idleSoundId = e.id;
+        this.sound.play(e.kind);
+      }
       if (e.kind === 'pee' && e.elapsed > 5100 && e.elapsed < 8200) {
+        if (this.peeSoundId !== e.id) {
+          this.peeSoundId = e.id;
+          this.sound.play('pee');
+        }
         const x = l.x + l.size * 0.64,
           y = l.base - l.size * 0.2,
           p = (e.elapsed / 500) % 1;
@@ -1038,6 +1151,16 @@
       }
     }
     dropPath(c, d) {
+      if (d.kind === 'cloud') {
+        for (let i = 0; i < 7; i++) {
+          const a = (i * Math.PI * 2) / 7,
+            x = Math.cos(a) * d.r * 0.45,
+            y = Math.sin(a) * d.r * 0.4;
+          c.moveTo(x + d.r * 0.65, y);
+          c.arc(x, y, d.r * 0.65, 0, Math.PI * 2);
+        }
+        return;
+      }
       const r = d.r,
         h = r * d.stretch;
       c.moveTo(0, -h);
@@ -1063,8 +1186,8 @@
         c.translate(x, y);
         c.rotate(d.angle);
         c.scale(p || 0.01, p || 0.01);
-        c.globalAlpha = fade * 0.96;
-        c.fillStyle = '#d4e5df';
+        c.globalAlpha = (fade * 0.96 * (this.effectsIntensity ?? 100)) / 100;
+        c.fillStyle = d.kind === 'cloud' ? '#96613f' : '#d4e5df';
         c.shadowColor = '#213a3944';
         c.shadowBlur = 0;
         c.beginPath();
@@ -1098,13 +1221,9 @@
     }
     preview(canvas, kind, stage) {
       if (!this.ready) return;
-      const key = [
-        kind,
-        stage,
-        this.state.homeStage,
-        this.state.hat,
-        this.artRevision || 0,
-      ].join('-');
+      const key = [kind, stage, this.state.homeStage, this.state.hat, this.artRevision || 0].join(
+        '-',
+      );
       if (canvas.dataset.preview === key) return;
       canvas.dataset.preview = key;
       const c = canvas.getContext('2d'),

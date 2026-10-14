@@ -1,0 +1,31 @@
+{
+  "version": "0.8.1",
+  "runtime": {
+    "style.css": "daf2684f0d3c6b918e23182c564d95bb0270a3ac",
+    "session.js": "261c03fec375ad41a5997e768a93e3733cc4f3ed",
+    "combo.js": "5b9b82e6c25001c3645c979c37bed6a7c08c0f33",
+    "inventory-rules.js": "73da67c6adf11059a07eac76bc8139ac4151dcf2",
+    "battle-rules.js": "5d83933606bccaa42204fcce5264836792d7e351",
+    "guests.js": "cb07f9fe8f913ee91f9a8763bc2a122ba5f87846",
+    "game.js": "2c57ea10b772a7fcd73e05b14a143df761802118",
+    "icons.js": "b324acf2228f06854c091f73878c1a9b2e52a294",
+    "locale.js": "b2702006dc5d936adc447a13287d4c5ffea903e2",
+    "locale-v8.js": "e821e55ba7a6d66795176c68e6210124d52dc601",
+    "bonuses.js": "0a17ad97dca7788a2e809c5a2289dc2088fb21a7",
+    "birds.js": "8a9e7a317fd34dfdb849b2ee747d8fdbf6b30000",
+    "idle.js": "f4a851eb4593ee3e266048e17a3e545b23194154",
+    "audio.js": "f7c665a0cf61ad75721ca40b60727b24cf3f7423",
+    "sprites.js": "4eee529341b5ca2893a91249b11922c8b966d528",
+    "minigames.js": "31c9f4294bcea6c4c9c7564c526d4bd2873385f7",
+    "extras.js": "c13444876e63db0969aa1e61c13905ec0d88ff48",
+    "scene-v8.js": "87b5b4743970257fd9cf9b460b583f5302914d49",
+    "world.js": "676fac8c2b6ace670eea82c57b5723dbf760bff3",
+    "inventory-ui.js": "af285d21eb4243259a21a7ae16de78defc121012",
+    "collections.js": "74fdf03d098420bde8db6ea4686770f72d31cf85",
+    "mini-ui.js": "2c8b2aa50e414ba82b72bb1bc9f2ce85f68e240a",
+    "battle-render.js": "0aeea3eb48338c8967c94cea379da04865e9c1a7",
+    "battle-ui.js": "f1c2760286986e4a0b06d8bf3dcec52180a9e33a",
+    "secret-ui.js": "82a479d298f9293e59b78c957980f122034834ec",
+    "app.js": "0e3c4465de16d9305addf70e7a73672294366da0"
+  }
+}

@@ -8,7 +8,7 @@
     PRIOR_BACKUP = 'pug-and-pebbles-v5-backup',
     LEGACY_BACKUP = 'pug-and-pebbles-v4-backup',
     OLDER_BACKUP = 'pug-and-pebbles-v3-backup',
-    VERSION = '0.8.0',
+    VERSION = '0.8.1',
     SHARE_URL = 'https://doublden.github.io/pug-and-pebbles/?v=' + VERSION,
     instance = Math.random().toString(36).slice(2) + Date.now();
   const session = PugSession.create(localStorage, 'pug-and-pebbles-session-v5', instance);
