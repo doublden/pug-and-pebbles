@@ -21,7 +21,8 @@
             '</div>';
         PugGame.HATS.forEach((hat, i) => {
           const owned = s.hats.includes(hat.id),
-            secret = !!hat.award && !owned,
+            awardLocked = !!hat.award && !owned,
+            secret = awardLocked && !s.hiddenRevealed,
             button = this.$('hat-buy-' + i),
             art = this.$('hat-art-' + i);
           this.$('hat-name-' + i).textContent = secret ? '???' : w.hatNames[i];
@@ -30,8 +31,8 @@
             : w.hatDescriptions[i] +
               (!owned && s.pug < hat.stage ? ' · ' + w.hatGate + ': ' + w.pugNames[hat.stage] : '');
           button.disabled =
-            secret || (!owned && (s.pug < hat.stage || s.balance.compare(hat.cost) < 0));
-          button.textContent = secret
+            awardLocked || (!owned && (s.pug < hat.stage || s.balance.compare(hat.cost) < 0));
+          button.textContent = awardLocked
             ? w.secret
             : owned
               ? s.hat === hat.id
@@ -45,7 +46,7 @@
           if (!art.querySelector('canvas'))
             art.innerHTML = '<canvas width="200" height="120" aria-hidden="true"></canvas>';
           const canvas = art.querySelector('canvas'),
-            f = this.world.extras.frame('hats', i, 4, 3);
+            f = this.world.extras.hatFrame(hat.id);
           if (f) {
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, 200, 120);
@@ -79,30 +80,63 @@
           this.format(quote.count ? quote.cost : game.getHelperPrice());
         const ex = s.expedition,
           left = ex ? Math.max(0, Math.ceil((ex.ends - Date.now()) / 1000)) : 0;
-        const ability=this.$('helper-burst');
-        ability.disabled=!s.helper||!!ex||s.helperBurstSeconds>0;
-        ability.textContent=s.helperBurstActive?w.helperBurstActive:w.helperBurst+(s.helperBurstSeconds?' · '+s.helperBurstSeconds+'s':'');
-        const paletteKey=w.helperColor+'-'+s.maxHelperSkin;
-        if(rebuild||this.paletteKey!==paletteKey||!this.$('helper-colors').firstChild){
-          this.paletteKey=paletteKey;
-          this.$('helper-colors').innerHTML=`<label class="setting-row">${w.helperColor}<select data-helper-skin><option value="">${w.currentLook}</option>${Array.from({length:s.maxHelperSkin+1},(_,i)=>`<option value="${i}">${w.helperTiers[i]}</option>`).join('')}</select></label><label class="setting-row">${w.helperSticker}<select data-helper-sticker>${['none','paw','fish','star'].map((id,i)=>`<option value="${id}">${w.stickerNames[i]}</option>`).join('')}</select></label>`;
+        const ability = this.$('helper-burst');
+        ability.disabled = !s.helper || !!ex || s.helperBurstSeconds > 0;
+        ability.textContent = s.helperBurstActive
+          ? w.helperBurstActive
+          : w.helperBurst + (s.helperBurstSeconds ? ' · ' + s.helperBurstSeconds + 's' : '');
+        const paletteKey = w.helperColor + '-' + s.maxHelperSkin;
+        if (rebuild || this.paletteKey !== paletteKey || !this.$('helper-colors').firstChild) {
+          this.paletteKey = paletteKey;
+          this.$('helper-colors').innerHTML =
+            `<label class="setting-row">${w.helperColor}<select data-helper-skin><option value="">${w.currentLook}</option>${Array.from({ length: s.maxHelperSkin + 1 }, (_, i) => `<option value="${i}">${w.helperTiers[i]}</option>`).join('')}</select></label><label class="setting-row">${w.helperSticker}<select data-helper-sticker>${['none', 'paw', 'fish', 'star'].map((id, i) => `<option value="${id}">${w.stickerNames[i]}</option>`).join('')}</select></label>`;
         }
-        this.$('helper-colors').querySelector('[data-helper-skin]').value=s.helperSkin===null?'':s.helperSkin;
-        this.$('helper-colors').querySelector('[data-helper-sticker]').value=s.helperSticker;
-        const expeditionKey=JSON.stringify([w.expeditions,s.helper,s.home,s.trainingDone,s.expeditionMisses,s.helperBaseRate,ex?.ends,!!left]);
-        if(rebuild||this.expeditionKey!==expeditionKey||!this.$('expeditions').firstChild){
-          this.expeditionKey=expeditionKey;
-          this.$('expeditions').innerHTML=`<h2>${w.expeditions}</h2><p class="collection-note">${w.expeditionRule}</p>`+
-            (ex?`<p id="expedition-timer"></p><button class="setting-action" data-collect="true" ${left?'disabled':''}>${w.collect} · ${this.format(ex.reward)}</button>${left?`<button class="setting-action" data-cancel-expedition="true">${w.cancelExpedition}</button>`:''}`:
-            PugInventoryRules.DURATIONS.map((d,i)=>{
-              const offer=game.expeditionLootOffer(d),conditional=offer.weights.map(o=>(o.index<0?w.parts:w.weaponNames[o.index])+': '+o.percent.toFixed(1)+'%').join(' · ');
-              return `<button class="setting-action" data-expedition="${d}" ${!s.helper?'disabled':''}>${w.expeditionTimes[i]} · +${this.format(game.expeditionOffer(d))}</button><p class="loot-odds">${offer.training?w.trainingLoot:`${w.lootChance}: ${offer.chance}% · ${w.lootRolls}: ${offer.rolls}${offer.chance?`<br>${w.lootConditional}: ${conditional}`:''}`}</p>`;
-            }).join('')+`<p class="collection-note">${w.pityLoot}</p>`);
+        this.$('helper-colors').querySelector('[data-helper-skin]').value =
+          s.helperSkin === null ? '' : s.helperSkin;
+        this.$('helper-colors').querySelector('[data-helper-sticker]').value = s.helperSticker;
+        const expeditionKey = JSON.stringify([
+          w.expeditions,
+          s.helper,
+          s.home,
+          s.trainingDone,
+          s.expeditionMisses,
+          s.helperBaseRate,
+          ex?.ends,
+          !!left,
+        ]);
+        if (rebuild || this.expeditionKey !== expeditionKey || !this.$('expeditions').firstChild) {
+          this.expeditionKey = expeditionKey;
+          this.$('expeditions').innerHTML =
+            `<h2>${w.expeditions}</h2><p class="collection-note">${w.expeditionRule}</p>` +
+            (ex
+              ? `<p id="expedition-timer"></p><button class="setting-action" data-collect="true" ${left ? 'disabled' : ''}>${w.collect} · ${this.format(ex.reward)}</button>${left ? `<button class="setting-action" data-cancel-expedition="true">${w.cancelExpedition}</button>` : ''}`
+              : PugInventoryRules.DURATIONS.map((d, i) => {
+                  const offer = game.expeditionLootOffer(d),
+                    conditional = offer.weights
+                      .map(
+                        (o) =>
+                          (o.index < 0 ? w.parts : w.weaponNames[o.index]) +
+                          ': ' +
+                          o.percent.toFixed(1) +
+                          '%',
+                      )
+                      .join(' · ');
+                  return `<button class="setting-action" data-expedition="${d}" ${!s.helper ? 'disabled' : ''}>${w.expeditionTimes[i]} · +${this.format(game.expeditionOffer(d))}</button><p class="loot-odds">${offer.training ? w.trainingLoot : `${w.lootChance}: ${offer.chance}% · ${w.lootRolls}: ${offer.rolls}${offer.chance ? `<br>${w.lootConditional}: ${conditional}` : ''}`}</p>`;
+                }).join('') + `<p class="collection-note">${w.pityLoot}</p>`);
         }
-        if(ex)this.$('expedition-timer').textContent=w.away+': '+Math.floor(left/3600)+':'+String(Math.floor(left/60)%60).padStart(2,'0')+':'+String(left%60).padStart(2,'0');
-        const canvas=this.$('helper-preview'),ctx=canvas.getContext('2d');
-        ctx.clearRect(0,0,600,260);this.world.extras.helper(ctx,performance.now(),600,260,s.helper,true);
-
+        if (ex)
+          this.$('expedition-timer').textContent =
+            w.away +
+            ': ' +
+            Math.floor(left / 3600) +
+            ':' +
+            String(Math.floor(left / 60) % 60).padStart(2, '0') +
+            ':' +
+            String(left % 60).padStart(2, '0');
+        const canvas = this.$('helper-preview'),
+          ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, 600, 260);
+        this.world.extras.helper(ctx, performance.now(), 600, 260, s.helper, true);
       }
     }
   }

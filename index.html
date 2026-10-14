@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#27251f" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Мопс" />
+    <meta name="apple-mobile-web-app-title" content="Mortik" />
     <meta
       name="description"
       content="Мопс и камушки: копай корм, лови друзей и обустрой жизнь своего мопса."
@@ -15,31 +15,38 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" type="image/png" href="favicon-v5.png" />
     <link rel="apple-touch-icon" href="icon-180-v5.png" />
-    <link rel="stylesheet" href="style.css?v=0.7.0d" />
-    <script src="session.js?v=0.7.0d"></script>
-    <script src="combo.js?v=0.7.0d"></script>
-    <script src="inventory-rules.js?v=0.7.0d" defer></script>
-    <script src="battle-rules.js?v=0.7.0d" defer></script>
-    <script src="game.js?v=0.7.0d" defer></script>
-    <script src="icons.js?v=0.7.0d" defer></script>
-    <script src="locale.js?v=0.7.0d" defer></script>
-    <script src="bonuses.js?v=0.7.0d" defer></script>
-    <script src="birds.js?v=0.7.0d" defer></script>
-    <script src="idle.js?v=0.7.0d" defer></script>
-    <script src="audio.js?v=0.7.0d" defer></script>
-    <script src="sprites.js?v=0.7.0d" defer></script>
-    <script src="minigames.js?v=0.7.0d" defer></script>
-    <script src="extras.js?v=0.7.0d" defer></script>
-    <script src="world.js?v=0.7.0d" defer></script>
-    <script src="inventory-ui.js?v=0.7.0d" defer></script>
-    <script src="collections.js?v=0.7.0d" defer></script>
-    <script src="mini-ui.js?v=0.7.0d" defer></script>
-    <script src="battle-render.js?v=0.7.0d" defer></script>
-    <script src="battle-ui.js?v=0.7.0d" defer></script>
-    <script src="app.js?v=0.7.0d" defer></script>
+    <link rel="stylesheet" href="style.css?v=0.8.0d" />
+    <script src="session.js?v=0.8.0d"></script>
+    <script src="combo.js?v=0.8.0d"></script>
+    <script src="inventory-rules.js?v=0.8.0d" defer></script>
+    <script src="battle-rules.js?v=0.8.0d" defer></script>
+    <script src="guests.js?v=0.8.0d" defer></script>
+    <script src="game.js?v=0.8.0d" defer></script>
+    <script src="icons.js?v=0.8.0d" defer></script>
+    <script src="locale.js?v=0.8.0d" defer></script>
+    <script src="locale-v8.js?v=0.8.0d" defer></script>
+    <script src="bonuses.js?v=0.8.0d" defer></script>
+    <script src="birds.js?v=0.8.0d" defer></script>
+    <script src="idle.js?v=0.8.0d" defer></script>
+    <script src="audio.js?v=0.8.0d" defer></script>
+    <script src="sprites.js?v=0.8.0d" defer></script>
+    <script src="minigames.js?v=0.8.0d" defer></script>
+    <script src="extras.js?v=0.8.0d" defer></script>
+    <script src="scene-v8.js?v=0.8.0d" defer></script>
+    <script src="world.js?v=0.8.0d" defer></script>
+    <script src="inventory-ui.js?v=0.8.0d" defer></script>
+    <script src="collections.js?v=0.8.0d" defer></script>
+    <script src="mini-ui.js?v=0.8.0d" defer></script>
+    <script src="battle-render.js?v=0.8.0d" defer></script>
+    <script src="battle-ui.js?v=0.8.0d" defer></script>
+    <script src="secret-ui.js?v=0.8.0d" defer></script>
+    <script src="app.js?v=0.8.0d" defer></script>
   </head>
   <body>
-    <div id="rotate-screen" role="status"><span aria-hidden="true">↻</span><p data-i18n="rotatePhone">Поверни телефон вертикально</p></div>
+    <div id="rotate-screen" role="status">
+      <span aria-hidden="true">↻</span>
+      <p data-i18n="rotatePhone">Поверни телефон вертикально</p>
+    </div>
     <main id="app" class="app-shell">
       <canvas id="world" tabindex="0" role="button" aria-label="Копать камушки"></canvas
       ><button id="sneeze-button" class="sr-only" data-i18n="sneeze">Чихнуть</button>
@@ -47,26 +54,41 @@
       <button id="food-hit" class="food-hit" aria-label="Копать камушки"></button
       ><canvas id="slobber" aria-hidden="true"></canvas>
       <section id="battle-hud" class="battle-hud" hidden>
-        <div class="battle-heading"><strong id="battle-name"></strong><span id="battle-clock"></span></div>
-        <div class="battle-health"><span id="battle-bar"></span></div><p id="battle-hp"></p>
-        <p id="battle-tip"></p><button id="battle-exit" class="setting-action"></button>
-      </section><button id="boss-target" class="boss-target" aria-label="Атаковать босса / Attack boss" hidden></button>
+        <div class="battle-heading">
+          <strong id="battle-name"></strong><span id="battle-clock"></span>
+        </div>
+        <div class="battle-health"><span id="battle-bar"></span></div>
+        <p id="battle-hp"></p>
+        <p id="battle-tip"></p>
+        <button id="battle-exit" class="setting-action"></button>
+      </section>
+      <button
+        id="boss-target"
+        class="boss-target"
+        aria-label="Атаковать босса / Attack boss"
+        hidden
+      ></button>
       <header class="hud">
         <div class="hud-main">
-        <div class="wallet">
-          <span class="kibble" aria-hidden="true"></span>
-          <div><strong id="balance">0</strong><span id="wallet-label">камушки</span></div>
-        </div>
-        <div class="status-stack">
-      <div class="test-chip" id="test-chip" hidden data-i18n="testMode">Тестовый прогресс</div>
-      <div class="bonus-indicator" id="bonus-indicator" hidden>
-        <span id="bonus-value">×2</span><span id="bonus-seconds">30</span>
-      </div>
-      <div id="combo-indicator" class="combo-indicator" hidden>
-        <strong id="combo-rate"></strong><span id="combo-caption"></span>
-      </div>
-          <div id="expedition-banner" class="expedition-banner" hidden><span id="expedition-ready-text"></span><button id="expedition-ready-claim"></button><button id="expedition-ready-dismiss" aria-label="Закрыть">×</button></div>
-        </div>
+          <div class="wallet">
+            <span class="kibble" aria-hidden="true"></span>
+            <div><strong id="balance">0</strong><span id="wallet-label">камушки</span></div>
+          </div>
+          <div class="status-stack">
+            <div class="test-chip" id="test-chip" hidden data-i18n="testMode">
+              Тестовый прогресс
+            </div>
+            <div class="bonus-indicator" id="bonus-indicator" hidden>
+              <span id="bonus-value">×2</span><span id="bonus-seconds">30</span>
+            </div>
+            <div id="combo-indicator" class="combo-indicator" hidden>
+              <strong id="combo-rate"></strong><span id="combo-caption"></span>
+            </div>
+            <div id="expedition-banner" class="expedition-banner" hidden>
+              <span id="expedition-ready-text"></span><button id="expedition-ready-claim"></button
+              ><button id="expedition-ready-dismiss" aria-label="Закрыть">×</button>
+            </div>
+          </div>
         </div>
         <div class="hud-actions">
           <button id="achievements-open" class="round-button" aria-label="Достижения">
@@ -174,7 +196,10 @@
         ><button data-tab="pug" aria-pressed="false" id="tab-pug">Мопс</button
         ><button data-tab="home" aria-pressed="false" id="tab-home">Дом</button
         ><button data-tab="hats" aria-pressed="false" id="tab-hats">Шляпы</button
-        ><button data-tab="helper" aria-pressed="false" id="tab-helper">Василий</button><button data-tab="inventory" aria-pressed="false" id="tab-inventory">Инвентарь</button>
+        ><button data-tab="helper" aria-pressed="false" id="tab-helper">Василий</button
+        ><button data-tab="beds" aria-pressed="false" id="tab-beds">Лежанки</button
+        ><button data-tab="album" aria-pressed="false" id="tab-album">Гости</button
+        ><button data-tab="inventory" aria-pressed="false" id="tab-inventory">Инвентарь</button>
       </nav>
       <div class="shop-options">
         <label id="bulk-label"></label>
@@ -188,7 +213,18 @@
       <p class="shop-footnote" id="shop-footnote">Каждые 25 уровней инструмента — двойная сила</p>
       <div class="save-note" id="save-note">Прогресс сохраняется на этом устройстве</div>
     </dialog>
-    <dialog id="expedition-cancel-dialog" class="sheet settings-sheet" aria-labelledby="expedition-cancel-title"><header class="sheet-header"><h1 id="expedition-cancel-title"></h1><button id="expedition-cancel-close" class="close-button">×</button></header><p id="expedition-cancel-about"></p><button id="expedition-cancel-confirm" class="setting-action"></button></dialog>
+    <dialog
+      id="expedition-cancel-dialog"
+      class="sheet settings-sheet"
+      aria-labelledby="expedition-cancel-title"
+    >
+      <header class="sheet-header">
+        <h1 id="expedition-cancel-title"></h1>
+        <button id="expedition-cancel-close" class="close-button">×</button>
+      </header>
+      <p id="expedition-cancel-about"></p>
+      <button id="expedition-cancel-confirm" class="setting-action"></button>
+    </dialog>
     <dialog id="settings-dialog" class="sheet settings-sheet" aria-labelledby="settings-title">
       <div class="sheet-handle" aria-hidden="true"></div>
       <header class="sheet-header">
@@ -235,15 +271,15 @@
         <button class="setting-action danger" id="reset-open" data-i18n="reset">
           Начать заново
         </button>
-        <button class="setting-action" id="sound-test" data-i18n="soundTest"></button
-        ><a
-          class="settings-note"
-          href="AUDIO_CREDITS.md"
-          target="_blank"
-          data-i18n="audioCredits"
-        ></a>
+        <button class="setting-action" id="sound-test" data-i18n="soundTest"></button>
+        <div class="volume-row">
+          <label for="effects-intensity" data-i18n="effectsIntensity"></label
+          ><output id="effects-intensity-value"></output
+          ><input id="effects-intensity" type="range" min="0" max="100" value="100" />
+        </div>
+        <p class="settings-note" data-i18n="copyright"></p>
         <p id="settings-save-note" class="settings-note">Всё сохраняется автоматически</p>
-        <p class="version-note">Pug & Pebbles · 0.7.0</p>
+        <p class="version-note">Pug & Pebbles · 0.8.0</p>
       </div>
     </dialog>
     <dialog id="achievements-dialog" class="sheet awards-sheet" aria-labelledby="awards-title">
@@ -365,7 +401,9 @@
               <option value="whistle" data-i18n="whistle"></option>
               <option value="backlook" data-i18n="backlook"></option>
               <option value="stretch" data-i18n="stretch"></option>
-              <option value="pee" data-i18n="pee"></option></select
+              <option value="pee" data-i18n="pee"></option>
+              <option value="hiccup" data-i18n="hiccup"></option>
+              <option value="zoomies" data-i18n="zoomies"></option></select
             ><button id="dev-idle-apply" data-i18n="apply"></button>
           </div>
           <div class="dev-row">
@@ -400,16 +438,44 @@
               <option value="splay">Relaxed sit</option></select
             ><button id="dev-pose-apply" data-i18n="apply"></button>
           </div>
-          <button class="setting-action" id="dev-inventory" data-i18n="testInventory"></button><button class="setting-action" id="dev-expedition-ready" data-i18n="testExpeditionReady"></button><button class="setting-action" id="dev-helper-ready" data-i18n="testHelperReady"></button>
+          <button class="setting-action" id="dev-inventory" data-i18n="testInventory"></button
+          ><button
+            class="setting-action"
+            id="dev-expedition-ready"
+            data-i18n="testExpeditionReady"
+          ></button
+          ><button
+            class="setting-action"
+            id="dev-helper-ready"
+            data-i18n="testHelperReady"
+          ></button>
+          <button class="setting-action" id="dev-reveal-hidden" data-i18n="revealHidden"></button>
+          <div class="dev-row">
+            <label for="dev-guest" data-i18n="spawnGuest"></label
+            ><select id="dev-guest">
+              <option value="yuppi">Yuppi</option>
+              <option value="butterfly">Butterfly</option>
+              <option value="bee">Bee</option></select
+            ><button id="dev-guest-apply" data-i18n="apply"></button>
+          </div>
           <button class="setting-action" id="dev-exit" data-i18n="exitDev">Выйти из режима</button>
         </div>
       </div>
     </dialog>
     <dialog id="boss-dialog" class="sheet confirmation-sheet" aria-labelledby="boss-title">
-      <header class="sheet-header"><h1 id="boss-title"></h1><button id="boss-close" class="close-button" aria-label="Закрыть / Close">×</button></header>
-      <div class="boss-portrait"><img id="boss-image" alt=""></div><p id="boss-copy"></p>
-      <strong id="boss-stats"></strong><p id="boss-advice"></p><p id="boss-reward"></p><p id="boss-note" class="collection-note"></p>
-      <button id="boss-start" class="setting-action"></button><button id="boss-inventory" class="setting-action"></button><button id="boss-home" class="setting-action" hidden></button>
+      <header class="sheet-header">
+        <h1 id="boss-title"></h1>
+        <button id="boss-close" class="close-button" aria-label="Закрыть / Close">×</button>
+      </header>
+      <div class="boss-portrait"><img id="boss-image" alt="" /></div>
+      <p id="boss-copy"></p>
+      <strong id="boss-stats"></strong>
+      <p id="boss-advice"></p>
+      <p id="boss-reward"></p>
+      <p id="boss-note" class="collection-note"></p>
+      <button id="boss-start" class="setting-action"></button
+      ><button id="boss-inventory" class="setting-action"></button
+      ><button id="boss-home" class="setting-action" hidden></button>
     </dialog>
     <dialog id="newlife-dialog" class="sheet confirmation-sheet" aria-labelledby="newlife-title">
       <header class="sheet-header"><h1 id="newlife-title" data-i18n="newLife"></h1></header>

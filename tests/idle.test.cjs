@@ -24,7 +24,7 @@ test('modals/background cancel idle scenes and require a new full wait', () => {
 });
 test('rare toilet scene has probability 0.2%, normal scenes sum to 99.8%', () => {
   assert.ok(Math.abs(TYPES.reduce((a, b) => a + b.weight, 0) - 100) < 1e-10);
-  assert.equal(choose(() => 0.9979).kind, 'stretch');
+  assert.equal(choose(() => 0.9979).kind, 'zoomies');
   assert.equal(choose(() => 0.9981).kind, 'pee');
 });
 test('scene ends, touch cancels, developer force rejects unknown scenes', () => {

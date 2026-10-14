@@ -427,7 +427,8 @@
         "Готовность: секреты открываются по реальным событиям, выплаты ограничены и сохраняются, быстрые тапы не оглушают, эффекты не мешают кнопкам, тайные предметы нельзя повторно фармить.",
         "Done when secrets unlock from real events, rewards are capped/persistent, fast taps are not deafening, effects do not block controls, and secret items cannot be farmed repeatedly."
       ],
-      "status": "planned"
+      "status": "released",
+      "release": "0.8.0"
     },
     {
       "id": 8,
@@ -476,7 +477,8 @@
         "Готовность: проверки и их ограничения записаны, миграции не теряют покупки, новая опубликованная сборка проверена, ссылка открывается и PWA обновляется корректно.",
         "Done when checks/limitations are recorded, migrations preserve purchases, the published build is verified, and its link/PWA update work correctly."
       ],
-      "status": "planned"
+      "status": "released",
+      "release": "0.8.0"
     },
     {
       "id": 9,
@@ -497,7 +499,7 @@
         42
       ],
       "extra": [],
-      "status": "planned",
+      "status": "released",
       "tasks": [
         [
           "Шесть обычных лежанок и три скрытые за енота, ворону и меч паладина; одна выбранная лежанка на заднем плане.",
@@ -511,7 +513,8 @@
       "acceptance": [
         "Готовность: сон и возвращение плавные, секретные открытия сохраняются, шапки/оружие корректны, бонусы проверены.",
         "Done: smooth sleep and return, saved secret unlocks, correct hats/weapons and verified bonuses."
-      ]
+      ],
+      "release": "0.8.0"
     },
     {
       "id": 10,
@@ -535,7 +538,7 @@
         55
       ],
       "extra": [],
-      "status": "planned",
+      "status": "released",
       "tasks": [
         [
           "После нынешнего самого дорогого дома — огромная квартира в Дубае: панорамный мегаполис за окнами, золотые слитки и брикеты долларов на заднем плане, ноутбук с графиками. Отдельная следующая стадия корма; подробно отрисовать под мобильный экран.",
@@ -561,7 +564,8 @@
       "done": [
         "Готовность: оба скрытых этапа раскрываются только после покупки, графика/анимации и скины проверены, баланс и перенос сохранений не теряют старые покупки.",
         "Done: both hidden stages reveal only after purchase, art/motions/skins are inspected, and balance/migration preserve existing purchases."
-      ]
+      ],
+      "release": "0.8.0"
     }
   ],
   "research_requirement_completed": 22,
@@ -626,5 +630,9 @@
     10,
     9,
     8
-  ]
+  ],
+  "latest_release": "0.8.0",
+  "remaining_blocks": [],
+  "publication_authorized": true,
+  "status": "all_approved_blocks_complete"
 }

@@ -1,3 +1,11 @@
+# 0.8.0 — all remaining blocks / Все оставшиеся блоки
+
+**0.8.0 — оставшиеся блоки 7–10 в одном выпуске:** Юпи перерисован по новому фото пушистого рыжего перса. Добавлены редкие гости, одноразовый сачок, альбом, бабочки/пчёлы, четыре скрытые шапки и восемь достижений. Тапы по мопсу и Василию теперь дают обычную добычу; поздний мопс поворачивается и пускает облака. Четыре отдельных пука и четыре мяуканья, икота, охота за хвостом и звук воды. Девять лежанок со сном и небольшими бонусами. Скрытые Дубай и мопс-качок, 24 обычных/редких позы и 12 боевых кадров. Старые покупки и заслуженный доступ к Новой жизни сохраняются. Ползунок слюней/облаков, расширенные тестовые вызовы, «Поделиться», обновлённый PWA-кэш.
+
+**0.8.0 — remaining blocks 7–10 together:** Yuppi now follows the new fluffy ginger Persian reference. Rare guests, a one-use net, guest album, butterflies/bees, four secret hats and eight achievements. Pug/Vasiliy taps also dig; later pugs turn around and release clouds. Four distinct fart and four meow recordings, hiccups, tail chase and water audio. Nine beds with sleep scenes and small bonuses. Secret Dubai and muscle pug tiers, 24 regular/rare poses and 12 combat drawings. Existing purchases and earned New life access survive migration. Adjustable effect intensity, more developer summons, sharing and updated PWA cache.
+
+Validation: automated tests, migration/reward tests, 5,376 attachment checks and six mobile sizes. Real iPhone/Android installation/audio still need device testing.
+
 # 0.7.0 — Crisp motion, composition and economy / Чёткие позы, композиция и экономика
 
 ## Русский

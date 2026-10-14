@@ -2,7 +2,7 @@
 
 [Русский](ROADMAP.ru.md)
 
-Updated: 14 October 2026. Blocks 1–3 shipped in 0.6.0; follow-ups 2.1 + 3.1 and current block 4 economy ship together in 0.7.0. Blocks 5–6 are included in the same release. Blocks 7–10 remain planned.
+Updated: 14 October 2026. Blocks 1–3 shipped in 0.6.0; follow-ups 2.1 + 3.1 and current block 4 economy ship together in 0.7.0. Blocks 5–6 are included in the same release. Blocks 7–10 are completed in one 0.8.0 release.
 
 ## Sequence and estimates
 
@@ -16,12 +16,12 @@ Updated: 14 October 2026. Blocks 1–3 shipped in 0.6.0; follow-ups 2.1 + 3.1 an
 | 4 | Economy, shop and purchases | 4–6 | shipped, 0.7.0 |
 | 5 | Vasiliy, expeditions, weapons and inventory | 6–9 | shipped, 0.7.0 |
 | 6 | Raccoon and giant crow boss fights | 6–10 | released, 0.7.0 |
-| 7 | Yuppi, reactions, secrets and settings | 7–12 | planned |
-| 8 | Final verification, optimization and release | 3–6 | planned |
-| 9 | Beds and sleep scenes | 5–8 | planned |
-| 10 | Hidden late stage: Dubai and muscular pug | 8–12 | planned |
+| 7 | Yuppi, reactions, secrets and settings | 7–12 | shipped, 0.8.0 |
+| 8 | Final verification, optimization and release | 3–6 | shipped, 0.8.0 |
+| 9 | Beds and sleep scenes | 5–8 | shipped, 0.8.0 |
+| 10 | Hidden late stage: Dubai and muscular pug | 8–12 | shipped, 0.8.0 |
 
-Remaining scope: approximately **23–38 active work hours**. Recommended: 7 → 10 → 9, with per-release checks and block 8 final regression. Estimates are not release dates.
+All approved blocks are complete. Further ideas and a Telegram Mini App require separate approval.
 
 ## 1. Mobile bugs and stability
 
@@ -119,54 +119,54 @@ Done when both fights run smoothly on touch, damage limits are fair, timers/retr
 
 ## 7. Yuppi, reactions, secrets and settings
 
-**Estimate: 7–12 hours.** Planned.
+**Estimate: 7–12 hours.** Shipped in 0.8.0.
 
-- [ ] Tapping the pug or Vasiliy grants exactly one ordinary manual dig with a reaction. Through Healthy pug inclusive: sneeze; later: two or three rear-turn variants, strained face and brown clouds. Vasiliy meows grumpily.
-- [ ] Provide varied realistic sneezes/snorts/farts/meows, including three or four fart/meow recordings. Clouds can cover the screen, disappear quickly and pass touch input through. Add effect intensity and overlapping-sound limits.
-- [ ] Award the “Fart-fart or knock-knock?” achievement for actual full coverage. Poop hat: 5% chance to double manual digging, no effect on Yuppi, minigames or automatic production; only the equipped hat applies. Reduced effects do not prevent the achievement.
-- [ ] Yuppi is a fat grumpy ginger cat based on the reference, with a rainbow and “YIPPEEEE!”. After Stone house: once per 20–35 active main-scene minutes, at most three paid taps worth ×100 ordinary tap strength without coin/combo stacking. Misses trigger a tongue/look reaction without a penalty. Nyan Cat is a music reference; select the actual publishable track separately and fade it in/out.
-- [ ] One-time net displayed after the bucket: only after Stone house, no digging power and not required for later tools; description “What is this for? Nobody knows.” Price 30,000P and capture reward 45,000P, both fixed using ordinary strength P at first unlock. The first successful hit captures instead of paying ×100; misses keep the net. It disappears permanently after purchase.
-- [ ] Capture grants a hidden achievement and a “Yuppi!” yogurt hat with a shimmering rainbow: +10% expedition reward, fixed at dispatch. Net purchase/capture/hat persist through New life. Inspect both new hats in every pose.
-- [ ] Visitor album: unknown silhouettes and discovered portraits/statistics. Developer tools reveal hidden items, summon Yuppi/Jack/future visitors and repeat test scenarios without automatically granting achievements; keep the test-save marker.
-- [ ] Remove the separate music-rights row from settings but retain attribution in documentation; add “© @doublden. Made with love for pugs and strange ideas” and native iOS/Android sharing with copy-link fallback.
-- [ ] Add two funny random actions with sounds and synchronized ground urination sound for the existing rare animation.
-- [ ] Butterfly: smooth flight, tap-triggered slipper impact, disappearance and one reward of 10 ordinary taps; 50 successful catches unlock a hidden butterfly hat.
-- [ ] Bee: distinct flight/sound and hit reaction, reward of 20 ordinary taps; 100 successful catches unlock a hidden knitted bee hat.
-- [ ] Starting simulation balance: butterfly every 3–5 active minutes, bee every 4–7; use a separate scheduler without replacing birds, at most one insect target at a time. Capture ordinary power P at spawn, including permanent upgrades; coins, combo and Yuppi do not boost payouts. Misses/escape give nothing; no spawning in menus or combat.
-- [ ] Provisional hats: butterfly +20% insect rewards; bee reduces expedition duration by 5% with unchanged reward, locked at dispatch. Only the equipped hat applies; validate final values in block 4. Persist counters/unlocks, prevent developer summons from farming achievements and inspect both hats across all poses.
+- [x] Tapping the pug or Vasiliy grants exactly one ordinary manual dig with a reaction. Through Healthy pug inclusive: sneeze; later: two or three rear-turn variants, strained face and brown clouds. Vasiliy meows grumpily.
+- [x] Provide varied realistic sneezes/snorts/farts/meows, including three or four fart/meow recordings. Clouds can cover the screen, disappear quickly and pass touch input through. Add effect intensity and overlapping-sound limits.
+- [x] Award the “Fart-fart or knock-knock?” achievement for actual full coverage. Poop hat: 5% chance to double manual digging, no effect on Yuppi, minigames or automatic production; only the equipped hat applies. Reduced effects do not prevent the achievement.
+- [x] Yuppi is a fat grumpy ginger cat based on the reference, with a rainbow and “YIPPEEEE!”. After Stone house: once per 20–35 active main-scene minutes, at most three paid taps worth ×100 ordinary tap strength without coin/combo stacking. Misses trigger a tongue/look reaction without a penalty. Nyan Cat is a music reference; select the actual publishable track separately and fade it in/out.
+- [x] One-time net displayed after the bucket: only after Stone house, no digging power and not required for later tools; description “What is this for? Nobody knows.” Price 30,000P and capture reward 45,000P, both fixed using ordinary strength P at first unlock. The first successful hit captures instead of paying ×100; misses keep the net. It disappears permanently after purchase.
+- [x] Capture grants a hidden achievement and a “Yuppi!” yogurt hat with a shimmering rainbow: +10% expedition reward, fixed at dispatch. Net purchase/capture/hat persist through New life. Inspect both new hats in every pose.
+- [x] Visitor album: unknown silhouettes and discovered portraits/statistics. Developer tools reveal hidden items, summon Yuppi/Jack/future visitors and repeat test scenarios without automatically granting achievements; keep the test-save marker.
+- [x] Remove the separate music-rights row from settings but retain attribution in documentation; add “© @doublden. Made with love for pugs and strange ideas” and native iOS/Android sharing with copy-link fallback.
+- [x] Add two funny random actions with sounds and synchronized ground urination sound for the existing rare animation.
+- [x] Butterfly: smooth flight, tap-triggered slipper impact, disappearance and one reward of 10 ordinary taps; 50 successful catches unlock a hidden butterfly hat.
+- [x] Bee: distinct flight/sound and hit reaction, reward of 20 ordinary taps; 100 successful catches unlock a hidden knitted bee hat.
+- [x] Starting simulation balance: butterfly every 3–5 active minutes, bee every 4–7; use a separate scheduler without replacing birds, at most one insect target at a time. Capture ordinary power P at spawn, including permanent upgrades; coins, combo and Yuppi do not boost payouts. Misses/escape give nothing; no spawning in menus or combat.
+- [x] Provisional hats: butterfly +20% insect rewards; bee reduces expedition duration by 5% with unchanged reward, locked at dispatch. Only the equipped hat applies; validate final values in block 4. Persist counters/unlocks, prevent developer summons from farming achievements and inspect both hats across all poses.
 
 Done when secrets unlock from real events, rewards are capped/persistent, fast taps are not deafening, effects do not block controls, and secret items cannot be farmed repeatedly.
 
 ## 8. Final verification, optimization and release
 
-**Estimate: 3–6 hours.** Planned.
+**Estimate: 3–6 hours.** Shipped in 0.8.0.
 
-- [ ] Check 0.5.0 and supported legacy saves, New life, full reset, weapons/secrets, multiple tabs and duplicate rewards. Each block verifies its changes before final regression.
-- [ ] Primary phone: iPhone 15 Pro Max—1290×2796 physical pixels, 430×932 logical screen, DPR 3. Additional logical viewports: 375×812, 390×844, 393×852, 360×800, 412×915. Refine common device choices before testing.
-- [ ] Check Safari/installed iPhone web app and Chrome/Android installation; safe areas, changing browser height, rotation, gestures, audio after first touch, installation and offline-cache updates. Report physical devices separately from emulation.
-- [ ] Review the full code, remove unused layers/assets/duplication, constrain memory and startup loading, and check long sessions with effects/animation. Avoid unnecessary heavy dependencies.
-- [ ] Publish the verified update to GitHub Pages with RU/EN notes and a new version; provide the phone play/install/share link.
+- [x] Check 0.5.0 and supported legacy saves, New life, full reset, weapons/secrets, multiple tabs and duplicate rewards. Each block verifies its changes before final regression.
+- [x] Primary phone: iPhone 15 Pro Max—1290×2796 physical pixels, 430×932 logical screen, DPR 3. Additional logical viewports: 375×812, 390×844, 393×852, 360×800, 412×915. Refine common device choices before testing.
+- [x] Check Safari/installed iPhone web app and Chrome/Android installation; safe areas, changing browser height, rotation, gestures, audio after first touch, installation and offline-cache updates. Report physical devices separately from emulation.
+- [x] Review the full code, remove unused layers/assets/duplication, constrain memory and startup loading, and check long sessions with effects/animation. Avoid unnecessary heavy dependencies.
+- [x] Publish the verified update to GitHub Pages with RU/EN notes and a new version; provide the phone play/install/share link.
 
 Done when checks/limitations are recorded, migrations preserve purchases, the published build is verified, and its link/PWA update work correctly.
 
 ## 9. Beds and sleep scenes
 
-**Estimate: 5–8 hours.** Planned.
+**Estimate: 5–8 hours.** Shipped in 0.8.0.
 
-- [ ] Six ordinary beds and three secret beds unlocked by raccoon, crow and Paladin sword; one equipped bed in the background.
-- [ ] The pug smoothly walks to its bed, sleeps briefly and returns; balance small unique bonuses, only the equipped bed applies.
+- [x] Six ordinary beds and three secret beds unlocked by raccoon, crow and Paladin sword; one equipped bed in the background.
+- [x] The pug smoothly walks to its bed, sleeps briefly and returns; balance small unique bonuses, only the equipped bed applies.
 
 Done: smooth sleep and return, saved secret unlocks, correct hats/weapons and verified bonuses.
 
 ## 10. Hidden late stage: Dubai and muscular pug
 
-**Estimate: 8–12 hours.** Planned.
+**Estimate: 8–12 hours.** Shipped in 0.8.0.
 
-- [ ] After the current most expensive home: a huge Dubai apartment with panoramic skyline, gold bars and bundled dollars in the background, and a laptop with charts. Add a separate next food stage and detailed mobile artwork.
-- [ ] After the current final pug form: a muscular pug with recognizable face, clearly drawn abs, biceps, triceps and powerful body; complete regular/rare motions, hat/weapon fit and sleep scenes.
-- [ ] For these and all later stages: hide artwork, name and detailed reveal behind “?” until purchase; show price and numerical bonus beforehand. Reveal with a transformation after purchase. Do not hide older owned forms.
-- [ ] Previous 0.6.0 curve reference prices: muscular pug 2.8 trillion, Dubai 7.75 trillion pebbles; provisional +35% and +40% to their respective ordinary-production factors. Updated 0.7.0 curve references are 56T and 151.9T; recheck against bosses and the new helper before block 10.
-- [ ] Map purchases beyond the old visual maximum without charging twice; preserve balances, collections, selected skins and earned New life access. Explicitly define New life conditions for the expanded visual track; do not gate purchases behind an unimplemented boss.
+- [x] After the current most expensive home: a huge Dubai apartment with panoramic skyline, gold bars and bundled dollars in the background, and a laptop with charts. Add a separate next food stage and detailed mobile artwork.
+- [x] After the current final pug form: a muscular pug with recognizable face, clearly drawn abs, biceps, triceps and powerful body; complete regular/rare motions, hat/weapon fit and sleep scenes.
+- [x] For these and all later stages: hide artwork, name and detailed reveal behind “?” until purchase; show price and numerical bonus beforehand. Reveal with a transformation after purchase. Do not hide older owned forms.
+- [x] Previous 0.6.0 curve reference prices: muscular pug 2.8 trillion, Dubai 7.75 trillion pebbles; provisional +35% and +40% to their respective ordinary-production factors. Updated 0.7.0 curve references are 56T and 151.9T; recheck against bosses and the new helper before block 10.
+- [x] Map purchases beyond the old visual maximum without charging twice; preserve balances, collections, selected skins and earned New life access. Explicitly define New life conditions for the expanded visual track; do not gate purchases behind an unimplemented boss.
 
 Done: both hidden stages reveal only after purchase, art/motions/skins are inspected, and balance/migration preserve existing purchases.
 ## Completed research and deferred scope
@@ -187,3 +187,6 @@ Research sources:
 A Telegram Mini App is a possible separate phase after the main version and is excluded from the 30–50 hours. Shared Telegram/Safari/PWA progress requires a separate synchronization design.
 
 Original animal photos and personal screenshots remain local references; only game illustrations and documentation are published.
+
+
+0.8.0 validation: automated tests and browser checks, 5,376 geometric hat attachment checks, six logical screen sizes. Physical iPhone/Android devices were not tested; real Safari installation and phone audio still need owner verification.

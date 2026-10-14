@@ -1,4 +1,4 @@
-const CACHE = 'pug-pebbles-v7-20261014d';
+const CACHE = 'pug-pebbles-v8-20261014a';
 const CORE = [
   './',
   'index.html',
@@ -9,6 +9,10 @@ const CORE = [
   'battle-ui.js',
   'battle-render.js',
   'game.js',
+  'guests.js',
+  'scene-v8.js',
+  'secret-ui.js',
+  'locale-v8.js',
   'combo.js',
   'session.js',
   'sounds/sneeze.wav',
@@ -42,9 +46,42 @@ const CORE = [
   'favicon-v5.png',
 ];
 const ART = [
+  ...[
+    'beds',
+    'yuppi',
+    'insects',
+    'hats-front',
+    'hats-side',
+    'hats-back',
+    'background-14',
+    'food-14',
+    'muscle-0',
+    'muscle-1',
+    'muscle-2',
+    'muscle-3',
+    'muscle-4',
+    'muscle-5',
+    'muscle-combat',
+  ].map((id) => 'assets-v8/' + id + '.webp'),
   'battle-v7/frames.json',
-  ...['raccoon','crow','pug-lean','pug-healthy','pug-rich'].map(id=>'battle-v7/'+id+'.webp'),
-  ...['stick','spoon','shank','toothbrush','pipe','crowbar','rustsword','templar','paladin'].map(id=>'weapons/'+id+'.svg'),
+  'assets-v8/muscle-combat.json',
+  ...['fart-1', 'fart-2', 'fart-3', 'meow-0', 'meow-1', 'meow-2', 'meow-3', 'yuppi'].map(
+    (id) => 'sounds/' + id + '.wav',
+  ),
+  ...['raccoon', 'crow', 'pug-lean', 'pug-healthy', 'pug-rich'].map(
+    (id) => 'battle-v7/' + id + '.webp',
+  ),
+  ...[
+    'stick',
+    'spoon',
+    'shank',
+    'toothbrush',
+    'pipe',
+    'crowbar',
+    'rustsword',
+    'templar',
+    'paladin',
+  ].map((id) => 'weapons/' + id + '.svg'),
   'homes-middle-mobile-v5.webp',
   'homes-early-mobile-v5.webp',
   'homes-poverty-mobile-v5.webp',
@@ -81,7 +118,9 @@ self.addEventListener('install', (event) =>
         cache.addAll(
           CORE.map(
             (file) =>
-              new Request(/\.(js|css)$/.test(file) ? file + '?v=0.7.0d' : file, { cache: 'reload' }),
+              new Request(/\.(js|css)$/.test(file) ? file + '?v=0.8.0d' : file, {
+                cache: 'reload',
+              }),
           ),
         ),
       )
@@ -108,7 +147,11 @@ self.addEventListener('message', (event) => {
   if (!warming)
     warming = (async () => {
       const cache = await caches.open(CACHE);
-      const current = Array.isArray(event.data.art) ? event.data.art.filter(p => /^artwork-v6\/(background|food)-\d{2}\.webp$/.test(p)) : [];
+      const current = Array.isArray(event.data.art)
+        ? event.data.art.filter((p) =>
+            /^(artwork-v6\/(background|food)-\d{2}|assets-v8\/[a-z0-9-]+)\.webp$/.test(p),
+          )
+        : [];
       for (const file of [...current, ...ART])
         try {
           if (!(await cache.match(file))) await cache.add(file);

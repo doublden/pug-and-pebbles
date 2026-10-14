@@ -1,14 +1,16 @@
-# Мопс и камушки / Pug & Pebbles — 0.7.0
+# Мопс и камушки / Pug & Pebbles — 0.8.0
 
-[Играть / Play](https://doublden.github.io/pug-and-pebbles/?v=0.7.0) · [GitHub](https://github.com/doublden/pug-and-pebbles)
+[Играть / Play](https://doublden.github.io/pug-and-pebbles/?v=0.8.0) · [GitHub](https://github.com/doublden/pug-and-pebbles)
 
 [План следующих обновлений](ROADMAP.ru.md) · [Next update roadmap](ROADMAP.en.md)
 
 ## Русский
 
+**0.8.0 — оставшиеся блоки 7–10 в одном выпуске:** Юпи перерисован по новому фото пушистого рыжего перса. Добавлены редкие гости, одноразовый сачок, альбом, бабочки/пчёлы, четыре скрытые шапки и восемь достижений. Тапы по мопсу и Василию теперь дают обычную добычу; поздний мопс поворачивается и пускает облака. Четыре отдельных пука и четыре мяуканья, икота, охота за хвостом и звук воды. Девять лежанок со сном и небольшими бонусами. Скрытые Дубай и мопс-качок, 24 обычных/редких позы и 12 боевых кадров. Старые покупки и заслуженный доступ к Новой жизни сохраняются. Ползунок слюней/облаков, расширенные тестовые вызовы, «Поделиться», обновлённый PWA-кэш.
+
 Мобильный кликер про мопса Мортика. Копайте камушки, покупайте инструменты, улучшайте мопса и его дом. Ловите падающих друзей ради временного бонуса и прогоняйте птиц, которые воруют корм. Быстрые нажатия дают небольшое комбо.
 
-В магазине доступны покупки инструментов и Василия ×1, ×10 и максимум; мопс и дом улучшаются по одной стадии. Также есть шляпы. Василий добывает один обычный тап/с уже после найма, получает новую расцветку каждые 10 уровней и может на 10 секунд удвоить работу. Он отправляется в экспедицию на 15 минут, час или три часа. Мини-игры: вычесать мопса, поймать корм и собачьи три в ряд. Достигнув мопса короля, можно добровольно начать Новую жизнь с небольшим постоянным бонусом и сохранением коллекции.
+В магазине доступны покупки инструментов и Василия ×1, ×10 и максимум; мопс и дом улучшаются по одной стадии. Также есть шляпы. Василий добывает один обычный тап/с уже после найма, получает новую расцветку каждые 10 уровней и может на 10 секунд удвоить работу. Он отправляется в экспедицию на 15 минут, час или три часа. Мини-игры: вычесать мопса, поймать корм и собачьи три в ряд. Достигнув последней формы мопса, можно добровольно начать Новую жизнь с небольшим постоянным бонусом и сохранением коллекции.
 
 **На iPhone:** откройте игровую ссылку в Safari → «Поделиться» → «На экран Домой». Если предлагается переключатель «Открывать как веб-приложение», включите его. Игра запускается отдельно от браузерного окна. Сохранение находится на этом устройстве; после первого онлайн-запуска игра кэширует рисунки для работы без сети.
 
@@ -22,11 +24,13 @@
 
 ## English
 
+**0.8.0 — remaining blocks 7–10 together:** Yuppi now follows the new fluffy ginger Persian reference. Rare guests, a one-use net, guest album, butterflies/bees, four secret hats and eight achievements. Pug/Vasiliy taps also dig; later pugs turn around and release clouds. Four distinct fart and four meow recordings, hiccups, tail chase and water audio. Nine beds with sleep scenes and small bonuses. Secret Dubai and muscle pug tiers, 24 regular/rare poses and 12 combat drawings. Existing purchases and earned New life access survive migration. Adjustable effect intensity, more developer summons, sharing and updated PWA cache.
+
 **0.7.0 (2.1 + 3.1 + 4 + 5 + 6):** crisp, slower held poses; Vasiliy +25%, food another +10% and centered higher, pug another −10% with the same anchor. Stronger stage/ordinary hat benefits and more demanding first purchases. Pug/home purchases are single-step and close the shop with sun rays. Category badges and actual total-tap upgrade deltas. Perfect mini-games award 160/240/360 starting-power taps. Existing purchases are preserved. Vasiliy starts at one ordinary tap/second, gains 11 excavator appearances and a ten-second double-output ability. Added weapon expedition loot, 3-to-1 crafting, inventory, junk collection, trip cancellation/ready notifications and paid cosmetic selectors. Weapons appear on his back. Added 30-second raccoon and giant crow battles at homes seven/eight, with armed poses, tense music, one-time rewards and next-home purchase gates.
 
 A mobile-first clicker about Mortik the pug. Dig pebbles, buy tools, improve the pug and his home. Catch falling friends for a temporary bonus and chase birds before they steal food. Fast tapping builds a small combo.
 
-Buy ×1, ×10 or the maximum affordable upgrades. Collect hats and hire grumpy Vasiliy: let him excavate or send him on a 15-minute, one-hour or three-hour expedition. Play Brush the pug, Catch the food and Doggy match three. Reach King pug to unlock an optional New life with a small permanent production bonus while keeping your collection.
+Buy ×1, ×10 or the maximum affordable upgrades. Collect hats and hire grumpy Vasiliy: let him excavate or send him on a 15-minute, one-hour or three-hour expedition. Play Brush the pug, Catch the food and Doggy match three. Reach the final pug form to unlock an optional New life with a small permanent production bonus while keeping your collection.
 
 **On iPhone:** open the play link in Safari → Share → Add to Home Screen. Enable “Open as Web App” if offered. Progress is stored on the device. The first online launch caches artwork for offline use.
 
@@ -49,3 +53,5 @@ node --test tests/*.test.cjs
 78 automated tests cover legacy-save migrations, progression, hats, achievements, capped rewards, expeditions, bulk quotes, combo timing, tab ownership and the excavator rendering regression. Desktop browser checks cover responsive layouts, controls, recordings and PWA caching. Physical iPhone/Safari validation remains a device test; desktop viewport emulation does not replace it.
 
 [Economy / Экономика](ECONOMY.md) · [Release notes / Изменения](RELEASE_NOTES.md) · [Sound credits / Источники звуков](AUDIO_CREDITS.md) · [Artwork / Рисунки](ART_BRIEF_V6.md)
+
+0.8.0 checks and limits: see [VERIFICATION_V8.json](VERIFICATION_V8.json). Browser validation does not certify physical Safari/Android installation or speaker playback.

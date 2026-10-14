@@ -1,0 +1,423 @@
+{
+  "title": "Будущие обновления Mortik",
+  "created": "2026-10-14",
+  "base_release": "0.5.0",
+  "status": "all_approved_blocks_complete",
+  "implementation_started": true,
+  "specification": "FUTURE_UPDATES.md",
+  "requirements": 60,
+  "economy_status": "implemented_and_tested",
+  "additional_ideas_status": "approved_in_scope",
+  "private_reference": "User-supplied animal photographs kept locally; only game illustrations are published.",
+  "publication_authorized": true,
+  "updated": "2026-10-14",
+  "core_requirements": 55,
+  "accepted_additional_mechanics": 5,
+  "economy_easing": {
+    "approximate_percent": 10,
+    "planned_method": "rebalance early costs upward and ordinary bonuses upward; target easier mid/late progression",
+    "preserve_approved_yuppi_formulas": true,
+    "status": "approved_rebalance_pending_calculation",
+    "early_game_exception": "first 3-4 pug and home purchases require more effort"
+  },
+  "iphone_feedback": {
+    "device": "iPhone 15 Pro Max",
+    "references": [
+      "assets/references-private/iphone-15-pro-max-20261014/IMG_3216.PNG",
+      "assets/references-private/iphone-15-pro-max-20261014/IMG_3215.PNG",
+      "assets/references-private/iphone-15-pro-max-20261014/IMG_3214.PNG",
+      "assets/references-private/iphone-15-pro-max-20261014/IMG_3213.PNG",
+      "assets/references-private/iphone-15-pro-max-20261014/IMG_3212.PNG",
+      "assets/references-private/iphone-15-pro-max-20261014/IMG_3210.PNG"
+    ],
+    "tasks": [
+      "high_quality_backgrounds_and_food",
+      "match3_swipes_and_readable_cells",
+      "single_vasiliy_head",
+      "pose_accurate_hats",
+      "combo_and_bonus_timer_overlap"
+    ]
+  },
+  "mobile_qa": {
+    "primary_device": "iPhone 15 Pro Max",
+    "physical_resolution": [
+      1290,
+      2796
+    ],
+    "logical_screen": [
+      430,
+      932
+    ],
+    "device_pixel_ratio": 3,
+    "representative_viewports": [
+      [
+        375,
+        812
+      ],
+      [
+        390,
+        844
+      ],
+      [
+        393,
+        852
+      ],
+      [
+        360,
+        800
+      ],
+      [
+        412,
+        915
+      ]
+    ],
+    "physical_testing_required": true,
+    "status": "planned_not_tested"
+  },
+  "post_completion_research": {
+    "minimum_ideas": 7,
+    "beyond_cookie_clicker": true,
+    "sources_required": true,
+    "status": "completed_early_at_user_request",
+    "completed": "2026-10-14",
+    "proposed_ideas": 8,
+    "implementation_authorized": false,
+    "selected_ideas": [
+      "vasiliy_active_ability"
+    ],
+    "replaced_ideas": {
+      "household_artifact_crafting": "boss_combat_weapon_inventory"
+    }
+  },
+  "telegram_mini_app": {
+    "feasible": true,
+    "implementation_authorized": false,
+    "status": "possible_separate_phase"
+  },
+  "boss_combat": {
+    "status": "approved_pending_implementation",
+    "implementation_started": false,
+    "initial_bosses": [
+      "raccoon",
+      "giant_crow"
+    ],
+    "fight_duration_seconds": 30,
+    "weapon_merge_ratio": 3,
+    "base_parts_for_paladin": 6561,
+    "home_threshold_needs_name_confirmation": false,
+    "loot_and_damage_values_status": "approved_starting_model_pending_simulation",
+    "tutorial_at_location_number": 7,
+    "first_boss_unlocks_location_number": 8,
+    "weapon_visibility_outside_battle_toggle": true
+  },
+  "shop_progression": {
+    "pug_and_home_quantity": 1,
+    "bulk_for_tools_and_helper": true,
+    "close_after_pug_or_home_purchase": true,
+    "celebration": "sun_rays_and_transformation"
+  },
+  "boss_audio": {
+    "tense_music": true,
+    "synchronized_attack_defense_sounds": true,
+    "material_specific": true,
+    "sound_overlap_limited": true
+  },
+  "delivery_estimate": {
+    "active_work_hours": [
+      30,
+      50
+    ],
+    "full_work_days": [
+      4,
+      7
+    ],
+    "fully_animated_initial_bosses": 2,
+    "telegram_excluded": true,
+    "status": "planning_estimate_not_deadline"
+  },
+  "shop_notifications": {
+    "main_button_triggers": [
+      "first_purchase_of_new_digging_tool",
+      "next_home_all_requirements_met",
+      "next_pug_stage"
+    ],
+    "main_button_excludes": [
+      "existing_tool_levels",
+      "helper_levels",
+      "hats_only"
+    ],
+    "category_badges": "affordable_and_unlocked_purchase_in_each_category",
+    "home_requires_boss_clear": true,
+    "status": "approved_planned"
+  },
+  "hat_visual_audit": {
+    "status": "planned_only_user_stopped_execution",
+    "all_hats": true,
+    "all_stages_and_animation_poses": true,
+    "redraw_when_required": true,
+    "pixel_contact_test_insufficient": true,
+    "latest_reference": "assets/references-private/iphone-15-pro-max-20261014/hat-fit-carrot-20261014.png",
+    "runtime_assets_changed": false
+  },
+  "roadmap_publication_authorized": true,
+  "runtime_publication_authorized": true,
+  "vasiliy_balance": {
+    "base_ordinary_taps_per_second": 1,
+    "levels_still_improve_production": true,
+    "temporary_coin_combo_yuppi_excluded": true,
+    "expedition_rewards_rebalanced_together": true,
+    "status": "approved_pending_calculation"
+  },
+  "blocks": [
+    {
+      "id": 1,
+      "title_ru": "Мобильные ошибки и стабильность",
+      "title_en": "Mobile bugs and stability",
+      "estimated_hours": [
+        2,
+        3
+      ],
+      "status": "planned",
+      "requirements": [
+        16,
+        17,
+        20
+      ],
+      "additional_mechanics": []
+    },
+    {
+      "id": 2,
+      "title_ru": "Шапки и крепления к мопсу",
+      "title_en": "Hats and character attachment",
+      "estimated_hours": [
+        4,
+        7
+      ],
+      "status": "planned",
+      "requirements": [
+        18
+      ],
+      "additional_mechanics": []
+    },
+    {
+      "id": 3,
+      "title_ru": "Чёткие локации, миски и корм",
+      "title_en": "Detailed locations, bowls and food",
+      "estimated_hours": [
+        4,
+        6
+      ],
+      "status": "planned",
+      "requirements": [
+        15
+      ],
+      "additional_mechanics": []
+    },
+    {
+      "id": 4,
+      "title_ru": "Экономика, магазин и покупки",
+      "title_en": "Economy, shop and purchases",
+      "estimated_hours": [
+        3,
+        5
+      ],
+      "status": "planned",
+      "requirements": [
+        19,
+        25,
+        26,
+        27,
+        31,
+        32
+      ],
+      "additional_mechanics": []
+    },
+    {
+      "id": 5,
+      "title_ru": "Василий, экспедиции, оружие и инвентарь",
+      "title_en": "Vasiliy, expeditions, weapons and inventory",
+      "estimated_hours": [
+        4,
+        6
+      ],
+      "status": "planned",
+      "requirements": [
+        14,
+        23,
+        24,
+        28,
+        32
+      ],
+      "additional_mechanics": [
+        3,
+        4
+      ]
+    },
+    {
+      "id": 6,
+      "title_ru": "Бои с енотом и большой вороной",
+      "title_en": "Raccoon and giant crow boss fights",
+      "estimated_hours": [
+        6,
+        10
+      ],
+      "status": "planned",
+      "requirements": [
+        24,
+        29,
+        30
+      ],
+      "additional_mechanics": []
+    },
+    {
+      "id": 7,
+      "title_ru": "Yuppi, реакции, секреты и настройки",
+      "title_en": "Yuppi, reactions, secrets and settings",
+      "estimated_hours": [
+        4,
+        7
+      ],
+      "status": "released",
+      "requirements": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "additional_mechanics": [
+        1,
+        2,
+        5
+      ],
+      "release": "0.8.0"
+    },
+    {
+      "id": 8,
+      "title_ru": "Полная проверка, оптимизация и выпуск",
+      "title_en": "Final verification, optimization and release",
+      "estimated_hours": [
+        3,
+        6
+      ],
+      "status": "released",
+      "requirements": [
+        21
+      ],
+      "additional_mechanics": [],
+      "release": "0.8.0"
+    }
+  ],
+  "public_roadmap_files": [
+    "ROADMAP.ru.md",
+    "ROADMAP.en.md"
+  ],
+  "roadmap_publication": {
+    "status": "published_verified",
+    "date": "2026-10-14",
+    "commit": "757486983e72073c3fad657518afd34fcf7f3101",
+    "files": [
+      "ROADMAP.ru.md",
+      "ROADMAP.en.md",
+      "README.md"
+    ],
+    "runtime_changed": false
+  },
+  "active_blocks": [],
+  "release_plan": {
+    "combined_blocks": [
+      1,
+      2,
+      3
+    ],
+    "target_version": "0.6.0",
+    "single_combined_release": true
+  },
+  "new_requests": {
+    "tool_skin_price": 500000,
+    "pug_skin_price": 1000000,
+    "home_skin_price": 1500000,
+    "shop_total_tap_delta_block": 4,
+    "skin_inventory_block": 5,
+    "slower_pug_animation_block": 2,
+    "portrait_only_block": 1,
+    "cancel_expedition_block": 5,
+    "ready_expedition_banner_block": 5,
+    "extra_funny_actions_block": 7,
+    "pee_audio_block": 7,
+    "beds_block": 9,
+    "beds_regular": 6,
+    "beds_secret": 3,
+    "food_skin_inventory_block": 5,
+    "mini_reward_formula_block": 4
+  },
+  "mobile_composition": {
+    "block": 3,
+    "food_scale": 1.1,
+    "pug_scale": 0.9,
+    "move_pug_left": true,
+    "economy_unchanged": true
+  },
+  "completed_blocks": [
+    1,
+    2,
+    3
+  ],
+  "planned_blocks": [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "planned_followups": [
+    "2.1",
+    "3.1"
+  ],
+  "remaining_hours": [
+    41,
+    67
+  ],
+  "feedback_0_6_0": {
+    "animation_blur": true,
+    "helper_relative_scale": 1.25,
+    "food_relative_scale": 1.1,
+    "food_move": "higher_and_centered",
+    "pug_relative_scale": 0.9,
+    "pug_anchor_unchanged": true,
+    "runtime_implementation_authorized": false
+  },
+  "insects": {
+    "butterfly": {
+      "reward_taps": 10,
+      "unlock_hits": 50,
+      "interval_seconds": [
+        180,
+        300
+      ]
+    },
+    "bee": {
+      "reward_taps": 20,
+      "unlock_hits": 100,
+      "interval_seconds": [
+        240,
+        420
+      ]
+    },
+    "temporary_boost_stacking": false,
+    "ordinary_power_snapshot": "spawn",
+    "balance": "provisional_until_block_4"
+  },
+  "latest_release": "0.8.0",
+  "remaining_blocks": []
+}

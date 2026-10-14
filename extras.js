@@ -160,10 +160,16 @@
         };
       }
       if (key.startsWith('hats') && index === 8) {
-        f.mount = key === 'hatsBack' ? { x: 0.5, y: 0.73, span: 0.92 } : key === 'hatsSide' ? { x: 0.64, y: 0.94, span: 0.72 } : { x: 0.38, y: 0.96, span: 0.70 };
+        f.mount =
+          key === 'hatsBack'
+            ? { x: 0.5, y: 0.73, span: 0.92 }
+            : key === 'hatsSide'
+              ? { x: 0.64, y: 0.94, span: 0.72 }
+              : { x: 0.38, y: 0.96, span: 0.7 };
       }
       if (key.startsWith('hats') && index === 7) f.mount.span = 0.84;
       this.frames.set(cache, f);
+      if (this.frames.size > 96) this.frames.delete(this.frames.keys().next().value);
       return f;
     }
     head(pixels, cell, pad, padY, pose, stage) {
@@ -297,10 +303,25 @@
     react(now) {
       this.reactionAt = now;
     }
+    hatFrame(id, pose = 'idle') {
+      const index = PugGame.HATS.findIndex((h) => h.id === id);
+      if (index < 0) return null;
+      const view = pose === 'rear' ? 'Back' : pose.includes('back') ? 'Side' : '';
+      const key = (index >= 10 ? 'hatsSecret' : 'hats') + view;
+      const f = this.frame(
+        this.world.images[key] ? key : index >= 10 ? 'hatsSecret' : 'hats',
+        index >= 10 ? index - 10 : index,
+        4,
+        index >= 10 ? 1 : 3,
+      );
+      if (f && index >= 10) {
+        f.mount = { x: 0.5, y: 0.96, span: 1 };
+      }
+      return f;
+    }
     hat(ctx, id, layout, pose, now, head) {
       const index = PugGame.HATS.findIndex((h) => h.id === id),
-        key = pose === 'rear' ? 'hatsBack' : pose.includes('back') ? 'hatsSide' : 'hats',
-        f = this.frame(this.world.images[key] ? key : 'hats', index, 4, 3);
+        f = this.hatFrame(id, pose);
       if (index < 0 || !f) return;
       const anchor = head || { x: 0.52, y: 0.28, w: 0.44, tilt: 0 };
       const size = layout.size,
@@ -314,6 +335,27 @@
       ctx.rotate(anchor.tilt || 0);
       ctx.translate(-left - wide * mount.x, -bottom);
       ctx.drawImage(f.canvas, f.x, f.y, f.w, f.h, left, bottom - height * mount.y, wide, height);
+      if (id === 'yogurt') {
+        ctx.save();
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 5; i++) {
+          ctx.strokeStyle = ['#fa706e', '#ffd44f', '#80dcb0', '#6dc5fa', '#c398fa'][i];
+          ctx.beginPath();
+          ctx.arc(
+            left + wide * 0.5,
+            bottom - height - 5,
+            wide * 0.35 + i * 2,
+            Math.PI,
+            Math.PI * 2,
+          );
+          ctx.stroke();
+        }
+        ctx.fillStyle = '#fff5b4';
+        ctx.globalAlpha = 0.4 + 0.6 * Math.abs(Math.sin(now / 270));
+        ctx.font = '15px system-ui';
+        ctx.fillText('✦', left + wide * 0.86, bottom - height - 10);
+        ctx.restore();
+      }
       if (id === 'umbrella' && !this.world.reduced) {
         ctx.strokeStyle = '#c9e9f1';
         ctx.lineWidth = 1.6;
@@ -330,67 +372,110 @@
       }
       ctx.restore();
     }
-    metalFrame(frame,tier){
+    metalFrame(frame, tier) {
       // Cached material coloring works on Safari without Canvas filter support.
-      if(tier===2 || typeof document==='undefined')return null;
+      if (tier === 2 || typeof document === 'undefined') return null;
       this.metals ||= new Map();
-      const key=[tier,frame.cacheKey ?? [frame.x,frame.y,frame.w,frame.h].join('-')].join('-');
-      if(this.metals.has(key))return this.metals.get(key);
-      const palette=[[131,87,58],[176,135,75],[236,174,45],[104,181,95],
-        [91,154,237],[85,195,190],[233,88,66],[237,239,245],
-        [244,194,92],[255,209,74],[255,220,109]][tier];
-      const canvas=document.createElement('canvas');canvas.width=Math.ceil(frame.w);canvas.height=Math.ceil(frame.h);
-      const c=canvas.getContext('2d',{willReadFrequently:true});
-      c.drawImage(frame.canvas,frame.x,frame.y,frame.w,frame.h,0,0,canvas.width,canvas.height);
-      const image=c.getImageData(0,0,canvas.width,canvas.height),data=image.data;
-      for(let i=0;i<data.length;i+=4){
-        const r=data[i],g=data[i+1],b=data[i+2];
-        if(data[i+3] && r>g*.9 && g>b*1.15 && r>b*1.4){
-          const shade=Math.min(255,(r*.3+g*.59+b*.11)*.85+30);
-          data[i]=shade*palette[0]/255;data[i+1]=shade*palette[1]/255;data[i+2]=shade*palette[2]/255;
+      const key = [tier, frame.cacheKey ?? [frame.x, frame.y, frame.w, frame.h].join('-')].join(
+        '-',
+      );
+      if (this.metals.has(key)) return this.metals.get(key);
+      const palette = [
+        [131, 87, 58],
+        [176, 135, 75],
+        [236, 174, 45],
+        [104, 181, 95],
+        [91, 154, 237],
+        [85, 195, 190],
+        [233, 88, 66],
+        [237, 239, 245],
+        [244, 194, 92],
+        [255, 209, 74],
+        [255, 220, 109],
+      ][tier];
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.ceil(frame.w);
+      canvas.height = Math.ceil(frame.h);
+      const c = canvas.getContext('2d', { willReadFrequently: true });
+      c.drawImage(
+        frame.canvas,
+        frame.x,
+        frame.y,
+        frame.w,
+        frame.h,
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+      );
+      const image = c.getImageData(0, 0, canvas.width, canvas.height),
+        data = image.data;
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i],
+          g = data[i + 1],
+          b = data[i + 2];
+        if (data[i + 3] && r > g * 0.9 && g > b * 1.15 && r > b * 1.4) {
+          const shade = Math.min(255, (r * 0.3 + g * 0.59 + b * 0.11) * 0.85 + 30);
+          data[i] = (shade * palette[0]) / 255;
+          data[i + 1] = (shade * palette[1]) / 255;
+          data[i + 2] = (shade * palette[2]) / 255;
         }
       }
-      c.putImageData(image,0,0);this.metals.set(key,canvas);
-      if(this.metals.size>32)this.metals.delete(this.metals.keys().next().value);
+      c.putImageData(image, 0, 0);
+      this.metals.set(key, canvas);
+      if (this.metals.size > 32) this.metals.delete(this.metals.keys().next().value);
       return canvas;
     }
-    weapon(ctx,layout,pose,head){
-      const s=this.world.state;if(!s.weaponsUnlocked||!s.showWeapon)return;
-      const id=PugInventoryRules.WEAPONS[s.weaponEquipped]?.id,img=this.world.images['weapon-'+id];
-      if(!img)return;
-      const low=['sleep','stretch','mid-sleep','mid-stretch'].includes(pose),rear=pose==='rear',side=pose.includes('back');
-      const length=layout.size*(low?.46:.58),width=length/3;
+    weapon(ctx, layout, pose, head) {
+      const s = this.world.state;
+      if (!s.weaponsUnlocked || !s.showWeapon) return;
+      const id = PugInventoryRules.WEAPONS[s.weaponEquipped]?.id,
+        img = this.world.images['weapon-' + id];
+      if (!img) return;
+      const low = ['sleep', 'stretch', 'mid-sleep', 'mid-stretch'].includes(pose),
+        rear = pose === 'rear',
+        side = pose.includes('back');
+      const length = layout.size * (low ? 0.46 : 0.58),
+        width = length / 3;
       ctx.save();
-      ctx.translate(layout.x+layout.size*(head.x+(rear?0:low||side?-head.w*.65:head.w*.65)),layout.y+layout.size*(head.y+(low?-.07:rear||side?.18:.05)));
-      ctx.rotate(low?1.35:rear?-.38:side?-.18:.46);
-      ctx.translate(0,length*.76);ctx.rotate(Math.PI);
-      ctx.drawImage(img,-width/2,-length*.12,width,length);
+      ctx.translate(
+        layout.x +
+          layout.size * (head.x + (rear ? 0 : low || side ? -head.w * 0.65 : head.w * 0.65)),
+        layout.y + layout.size * (head.y + (low ? -0.07 : rear || side ? 0.18 : 0.05)),
+      );
+      ctx.rotate(low ? 1.35 : rear ? -0.38 : side ? -0.18 : 0.46);
+      ctx.translate(0, length * 0.76);
+      ctx.rotate(Math.PI);
+      ctx.drawImage(img, -width / 2, -length * 0.12, width, length);
       ctx.restore();
     }
     rig(ctx, now, width, height, preview) {
       const base = this.frame('helperRig', 0, 4, 4);
       if (!base) return false;
-      const tier=this.world.state.helperTier||0;
+      const tier = this.world.state.helperTier || 0;
       const cycle = (now / 1000) % 30,
         moving = !preview && !this.world.uiPaused && cycle > 12 && cycle < 23;
       const w = preview
           ? Math.min(width * 0.66, height * 1.25)
-          : width * (width < height ? 0.4 : 0.2375) * (1+tier*.02),
+          : width * (width < height ? 0.4 : 0.2375) * (1 + tier * 0.02),
         bodyW = w * 0.6,
         bodyH = (bodyW * base.h) / base.w;
       const x =
-        (preview ? (width-w*1.23)/2 : width<height
-          ? Math.min(width*.49,width-w*1.23-width*.055) : width*.78) +
+        (preview
+          ? (width - w * 1.23) / 2
+          : width < height
+            ? Math.min(width * 0.49, width - w * 1.23 - width * 0.055)
+            : width * 0.78) +
         (moving ? Math.sin(((cycle - 12) / 11) * Math.PI * 2) * width * 0.035 : 0);
       const y =
         height * (width < height ? 0.82 : 0.91) -
         bodyH +
         (moving ? Math.sin(((cycle - 12) / 11) * Math.PI) * height * 0.025 : 0);
       if (!preview) this.helperBounds = { x, y, w: w * 1.23, h: bodyH + w * 0.22 };
-      const paint=(f,x,y,w,h,metal=true)=>{
-        const colored=metal?this.metalFrame(f,tier):null;
-        if(colored)ctx.drawImage(colored,0,0,colored.width,colored.height,x,y,w,h);
-        else ctx.drawImage(f.canvas,f.x,f.y,f.w,f.h,x,y,w,h);
+      const paint = (f, x, y, w, h, metal = true) => {
+        const colored = metal ? this.metalFrame(f, tier) : null;
+        if (colored) ctx.drawImage(colored, 0, 0, colored.width, colored.height, x, y, w, h);
+        else ctx.drawImage(f.canvas, f.x, f.y, f.w, f.h, x, y, w, h);
       };
       ctx.save();
       ctx.globalAlpha = 1;
@@ -415,13 +500,16 @@
           face,
           x + bodyW * 0.27,
           y + bodyH * 0.085,
-          bodyW * 0.40,
-          (bodyW * 0.40 * face.h) / face.w,
+          bodyW * 0.4,
+          (bodyW * 0.4 * face.h) / face.w,
           false,
         );
         ctx.restore();
       }
-      const p = this.world.reduced || this.world.uiPaused || moving ? 0 : ((now*(this.world.state.helperBurstActive?2:1)) % 6500) / 6500;
+      const p =
+        this.world.reduced || this.world.uiPaused || moving
+          ? 0
+          : ((now * (this.world.state.helperBurstActive ? 2 : 1)) % 6500) / 6500;
       const a = -0.7 + Math.sin(p * Math.PI * 2) * 0.34,
         b = 0.92 + Math.sin(p * Math.PI * 2 + 0.8) * 0.42;
       const pivot = { x: x + bodyW * 0.86, y: y + bodyH * 0.62 },
@@ -458,24 +546,81 @@
           ctx.fill();
         }
       }
-      if(tier<2){
-        ctx.fillStyle='#6f412c';for(let i=0;i<7;i++){ctx.beginPath();ctx.ellipse(x+bodyW*(.07+(i*.13)% .7),y+bodyH*(.64+(i*.047)% .23),bodyW*.025,bodyH*.025,0,0,Math.PI*2);ctx.fill();}
+      if (tier < 2) {
+        ctx.fillStyle = '#6f412c';
+        for (let i = 0; i < 7; i++) {
+          ctx.beginPath();
+          ctx.ellipse(
+            x + bodyW * (0.07 + ((i * 0.13) % 0.7)),
+            y + bodyH * (0.64 + ((i * 0.047) % 0.23)),
+            bodyW * 0.025,
+            bodyH * 0.025,
+            0,
+            0,
+            Math.PI * 2,
+          );
+          ctx.fill();
+        }
       }
-      if(tier>=10){
-        ctx.fillStyle='#9de5ec';ctx.strokeStyle='#eef9df';ctx.lineWidth=1;
-        for(let i=0;i<4;i++){const dx=x+bodyW*(.12+i*.19),dy=y+bodyH*.86;ctx.beginPath();ctx.moveTo(dx,dy-3);ctx.lineTo(dx+3,dy);ctx.lineTo(dx,dy+4);ctx.lineTo(dx-3,dy);ctx.closePath();ctx.fill();ctx.stroke();}
+      if (tier >= 10) {
+        ctx.fillStyle = '#9de5ec';
+        ctx.strokeStyle = '#eef9df';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 4; i++) {
+          const dx = x + bodyW * (0.12 + i * 0.19),
+            dy = y + bodyH * 0.86;
+          ctx.beginPath();
+          ctx.moveTo(dx, dy - 3);
+          ctx.lineTo(dx + 3, dy);
+          ctx.lineTo(dx, dy + 4);
+          ctx.lineTo(dx - 3, dy);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        }
       }
-      const sticker=this.world.state.helperSticker;
-      if(sticker && sticker!=='none'){
-        ctx.save();ctx.translate(x+bodyW*.15,y+bodyH*.73);
-        const size=bodyW*.08;ctx.fillStyle=tier>=8?'#544334':'#fff0d0';
-        if(sticker==='paw'){
-          ctx.beginPath();ctx.ellipse(0,size*.3,size*.46,size*.36,0,0,Math.PI*2);ctx.fill();
-          for(let i=0;i<4;i++){ctx.beginPath();ctx.ellipse((i-1.5)*size*.3,-size*.22+Math.abs(i-1.5)*size*.16,size*.14,size*.18,0,0,Math.PI*2);ctx.fill();}
-        }else if(sticker==='fish'){
-          ctx.beginPath();ctx.ellipse(0,0,size*.5,size*.28,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.moveTo(size*.35,0);ctx.lineTo(size*.8,-size*.3);ctx.lineTo(size*.8,size*.3);ctx.closePath();ctx.fill();
-        }else{
-          ctx.beginPath();for(let i=0;i<10;i++){const angle=i*Math.PI/5-Math.PI/2,r=i%2?size*.25:size*.6;ctx.lineTo(Math.cos(angle)*r,Math.sin(angle)*r);}ctx.closePath();ctx.fill();
+      const sticker = this.world.state.helperSticker;
+      if (sticker && sticker !== 'none') {
+        ctx.save();
+        ctx.translate(x + bodyW * 0.15, y + bodyH * 0.73);
+        const size = bodyW * 0.08;
+        ctx.fillStyle = tier >= 8 ? '#544334' : '#fff0d0';
+        if (sticker === 'paw') {
+          ctx.beginPath();
+          ctx.ellipse(0, size * 0.3, size * 0.46, size * 0.36, 0, 0, Math.PI * 2);
+          ctx.fill();
+          for (let i = 0; i < 4; i++) {
+            ctx.beginPath();
+            ctx.ellipse(
+              (i - 1.5) * size * 0.3,
+              -size * 0.22 + Math.abs(i - 1.5) * size * 0.16,
+              size * 0.14,
+              size * 0.18,
+              0,
+              0,
+              Math.PI * 2,
+            );
+            ctx.fill();
+          }
+        } else if (sticker === 'fish') {
+          ctx.beginPath();
+          ctx.ellipse(0, 0, size * 0.5, size * 0.28, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(size * 0.35, 0);
+          ctx.lineTo(size * 0.8, -size * 0.3);
+          ctx.lineTo(size * 0.8, size * 0.3);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          ctx.beginPath();
+          for (let i = 0; i < 10; i++) {
+            const angle = (i * Math.PI) / 5 - Math.PI / 2,
+              r = i % 2 ? size * 0.25 : size * 0.6;
+            ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+          }
+          ctx.closePath();
+          ctx.fill();
         }
         ctx.restore();
       }

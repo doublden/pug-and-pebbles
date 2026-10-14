@@ -1,0 +1,108 @@
+{
+  "version": "0.8.0",
+  "save_schema": 9,
+  "date": "2026-10-14",
+  "baseline_commit": "fbd871c4e549939d2f70a237a7525cfd93958097",
+  "automated_tests": {
+    "passed": 146,
+    "failed": 0,
+    "command": "node --test tests/*.test.cjs"
+  },
+  "hat_attachment_matrix": {
+    "combinations": 5376,
+    "geometric_failures": 0,
+    "dimensions": "14 hats × 16 stages × 24 poses",
+    "limit": "Geometric attachment checks plus visual inspection; no claim of exhaustive subjective beauty."
+  },
+  "mobile_css_viewports": [
+    [
+      430,
+      932
+    ],
+    [
+      375,
+      812
+    ],
+    [
+      390,
+      844
+    ],
+    [
+      393,
+      852
+    ],
+    [
+      360,
+      800
+    ],
+    [
+      412,
+      915
+    ]
+  ],
+  "hud_checks": {
+    "actual_inner_sizes_match": true,
+    "combo_and_bonus_overlap": false,
+    "horizontal_overflow": false,
+    "long_balance_inside": true
+  },
+  "iphone15promax_backing_canvas": {
+    "test": "constructor/resize unit check at DPR 3",
+    "width": 1290,
+    "height": 2796
+  },
+  "browser_qa": {
+    "runtime": "Codex in-app browser",
+    "guest_maximum_paid_taps": 3,
+    "guest_net_catch_unlocks": "yogurt hat",
+    "public_save_modified_for_qa": false
+  },
+  "migration": {
+    "versions": "2–9",
+    "old_newlife_access_preserved": true,
+    "repeat_prestige_requires_growth": true,
+    "beyond_cap_purchases_preserved": true
+  },
+  "bounded_work": {
+    "guest_simulation_active_seconds": 57600,
+    "simultaneous_guests_max": 2,
+    "body_frame_cache": 48,
+    "extra_frame_cache": 96,
+    "particles": 16,
+    "drops": 220,
+    "feathers": 60,
+    "guest_bursts": 4,
+    "recorded_effect_voices": 4,
+    "no_runtime_dependencies_added": true
+  },
+  "artwork": {
+    "files": {
+      "background-14.webp": 302316,
+      "muscle-4.webp": 156102,
+      "muscle-5.webp": 128586,
+      "yuppi.webp": 144568,
+      "beds.webp": 306510,
+      "muscle-2.webp": 166428,
+      "muscle-3.webp": 157476,
+      "muscle-0.webp": 162516,
+      "hats-front.webp": 119238,
+      "hats-back.webp": 116692,
+      "hats-side.webp": 118912,
+      "muscle-combat.webp": 241528,
+      "muscle-1.webp": 188228,
+      "food-14.webp": 167424,
+      "insects.webp": 161198
+    },
+    "bytes": 2637722
+  },
+  "limitations": [
+    "Physical iPhone/Android devices, actual Safari Add to Home Screen and speaker playback were not available for testing.",
+    "Browser logical sizes and a DPR-3 backing-canvas unit check do not certify real-device performance."
+  ],
+  "publication": "GitHub Pages exact-commit deployment and live version are verified after the source push.",
+  "regressions_fixed_during_review": [
+    "Missing new muscle art permits legacy offline fallback.",
+    "Paladin crafting awards its bed immediately.",
+    "Combat clears fullscreen clouds before rendering."
+  ]
+}

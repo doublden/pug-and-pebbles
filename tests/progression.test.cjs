@@ -27,11 +27,11 @@ test('v4 saves preserve purchases and receive empty v5 collections exactly once'
   assert.equal(g.getState().pug, 4);
   assert.deepEqual(g.getState().levels, old.levels);
   assert.deepEqual(g.getState().hats, []);
-  assert.equal(g.serialize().version, 8);
+  assert.equal(g.serialize().version, 9);
   assert.deepEqual(createGame(g.serialize()).serialize(), g.serialize());
 });
-test('ten hats: six gated purchases and four event-only unlocks', () => {
-  assert.equal(HATS.length, 10);
+test('fourteen hats: six gated purchases and eight event-only unlocks', () => {
+  assert.equal(HATS.length, 14);
   const g = funded({ pug: 0 });
   assert.equal(g.buyHat('carrot'), false);
   g.devStages(3, 0);
@@ -141,10 +141,10 @@ test('perfect catch unlocks saucepan; failed and partial runs never unlock it', 
   g.finishMini('catch', 1, true);
   assert.ok(g.getState().hats.includes('pan'));
 });
-test('new life requires king, resets run and preserves collection, lifetime totals and cooldowns', () => {
+test('new life requires the latest final form, resets run and preserves collection, lifetime totals and cooldowns', () => {
   const g = funded();
   assert.equal(g.newLife(), false);
-  g.devStages(14, 13);
+  g.devStages(15, 14);
   g.buyHat('carrot');
   g.buyHelper();
   g.chaseBird('pirate');

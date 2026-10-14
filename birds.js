@@ -48,12 +48,13 @@
       serial = 0,
       speed = 1,
       peckFactor = 1;
-    const make = (type) => {
+    const make = (type, test = false) => {
       const start = clock,
         flight = 1800 + random() * 800;
       return {
         id: ++serial,
         type,
+        test,
         target: Math.floor(random() * 3),
         fromLeft: random() < 0.5,
         sky: 0.1 + random() * 0.2,
@@ -125,12 +126,16 @@
       },
       force(type) {
         if (!TYPES[type]) return false;
-        bird = make(type);
+        bird = make(type, true);
         next = clock + (110000 + random() * 80000) / speed;
         return true;
       },
       configure(options = {}) {
-        peckFactor = Number.isFinite(options.peckFactor) ? Math.max(1, Math.min(1.35, options.peckFactor)) : options.slowPeck ? 1.2 : 1;
+        peckFactor = Number.isFinite(options.peckFactor)
+          ? Math.max(1, Math.min(1.35, options.peckFactor))
+          : options.slowPeck
+            ? 1.2
+            : 1;
       },
       setSpeed(value) {
         speed = [1, 3, 10].includes(value) ? value : 1;

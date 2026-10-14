@@ -2,19 +2,28 @@
   'use strict';
   const $ = (id) => document.getElementById(id),
     KEY = 'pug-and-pebbles-v2',
-    BACKUP = 'pug-and-pebbles-v8-backup',
+    BACKUP = 'pug-and-pebbles-v9-backup',
+    V8_BACKUP = 'pug-and-pebbles-v8-backup',
     V7_BACKUP = 'pug-and-pebbles-v7-backup',
     PRIOR_BACKUP = 'pug-and-pebbles-v5-backup',
     LEGACY_BACKUP = 'pug-and-pebbles-v4-backup',
     OLDER_BACKUP = 'pug-and-pebbles-v3-backup',
-    VERSION = '0.7.0',
+    VERSION = '0.8.0',
     SHARE_URL = 'https://doublden.github.io/pug-and-pebbles/?v=' + VERSION,
     instance = Math.random().toString(36).slice(2) + Date.now();
   const session = PugSession.create(localStorage, 'pug-and-pebbles-session-v5', instance);
   session.claim();
   function readEnvelope() {
     const candidates = [];
-    for (const key of [KEY, BACKUP, V7_BACKUP, PRIOR_BACKUP, LEGACY_BACKUP, OLDER_BACKUP])
+    for (const key of [
+      KEY,
+      BACKUP,
+      V8_BACKUP,
+      V7_BACKUP,
+      PRIOR_BACKUP,
+      LEGACY_BACKUP,
+      OLDER_BACKUP,
+    ])
       try {
         const e = JSON.parse(localStorage.getItem(key) || 'null');
         if (e?.game && PugGame.createGame(e.game).restoreStatus !== 'invalid') candidates.push(e);
@@ -40,6 +49,9 @@
         ? Math.max(0, Math.min(100, s.effectsVolume))
         : 80,
       musicVolume: Number.isFinite(s?.musicVolume) ? Math.max(0, Math.min(100, s.musicVolume)) : 75,
+      effectsIntensity: Number.isFinite(s?.effectsIntensity)
+        ? Math.max(0, Math.min(100, s.effectsIntensity))
+        : 100,
       tutorialDone: s?.tutorialDone === true,
     };
   }
@@ -73,8 +85,8 @@
     format,
     bulk: () => bulkMode,
   });
-  const inventoryUI = new PugInventoryUI({getGame:()=>game,words:()=>t(),format});
-  let cancelExpeditionEnds=null;
+  const inventoryUI = new PugInventoryUI({ getGame: () => game, words: () => t(), format });
+  let cancelExpeditionEnds = null;
   const miniUI = new PugMiniUI({
     getGame: () => game,
     words: () => t(),
@@ -90,13 +102,52 @@
   });
   const t = () => PugLocale[settings.language],
     modalOpen = () => battleUI.active || !!document.querySelector('dialog[open]');
-  const battleUI=new PugBattleUI({getGame:()=>game,words:()=>t(),world,sound,format,toast,
-    isActive:()=>session.owns()&&!document.hidden&&!portraitBlocked(),
-    changed:()=>{combo.reset();earned();render();persist();},
-    inventory:()=>{tab='inventory';selectShopTab();open('shop-dialog');},
-    home:()=>{tab='home';selectShopTab();open('shop-dialog');},
+  const battleUI = new PugBattleUI({
+    getGame: () => game,
+    words: () => t(),
+    world,
+    sound,
+    format,
+    toast,
+    isActive: () => session.owns() && !document.hidden && !portraitBlocked(),
+    changed: () => {
+      combo.reset();
+      earned();
+      render();
+      persist();
+    },
+    inventory: () => {
+      tab = 'inventory';
+      selectShopTab();
+      open('shop-dialog');
+    },
+    home: () => {
+      tab = 'home';
+      selectShopTab();
+      open('shop-dialog');
+    },
   });
-  function selectShopTab(){for(const b of document.querySelectorAll('[data-tab]')){const active=b.dataset.tab===tab;b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active));}}
+  const secretsUI = new PugSecretsUI({
+    getGame: () => game,
+    words: () => t(),
+    world,
+    sound,
+    format,
+    toast,
+    canPlay: () => loaded && !modalOpen() && !portraitBlocked() && session.owns(),
+    changed: () => {
+      earned();
+      render();
+      dirty();
+    },
+  });
+  function selectShopTab() {
+    for (const b of document.querySelectorAll('[data-tab]')) {
+      const active = b.dataset.tab === tab;
+      b.classList.toggle('selected', active);
+      b.setAttribute('aria-pressed', String(active));
+    }
+  }
   function format(value) {
     const n = PugGame.Amount.from(value);
     if (!n.m) return '0';
@@ -117,6 +168,9 @@
     toastTimer = setTimeout(() => $('toast').classList.remove('visible'), 2800);
   }
   function stageName(kind, level) {
+    const current = game.getState()[kind];
+    if (level > (kind === 'pug' ? 14 : 13) && level > current && !game.getState().hiddenRevealed)
+      return '???';
     const names = t()[kind === 'pug' ? 'pugNames' : 'homeNames'],
       last = names.length - 1;
     return names[Math.min(level, last)] + (level > last ? ` +${level - last}` : '');
@@ -129,6 +183,7 @@
       $(id).textContent = saveAvailable ? yes : t().saveError;
   }
   function adopt(e) {
+    secretsUI.clear();
     battleUI.reset();
     envelope = e;
     revision = e.revision || 0;
@@ -241,8 +296,8 @@
   function translate() {
     const w = t();
     $('minigames-open').ariaLabel = w.minigames;
-    $('expedition-cancel-close').ariaLabel=w.close;
-    $('expedition-ready-dismiss').ariaLabel=w.close;
+    $('expedition-cancel-close').ariaLabel = w.close;
+    $('expedition-ready-dismiss').ariaLabel = w.close;
     for (const id of ['minigames-close', 'mini-exit']) $(id).ariaLabel = w.close;
     for (const button of document.querySelectorAll('[data-lane]'))
       button.ariaLabel = w.laneNames[Number(button.dataset.lane)];
@@ -261,6 +316,8 @@
       'tab-hats': 'hats',
       'tab-helper': 'helper',
       'tab-inventory': 'inventory',
+      'tab-beds': 'beds',
+      'tab-album': 'album',
       'expedition-ready-text': 'expeditionReady',
       'expedition-ready-claim': 'collect',
       'expedition-cancel-title': 'cancelExpedition',
@@ -290,6 +347,9 @@
       $(kind + '-volume').value = settings[kind + 'Volume'];
       $(kind + '-volume-value').textContent = settings[kind + 'Volume'] + '%';
     }
+    world.effectsIntensity = settings.effectsIntensity;
+    $('effects-intensity').value = settings.effectsIntensity;
+    $('effects-intensity-value').textContent = settings.effectsIntensity + '%';
     sound.configure(settings.effects, settings.music, settings.effectsVolume, settings.musicVolume);
     saveNotes();
     renderShop(true);
@@ -312,11 +372,20 @@
     const goal = goals[0],
       name = goal.kind === 'helper' ? t().helper : stageName(goal.kind, current[goal.kind] + 1);
     $('nearest-goal').innerHTML =
-      `<span>${t().nearestGoal}: <strong>${name}</strong></span><div class="track-progress"><span style="width:${current.balance.ratio(goal.cost) * 100}%"></span></div><small>${goal.kind==='home'&&game.bossGate()!==null?t().bossGate:current.balance.compare(goal.cost) >= 0 ? t().ready : t().remaining + ': ' + format(goal.cost.subtract(current.balance))}</small>`;
+      `<span>${t().nearestGoal}: <strong>${name}</strong></span><div class="track-progress"><span style="width:${current.balance.ratio(goal.cost) * 100}%"></span></div><small>${goal.kind === 'home' && game.bossGate() !== null ? t().bossGate : current.balance.compare(goal.cost) >= 0 ? t().ready : t().remaining + ': ' + format(goal.cost.subtract(current.balance))}</small>`;
     const s = game.getState(),
       w = t(),
       content = $('shop-content');
-    if(tab==='inventory'){inventoryUI.render(rebuild);$('shop-footnote').hidden=true;return;}
+    if (['beds', 'album'].includes(tab)) {
+      secretsUI.render(tab, rebuild);
+      $('shop-footnote').hidden = true;
+      return;
+    }
+    if (tab === 'inventory') {
+      inventoryUI.render(rebuild);
+      $('shop-footnote').hidden = true;
+      return;
+    }
     if (['hats', 'helper'].includes(tab)) {
       collections.render(tab, rebuild);
       $('shop-footnote').hidden = true;
@@ -333,6 +402,15 @@
             })
             .join('') +
           '</div>';
+      const net = secretsUI.netCard();
+      let netNode = content.querySelector('.net-card');
+      if (net && !netNode) {
+        $('tool-card-9').insertAdjacentHTML('afterend', net);
+      } else if (!net && netNode) netNode.remove();
+      if (netNode) {
+        const o = game.netOffer();
+        netNode.querySelector('button').disabled = !o.unlocked || s.balance.compare(o.price) < 0;
+      }
       for (let i = 1; i < PugGame.TOOLS.length; i++) {
         const lv = s.levels[i],
           quote = game.quote('tool', i, bulkMode),
@@ -341,8 +419,9 @@
         $('tool-card-' + i).className = 'tool-card' + (locked ? ' locked' : lv ? ' owned' : '');
         $('tool-level-' + i).textContent = locked ? w.locked : lv ? `${w.level} ${lv}` : '';
         const next = game.getToolPower(i, Math.max(1, lv + quote.count));
-        $('tool-production-' + i).textContent =
-          lv ? '+' + format(game.toolGain(i, quote.count)) + ' ' + w.totalPerTap : '+' + format(next) + ' ' + w.perTap;
+        $('tool-production-' + i).textContent = lv
+          ? '+' + format(game.toolGain(i, quote.count)) + ' ' + w.totalPerTap
+          : '+' + format(next) + ' ' + w.perTap;
         $('tool-price-' + i).textContent = format(cost);
         $('tool-action-' + i).textContent = (lv ? w.improve : w.buy) + ' ×' + quote.count;
         const b = $('buy-tool-' + i);
@@ -364,8 +443,21 @@
       $('track-boost').textContent = '+' + (game.getTrackGain(tab) * 100).toFixed(1) + '%';
       $('track-price').textContent = format(cost);
       $('upgrade-' + tab).disabled = !!quote.locked || !quote.count || s.balance.compare(cost) < 0;
-      const gate=tab==='home'?game.bossGate():null;
-      if(gate!==null){if(!$('shop-boss-open')){const b=document.createElement('button');b.id='shop-boss-open';b.className='setting-action';$('upgrade-home').before(b);} $('shop-boss-open').textContent=w.bossFight+' · '+w.bossNames[gate];$('shop-boss-open').onclick=()=>{$('shop-dialog').close();battleUI.open(gate);};$('track-caption').textContent=w.bossGate;}else $('shop-boss-open')?.remove();
+      const gate = tab === 'home' ? game.bossGate() : null;
+      if (gate !== null) {
+        if (!$('shop-boss-open')) {
+          const b = document.createElement('button');
+          b.id = 'shop-boss-open';
+          b.className = 'setting-action';
+          $('upgrade-home').before(b);
+        }
+        $('shop-boss-open').textContent = w.bossFight + ' · ' + w.bossNames[gate];
+        $('shop-boss-open').onclick = () => {
+          $('shop-dialog').close();
+          battleUI.open(gate);
+        };
+        $('track-caption').textContent = w.bossGate;
+      } else $('shop-boss-open')?.remove();
       $('track-progress-fill').style.width = s.balance.ratio(cost) * 100 + '%';
       $('track-remaining').textContent =
         s.balance.compare(cost) >= 0
@@ -375,7 +467,16 @@
         { length: last + 1 },
         (_, i) => `<span class="${i <= Math.min(lv, last) ? 'active' : ''}"></span>`,
       ).join('');
-      if (loaded) world.preview($('track-canvas'), tab, stage);
+      if (stage > (tab === 'pug' ? 14 : 13) && stage > lv && !s.hiddenRevealed) {
+        $('track-canvas').dataset.preview = '';
+        const c = $('track-canvas').getContext('2d');
+        c.clearRect(0, 0, $('track-canvas').width, $('track-canvas').height);
+        c.fillStyle = '#857b5f';
+        c.textAlign = 'center';
+        c.font = '100px Georgia';
+        c.fillText('?', $('track-canvas').width / 2, $('track-canvas').height * 0.7);
+        $('track-caption').textContent = w.stageSecret;
+      } else if (loaded) world.preview($('track-canvas'), tab, stage);
     }
     $('shop-footnote').hidden = tab !== 'tools';
   }
@@ -387,7 +488,7 @@
     $('awards-content').innerHTML = list
       .map(
         (a, i) =>
-          `<article class="award-card ${a.unlocked ? 'earned' : ''}"><span class="award-icon" aria-hidden="true">${icons[i] || '✦'}</span><div><h2>${a.secret && !a.unlocked ? '???' : w.awardNames[i]}</h2><p>${a.secret && !a.unlocked ? w.secretHints[i - 10] : w.awardDescriptions[i]}</p><div class="award-progress"><span style="width:${(a.progress / a.target) * 100}%"></span></div><p class="award-status">${a.unlocked ? w.earned : Math.floor(a.progress) + ' / ' + a.target}</p></div></article>`,
+          `<article class="award-card ${a.unlocked ? 'earned' : ''}"><span class="award-icon" aria-hidden="true">${icons[i] || '✦'}</span><div><h2>${a.secret && !a.unlocked ? '???' : w.awardNames[i]}</h2><p>${a.secret && !a.unlocked ? w.awardDescriptions[i] : w.awardDescriptions[i]}</p><div class="award-progress"><span style="width:${(a.progress / a.target) * 100}%"></span></div><p class="award-status">${a.unlocked ? w.earned : Math.floor(a.progress) + ' / ' + a.target}</p></div></article>`,
       )
       .join('');
   }
@@ -449,7 +550,15 @@
   }
   $('shop-dialog').addEventListener('close', () => {
     if (revealFrom) {
-      world.transition = { from: {...revealFrom,pugStage:revealFrom.pugAppearance,homeStage:revealFrom.homeAppearance,foodStage:revealFrom.foodAppearance}, start: performance.now() };
+      world.transition = {
+        from: {
+          ...revealFrom,
+          pugStage: revealFrom.pugAppearance,
+          homeStage: revealFrom.homeAppearance,
+          foodStage: revealFrom.foodAppearance,
+        },
+        start: performance.now(),
+      };
       revealFrom = null;
     }
   });
@@ -464,13 +573,26 @@
       renderShop(true);
       $('shop-content').scrollTop = 0;
     };
-  $('shop-content').onclick = (e) => {
+  $('shop-content').onclick = async (e) => {
     const b = e.target.closest('button');
     if (!b || b.disabled) return;
-    if(b.dataset.inventoryJump){$(b.dataset.inventoryJump)?.scrollIntoView({block:'start',behavior:world.reduced?'auto':'smooth'});return;}
+    if (b.dataset.inventoryJump) {
+      $(b.dataset.inventoryJump)?.scrollIntoView({
+        block: 'start',
+        behavior: world.reduced ? 'auto' : 'smooth',
+      });
+      return;
+    }
     const kind = b.dataset.upgrade;
-    const before = kind ? game.getState() : null;
+    const before = kind ? game.getState() : null,
+      purchaseGame = game;
     let bought = false;
+    if (b.dataset.bed)
+      bought = game.getState().beds.includes(b.dataset.bed)
+        ? game.equipBed(b.dataset.bed)
+        : game.buyBed(b.dataset.bed);
+    if (b.hasAttribute('data-bed-remove')) bought = game.equipBed(null);
+    if (b.hasAttribute('data-net')) bought = game.buyNet();
     if (b.dataset.hat) {
       const s = game.getState();
       bought = s.hats.includes(b.dataset.hat)
@@ -481,18 +603,46 @@
     if (b.dataset.expedition) {
       bought = game.sendExpedition(Number(b.dataset.expedition));
     }
-    if (b.dataset.collect) { collectExpedition(); return; }
-    if (b.dataset.cancelExpedition) {
-      cancelExpeditionEnds=game.getState().expedition?.ends;
-      $('expedition-cancel-dialog').showModal();return;
+    if (b.dataset.collect) {
+      collectExpedition();
+      return;
     }
-    if(b.dataset.helperBurst){bought=game.activateHelper();if(bought){world.extras.react(performance.now());sound.play('sigh');}}
-    if(b.dataset.weapon!==undefined)bought=game.equipWeapon(Number(b.dataset.weapon));
-    if(b.dataset.merge!==undefined)bought=game.mergeWeapon(Number(b.dataset.merge));
-    if(b.dataset.cosmetic)bought=game.buyCosmetic(b.dataset.cosmetic);
+    if (b.dataset.cancelExpedition) {
+      cancelExpeditionEnds = game.getState().expedition?.ends;
+      $('expedition-cancel-dialog').showModal();
+      return;
+    }
+    if (b.dataset.helperBurst) {
+      bought = game.activateHelper();
+      if (bought) {
+        world.extras.react(performance.now());
+        sound.play('sigh');
+      }
+    }
+    if (b.dataset.weapon !== undefined) bought = game.equipWeapon(Number(b.dataset.weapon));
+    if (b.dataset.merge !== undefined) bought = game.mergeWeapon(Number(b.dataset.merge));
+    if (b.dataset.cosmetic) bought = game.buyCosmetic(b.dataset.cosmetic);
     if (b.dataset.helper) bought = game.buyBulk('helper', 0, bulkMode);
     if (b.dataset.tool) bought = game.buyBulk('tool', Number(b.dataset.tool), bulkMode);
-    if (kind) bought = game.buyBulk(kind, 0, 1);
+    if (kind) {
+      if (b.dataset.pending) return;
+      b.dataset.pending = 'true';
+      b.disabled = true;
+      try {
+        const stage = Math.min(kind === 'pug' ? 15 : 14, game.getState()[kind] + 1);
+        if (kind === 'pug' && stage === 15) await world.scene.preloadPug();
+        else if (kind === 'home')
+          await Promise.all([
+            world.image('location-' + stage, world.artPath('background', stage)),
+            world.image('food-' + stage, world.artPath('food', stage)),
+          ]);
+        if (game === purchaseGame) bought = game.buyBulk(kind, 0, 1);
+      } catch (_) {
+        toast(t().loadError);
+      } finally {
+        delete b.dataset.pending;
+      }
+    }
     if (bought) {
       if (kind && !revealFrom) revealFrom = before;
       sound.unlock();
@@ -511,27 +661,52 @@
       }
     }
   };
-  function collectExpedition(){
-    const amount=game.claimExpedition();if(!amount.m)return;
-    $('expedition-banner').hidden=true;sound.play('buy');
-    const loot=game.getState().lastLoot;
-    toast(t().collect+' +'+format(amount)+(loot.length?' · '+t().lootReceived+': '+loot.length:''));
-    earned();render();persist();
+  function collectExpedition() {
+    const amount = game.claimExpedition();
+    if (!amount.m) return;
+    $('expedition-banner').hidden = true;
+    sound.play('buy');
+    const loot = game.getState().lastLoot;
+    toast(
+      t().collect +
+        ' +' +
+        format(amount) +
+        (loot.length ? ' · ' + t().lootReceived + ': ' + loot.length : ''),
+    );
+    earned();
+    render();
+    persist();
   }
-  $('expedition-ready-claim').onclick=collectExpedition;
-  $('expedition-ready-dismiss').onclick=()=>{$('expedition-banner').hidden=true;};
-  for(const id of ['expedition-cancel-close'])$(id).onclick=()=>$('expedition-cancel-dialog').close();
-  $('expedition-cancel-confirm').onclick=()=>{
-    if(game.cancelExpedition(cancelExpeditionEnds)){render();persist();toast(t().expeditionCancelled);}
+  $('expedition-ready-claim').onclick = collectExpedition;
+  $('expedition-ready-dismiss').onclick = () => {
+    $('expedition-banner').hidden = true;
+  };
+  for (const id of ['expedition-cancel-close'])
+    $(id).onclick = () => $('expedition-cancel-dialog').close();
+  $('expedition-cancel-confirm').onclick = () => {
+    if (game.cancelExpedition(cancelExpeditionEnds)) {
+      render();
+      persist();
+      toast(t().expeditionCancelled);
+    }
     $('expedition-cancel-dialog').close();
   };
-  $('shop-content').onchange=(e)=>{
-    const input=e.target;let changed=false;
-    if(input.dataset.skin)changed=game.chooseSkin(input.dataset.skin,input.value===''?null:Number(input.value));
-    if(input.dataset.showWeapon!==undefined)changed=game.showWeapon(input.checked);
-    if(input.dataset.helperSkin!==undefined)changed=game.chooseHelperSkin(input.value===''?null:Number(input.value));
-    if(input.dataset.helperSticker!==undefined)changed=game.chooseHelperSticker(input.value);
-    if(changed){render();persist();}
+  $('shop-content').onchange = (e) => {
+    const input = e.target;
+    let changed = false;
+    if (input.dataset.skin)
+      changed = game.chooseSkin(
+        input.dataset.skin,
+        input.value === '' ? null : Number(input.value),
+      );
+    if (input.dataset.showWeapon !== undefined) changed = game.showWeapon(input.checked);
+    if (input.dataset.helperSkin !== undefined)
+      changed = game.chooseHelperSkin(input.value === '' ? null : Number(input.value));
+    if (input.dataset.helperSticker !== undefined) changed = game.chooseHelperSticker(input.value);
+    if (changed) {
+      render();
+      persist();
+    }
   };
   function updateSettings() {
     settings = {
@@ -563,8 +738,8 @@
       if (kind === 'effects') sound.play('dig');
       persist();
     };
-  function dig(x, y) {
-    if (!loaded || modalOpen() || portraitBlocked()) return;
+  function dig(x, y, silent = false) {
+    if (!loaded || modalOpen() || portraitBlocked() || !session.owns()) return;
     sound.unlock();
     const s = game.getState(),
       amount = game.dig(
@@ -572,26 +747,56 @@
         combo.tap(performance.now()).multiplier,
       );
     world.dig(PugGame.TOOLS[s.toolAppearance].key, '+' + format(amount), x, y);
-    sound.play('dig');
+    if (!silent) sound.play('dig');
     earned();
     render();
     dirty();
   }
-  function sneeze() {
-    if (!loaded || modalOpen() || portraitBlocked()) return;
-    sound.unlock();
-    game.sneeze();
-    world.sneeze();
+  function sneeze(x, y) {
+    if (!loaded || modalOpen() || portraitBlocked() || !session.owns()) return;
+    const l = world.layout();
+    dig(
+      Number.isFinite(x) ? x : l.x + l.size * 0.5,
+      Number.isFinite(y) ? y : l.y + l.size * 0.4,
+      true,
+    );
+    if (game.getState().pug <= 8) {
+      game.sneeze();
+      world.sneeze();
+    } else {
+      game.fart();
+      world.scene.petPug(performance.now());
+    }
     earned();
     dirty();
   }
-  function portraitBlocked() { return matchMedia('(orientation: landscape) and (max-height: 600px)').matches; }
-  function scenePoint(e) { const r = $('world').getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+  function petHelper(x, y) {
+    dig(x, y, true);
+    if (game.petHelper()) {
+      world.extras.react(performance.now());
+      sound.play('meow', Math.floor(Math.random() * 4));
+      earned();
+      dirty();
+    }
+  }
+  function tapScene(p) {
+    if (world.scene.actors.some((a) => a.kind === 'yuppi'))
+      world.scene.missUntil = performance.now() + 600;
+    if (world.hitHelper(p.x, p.y)) petHelper(p.x, p.y);
+    else if (world.hitPug(p.x, p.y)) sneeze(p.x, p.y);
+    else if (world.hitFood(p.x, p.y)) dig(p.x, p.y);
+  }
+  function portraitBlocked() {
+    return matchMedia('(orientation: landscape) and (max-height: 600px)').matches;
+  }
+  function scenePoint(e) {
+    const r = $('world').getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
   $('food-hit').addEventListener('pointerdown', (e) => {
     if (e.button !== 0 || modalOpen() || portraitBlocked()) return;
     const p = scenePoint(e);
-    if (world.hitPug(p.x, p.y) && !world.hitHelper(p.x, p.y)) sneeze();
-    else dig(p.x, p.y);
+    tapScene(p);
   });
   $('food-hit').onclick = (e) => {
     if (e.detail === 0) {
@@ -602,12 +807,7 @@
   $('world').addEventListener('pointerdown', (e) => {
     if (e.button !== 0 || modalOpen() || portraitBlocked()) return;
     const p = scenePoint(e);
-    if (world.hitPug(p.x, p.y) && !world.hitHelper(p.x, p.y)) {
-      sneeze();
-      return;
-    }
-    if (world.hitFood(p.x, p.y) || world.hitHelper(p.x, p.y))
-      dig(p.x, p.y);
+    tapScene(p);
   });
   $('world').addEventListener('keydown', (e) => {
     if (e.code === 'Space' || e.code === 'Enter') {
@@ -620,9 +820,9 @@
       sneeze();
     }
   });
-  $('sneeze-button').onclick = sneeze;
+  $('sneeze-button').onclick = () => sneeze();
   $('pet-coin').onclick = () => {
-    if (modalOpen()) return;
+    if (modalOpen() || !session.owns()) return;
     const got = runner.catch(Number($('pet-coin').dataset.coinId));
     if (!got) return;
     game.claimBonus(got.value);
@@ -636,12 +836,12 @@
     persist();
   };
   function chaseBird() {
-    if (modalOpen() || !birdState) return;
+    if (modalOpen() || !birdState || !session.owns()) return;
     const b = birdRunner.chase(birdState.id);
     if (!b) return;
     const pos = PugBirds.position(b, world.birdAnchor(b.target), world.w, world.h);
     world.burstBird(b.type, pos.x, pos.y - 20);
-    game.chaseBird(b.type);
+    game.chaseBird(b.type, b.test);
     earned();
     sound.unlock();
     sound.play('poof');
@@ -674,10 +874,12 @@
     world.drawBird($('bird-canvas'), b);
     button.ariaLabel = t().chase + ' ' + t()[b.type];
     if (result.spawned) {
+      game.observeBird(b.type, b.test);
+      dirty();
       sound.play(b.type === 'crow' ? 'crow' : 'chirp');
       toast(b.type === 'pirate' ? t().pirateHint : t().birdHint);
     }
-    if (result.pecks) {
+    if (result.pecks && !b.test) {
       for (let i = 0; i < result.pecks; i++) {
         const amount = game.birdPeck();
         if (amount.compare(0) > 0) world.lost('−' + format(amount), p.x, p.y - 25);
@@ -731,6 +933,7 @@
     });
     birdRunner.configure({ peckFactor: game.hatEffect('peckTime') });
     tickBirds(delta, playing);
+    secretsUI.tick(delta, playing);
     world.uiPaused = !playing;
     const idle = idleRunner.tick(delta, playing && world.idleReady());
     world.setIdle(idle.event);
@@ -768,12 +971,18 @@
     }
     if (now - lastHud > 250) {
       lastHud = now;
-      if(playing&&!world.transition)battleUI.maybeIntro();
-      if(!game.getState().expedition)$('expedition-banner').hidden=true;
-      if(game.expeditionNotice(Date.now(), !owner || !playing || world.bossActive === true)){
-        $('expedition-banner').hidden=false;persist();
+      if (playing && !world.transition) battleUI.maybeIntro();
+      if (!game.getState().expedition) $('expedition-banner').hidden = true;
+      if (game.expeditionNotice(Date.now(), !owner || !playing || world.bossActive === true)) {
+        $('expedition-banner').hidden = false;
+        persist();
       }
       if (world.drops.length) {
+        const cloud = world.spitCoverage(now, 'cloud');
+        if (game.markFartCoverage(cloud.covered, cloud.total)) {
+          earned();
+          dirty();
+        }
         const coverage = world.spitCoverage(now);
         if (game.markCoverage(coverage.covered, coverage.total)) {
           earned();
@@ -852,6 +1061,7 @@
   });
   $('reset-confirm').onclick = () => {
     battleUI.reset();
+    secretsUI.clear();
     game = PugGame.createGame();
     combo.reset();
     revealFrom = null;
@@ -877,6 +1087,7 @@
     idleRunner = PugIdle.create();
     world.setIdle(null);
     birdState = null;
+    secretsUI.clear();
     world.feathers = [];
     developerUnlocked = false;
     devTap = 1;
@@ -902,7 +1113,7 @@
       $('dev-' + kind).innerHTML = w[kind === 'pug' ? 'pugNames' : 'homeNames']
         .map((name, i) => `<option value="${i}">${i} · ${name}</option>`)
         .join('');
-      $('dev-' + kind).value = Math.min(kind === 'pug' ? 14 : 13, s[kind]);
+      $('dev-' + kind).value = Math.min(kind === 'pug' ? 15 : 14, s[kind]);
     }
     $('dev-tool').innerHTML = w.toolNames
       .slice(1)
@@ -957,6 +1168,15 @@
       runner.force(Number($('dev-bonus').value));
     }, true);
   $('dev-idle-apply').onclick = () => devAction(() => idleRunner.force($('dev-idle').value), true);
+  $('effects-intensity').oninput = () => {
+    settings.effectsIntensity = Number($('effects-intensity').value);
+    world.effectsIntensity = settings.effectsIntensity;
+    $('effects-intensity-value').textContent = settings.effectsIntensity + '%';
+    dirty();
+  };
+  $('effects-intensity').onchange = persist;
+  $('dev-reveal-hidden').onclick = () => devAction(() => game.devRevealHidden());
+  $('dev-guest-apply').onclick = () => devAction(() => game.devGuest($('dev-guest').value), true);
   $('dev-bird-apply').onclick = () =>
     devAction(() => {
       birdReady = true;
@@ -984,9 +1204,9 @@
       };
       setTimeout(spray, 0);
     }, true);
-  $('dev-inventory').onclick=()=>devAction(()=>game.devInventory());
-  $('dev-expedition-ready').onclick=()=>devAction(()=>game.devExpeditionReady());
-  $('dev-helper-ready').onclick=()=>devAction(()=>game.devHelperReady());
+  $('dev-inventory').onclick = () => devAction(() => game.devInventory());
+  $('dev-expedition-ready').onclick = () => devAction(() => game.devExpeditionReady());
+  $('dev-helper-ready').onclick = () => devAction(() => game.devHelperReady());
   $('dev-mini-reset').onclick = () => devAction(() => game.devMiniReady());
   $('dev-pose-apply').onclick = () => devAction(() => world.animatePose($('dev-pose').value), true);
   $('dev-exit').onclick = () => {
@@ -1038,6 +1258,7 @@
   };
   $('newlife-confirm').onclick = () => {
     if (!game.newLife()) return;
+    secretsUI.clear();
     world.hasState = false;
     world.pose = 'idle';
     world.poseEnd = 0;
@@ -1107,7 +1328,14 @@
     world.setIdle(null);
   });
   addEventListener('storage', (e) => {
-    if (e.key === KEY || e.key === BACKUP || e.key === V7_BACKUP || e.key === PRIOR_BACKUP || e.key === LEGACY_BACKUP || e.key === OLDER_BACKUP) {
+    if (
+      e.key === KEY ||
+      e.key === BACKUP ||
+      e.key === V7_BACKUP ||
+      e.key === PRIOR_BACKUP ||
+      e.key === LEGACY_BACKUP ||
+      e.key === OLDER_BACKUP
+    ) {
       const latest = readEnvelope();
       if ((latest.revision || 0) > revision && latest.instance !== instance) {
         adopt(latest);
@@ -1136,12 +1364,26 @@
       if (!settings.tutorialDone) showTutorial();
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.addEventListener('controllerchange', () =>
-          navigator.serviceWorker.controller?.postMessage({ type: 'WARM', art: [world.artPath('background', game.getState().homeStage), world.artPath('food', game.getState().homeStage)] }),
+          navigator.serviceWorker.controller?.postMessage({
+            type: 'WARM',
+            art: [
+              world.artPath('background', game.getState().homeStage),
+              world.artPath('food', game.getState().homeStage),
+            ],
+          }),
         );
         navigator.serviceWorker
           .register('sw.js', { updateViaCache: 'none' })
           .then(() => navigator.serviceWorker.ready)
-          .then((reg) => reg.active?.postMessage({ type: 'WARM', art: [world.artPath('background', game.getState().homeStage), world.artPath('food', game.getState().homeStage)] }))
+          .then((reg) =>
+            reg.active?.postMessage({
+              type: 'WARM',
+              art: [
+                world.artPath('background', game.getState().homeStage),
+                world.artPath('food', game.getState().homeStage),
+              ],
+            }),
+          )
           .catch(() => {});
       }
       requestAnimationFrame(tick);

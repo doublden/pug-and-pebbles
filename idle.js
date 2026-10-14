@@ -2,10 +2,12 @@
   'use strict';
   const TYPES = Object.freeze(
     [
-      { kind: 'sleep', weight: 40, duration: 8000 },
-      { kind: 'whistle', weight: 25, duration: 7500 },
+      { kind: 'sleep', weight: 30, duration: 8000 },
+      { kind: 'whistle', weight: 20, duration: 7500 },
       { kind: 'backlook', weight: 20, duration: 8500 },
       { kind: 'stretch', weight: 14.8, duration: 6500 },
+      { kind: 'hiccup', weight: 8, duration: 4200 },
+      { kind: 'zoomies', weight: 7, duration: 5400 },
       { kind: 'pee', weight: 0.2, duration: 9500 },
     ].map(Object.freeze),
   );

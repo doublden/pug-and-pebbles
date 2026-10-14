@@ -125,8 +125,8 @@ test('trillion-priced royalty still allows further upgrades', () => {
   const g = funded(1e18, { pug: 14, home: 13 });
   assert.ok(g.upgrade('pug'));
   assert.ok(g.upgrade('home'));
-  assert.equal(g.getState().pugStage, 14);
-  assert.equal(g.getState().homeStage, 13);
+  assert.equal(g.getState().pugStage, 15);
+  assert.equal(g.getState().homeStage, 14);
   assert.equal(g.getState().pug, 15);
 });
 test('scientific numbers retain enormous currency and power', () => {
