@@ -157,7 +157,9 @@
         31,
         32,
         35,
-        44
+        44,
+        52,
+        55
       ],
       "extra": [],
       "tasks": [
@@ -188,6 +190,10 @@
         [
           "Полная победа в мини-игре: 8 × длительность в секундах × обычная сила тапа на старте; частичный успех пропорционален, временные усиления исключены.",
           "Full minigame victory: 8 × planned seconds × ordinary tap power captured at start; partial success is proportional, temporary boosts excluded."
+        ],
+        [
+          "Учесть бабочку 10P и пчелу 20P в общей экономике, без временных множителей; пересчитать новые поздние цены/бонусы и совместимость Новой жизни.",
+          "Include butterfly 10P and bee 20P in the economy without temporary boosts; recalculate late-stage prices/bonuses and New life compatibility."
         ]
       ],
       "done": [
@@ -327,8 +333,8 @@
       "ru": "Yuppi, реакции, секреты и настройки",
       "en": "Yuppi, reactions, secrets and settings",
       "hours": [
-        5,
-        8
+        7,
+        12
       ],
       "depends": [
         2,
@@ -350,7 +356,10 @@
         12,
         13,
         40,
-        41
+        41,
+        50,
+        51,
+        52
       ],
       "extra": [
         1,
@@ -393,6 +402,22 @@
         [
           "Добавить два смешных случайных действия со звуками и синхронный звук мочи для редкой существующей анимации.",
           "Add two funny random actions with sounds and synchronized ground urination sound for the existing rare animation."
+        ],
+        [
+          "Бабочка: плавный полёт, тап с анимацией удара тапком, исчезновение и однократная награда 10 обычных тапов; после 50 успешных попаданий скрытая шапка-бабочка.",
+          "Butterfly: smooth flight, tap-triggered slipper impact, disappearance and one reward of 10 ordinary taps; 50 successful catches unlock a hidden butterfly hat."
+        ],
+        [
+          "Пчела: собственный полёт/звук и реакция на удар, награда 20 обычных тапов; после 100 попаданий скрытая вязаная шапка-пчела.",
+          "Bee: distinct flight/sound and hit reaction, reward of 20 ordinary taps; 100 successful catches unlock a hidden knitted bee hat."
+        ],
+        [
+          "Начальный баланс для симуляции: бабочка раз в 3–5 активных минут, пчела раз в 4–7; это интервалы нового генератора, а не замена птиц. Одна насекомая цель за раз. P фиксируется при появлении и включает постоянные улучшения; монетки, комбо и Yuppi не усиливают выплату. Промах/уход за экран — без награды. Не появляться в меню или бою.",
+          "Starting simulation balance: butterfly every 3–5 active minutes, bee every 4–7; use a separate scheduler without replacing birds, at most one insect target at a time. Capture ordinary power P at spawn, including permanent upgrades; coins, combo and Yuppi do not boost payouts. Misses/escape give nothing; no spawning in menus or combat."
+        ],
+        [
+          "Предварительно: шапка-бабочка +20% к наградам насекомых; шапка-пчела сокращает экспедиции на 5% при прежней награде, эффект фиксируется при отправке. Только надетая шапка, не складывать бонусы всех шапок; проверить финальные значения в блоке 4. Счётчики/награды сохраняются, тестовые вызовы не фармят достижения, оба рисунка проверяются во всех позах.",
+          "Provisional hats: butterfly +20% insect rewards; bee reduces expedition duration by 5% with unchanged reward, locked at dispatch. Only the equipped hat applies; validate final values in block 4. Persist counters/unlocks, prevent developer summons from farming achievements and inspect both hats across all poses."
         ]
       ],
       "done": [
@@ -484,9 +509,122 @@
         "Готовность: сон и возвращение плавные, секретные открытия сохраняются, шапки/оружие корректны, бонусы проверены.",
         "Done: smooth sleep and return, saved secret unlocks, correct hats/weapons and verified bonuses."
       ]
+    },
+    {
+      "id": 10,
+      "ru": "Скрытый поздний этап: Дубай и мопс-качок",
+      "en": "Hidden late stage: Dubai and muscular pug",
+      "hours": [
+        8,
+        12
+      ],
+      "depends": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "req": [
+        53,
+        54,
+        55
+      ],
+      "extra": [],
+      "status": "planned",
+      "tasks": [
+        [
+          "После нынешнего самого дорогого дома — огромная квартира в Дубае: панорамный мегаполис за окнами, золотые слитки и брикеты долларов на заднем плане, ноутбук с графиками. Отдельная следующая стадия корма; подробно отрисовать под мобильный экран.",
+          "After the current most expensive home: a huge Dubai apartment with panoramic skyline, gold bars and bundled dollars in the background, and a laptop with charts. Add a separate next food stage and detailed mobile artwork."
+        ],
+        [
+          "После нынешней последней формы — мопс-качок: узнаваемая морда, отчётливо нарисованные пресс, бицепсы, трицепсы и накачанное тело; полный набор обычных/редких движений, посадка всех шапок, оружия и сцены сна.",
+          "After the current final pug form: a muscular pug with recognizable face, clearly drawn abs, biceps, triceps and powerful body; complete regular/rare motions, hat/weapon fit and sleep scenes."
+        ],
+        [
+          "Для новых и всех следующих стадий: до покупки изображение, название и подробности скрыты знаком «?», цена и численный бонус доступны; после покупки раскрыть и показать превращение. Уже купленные старые формы не скрывать.",
+          "For these and all later stages: hide artwork, name and detailed reveal behind “?” until purchase; show price and numerical bonus beforehand. Reveal with a transformation after purchase. Do not hide older owned forms."
+        ],
+        [
+          "Ориентир по нынешней кривой: качок 2,8 трлн, Дубай 7,75 трлн камушков; предварительные прибавки +35% и +40% к соответствующему множителю обычной добычи. Финальные цены пересчитать в блоке 4, учитывая новые доходы и облегчение позднего прогресса.",
+          "Current-curve reference prices: muscular pug 2.8 trillion, Dubai 7.75 trillion pebbles; provisional +35% and +40% to their respective ordinary-production factors. Recalculate final prices in block 4 against new income and easier late progression."
+        ],
+        [
+          "Перенести покупки сверх старого визуального максимума без повторной оплаты; сохранить баланс, коллекции, выбранные скины и уже заработанный доступ к Новой жизни. Новый визуальный максимум требует явных условий Новой жизни; отсутствующий будущий босс не блокирует покупку.",
+          "Map purchases beyond the old visual maximum without charging twice; preserve balances, collections, selected skins and earned New life access. Explicitly define New life conditions for the expanded visual track; do not gate purchases behind an unimplemented boss."
+        ]
+      ],
+      "done": [
+        "Готовность: оба скрытых этапа раскрываются только после покупки, графика/анимации и скины проверены, баланс и перенос сохранений не теряют старые покупки.",
+        "Done: both hidden stages reveal only after purchase, art/motions/skins are inspected, and balance/migration preserve existing purchases."
+      ]
     }
   ],
   "research_requirement_completed": 22,
   "active_release": "0.6.0",
-  "active_blocks": []
+  "active_blocks": [],
+  "followups": [
+    {
+      "id": "2.1",
+      "parent": 2,
+      "ru": "Чёткие, более медленные анимации",
+      "en": "Crisp, slower animations",
+      "hours": [
+        1,
+        2
+      ],
+      "status": "planned",
+      "req": [
+        46
+      ],
+      "tasks": [
+        [
+          "По отзыву о 0.6.0 увеличить удержание отдельных кадров; уменьшить длительное смешивание разных поз, из-за которого видны смазанные морды и двойные контуры. Подобрать темп по действию, не растягивать размытие. Проверить шапки и переходы во всех позах.",
+          "Following 0.6.0 feedback, hold individual frames longer and reduce extended blending between different poses, which produces blurred faces and doubled outlines. Tune each action without stretching the blur; recheck hats and pose transitions."
+        ]
+      ]
+    },
+    {
+      "id": "3.1",
+      "parent": 3,
+      "ru": "Композиция и размеры персонажей",
+      "en": "Composition and character scale",
+      "hours": [
+        1,
+        2
+      ],
+      "status": "planned",
+      "req": [
+        47,
+        48,
+        49
+      ],
+      "tasks": [
+        [
+          "Относительно 0.6.0: Василий с экскаватором +25% по линейному размеру, пропорции сохранить; корм ещё +10%, поднять и расположить ближе к центру; мопс ещё −10%, сохранить текущую позицию/точку привязки.",
+          "Relative to 0.6.0: enlarge Vasiliy and excavator by 25% linearly, preserving proportions; enlarge food by another 10%, raise it and move it toward the center; shrink the pug by another 10% without moving its anchor."
+        ],
+        [
+          "Пересчитать области касаний, крепления птиц, шапок и позиции Василия; корм должен удобно нажиматься в ранних/поздних стадиях и разных анимациях, без перекрытия кнопок. Повторить мобильную проверку.",
+          "Recalculate touch bounds, bird/hat anchors and helper placement; food must be easy to tap at early/late stages and throughout animations without covering controls. Repeat mobile QA."
+        ]
+      ]
+    }
+  ],
+  "remaining_hours": [
+    41,
+    67
+  ],
+  "recommended_order": [
+    "2.1",
+    "3.1",
+    4,
+    5,
+    6,
+    7,
+    10,
+    9,
+    8
+  ]
 }
