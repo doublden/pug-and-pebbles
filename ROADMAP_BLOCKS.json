@@ -566,6 +566,35 @@
         "Done: both hidden stages reveal only after purchase, art/motions/skins are inspected, and balance/migration preserve existing purchases."
       ],
       "release": "0.8.1"
+    },
+    {
+      "id": 11,
+      "title_ru": "Размещение в сцене: сон, лежанки и миски",
+      "title_en": "Scene placement: sleep, beds and bowls",
+      "status": "planned_not_started",
+      "tasks": [
+        [
+          "Сопля сна мопса-качка должна надуваться возле носа во всех кадрах, включая сон в лежанке.",
+          "Anchor the muscular pug sleep bubble to the nose in every frame, including bed sleep."
+        ],
+        [
+          "Проверить все дома и все лежанки: размещать на полу или земле, без пересечения со стенами и мебелью; исправить диван в Дубае.",
+          "Inspect all homes and beds: place beds on floor or ground without overlapping walls or furniture; correct the Dubai sofa overlap."
+        ],
+        [
+          "Уменьшить миску с кормом на 10% только в Дубае и предыдущей локации относительно 0.8.1; обновить область тапа.",
+          "Reduce the food bowl by 10% only in Dubai and the preceding location relative to 0.8.1; update tap bounds."
+        ]
+      ],
+      "reported_against_release": "0.8.1",
+      "implementation_authorized": false,
+      "recorded_after_release_links": true,
+      "ru": "Размещение в сцене: сон, лежанки и миски",
+      "en": "Scene placement: sleep, beds and bowls",
+      "depends": [
+        9,
+        10
+      ]
     }
   ],
   "research_requirement_completed": 22,
@@ -632,7 +661,15 @@
     8
   ],
   "latest_release": "0.8.1",
-  "remaining_blocks": [],
+  "remaining_blocks": [
+    11
+  ],
   "publication_authorized": true,
-  "status": "all_approved_blocks_complete"
+  "status": "released_with_deferred_followup",
+  "next_update_feedback": {
+    "block": 11,
+    "scope": "documentation_only",
+    "implementation_started": false,
+    "requires_start_instruction": true
+  }
 }

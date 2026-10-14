@@ -21,7 +21,7 @@ Updated: 14 October 2026. Blocks 1–3 shipped in 0.6.0; follow-ups 2.1 + 3.1 an
 | 9 | Beds and sleep scenes | 5–8 | shipped, 0.8.1 |
 | 10 | Hidden late stage: Dubai and muscular pug | 8–12 | shipped, 0.8.1 |
 
-All approved blocks are complete. Further ideas and a Telegram Mini App require separate approval.
+All previously approved blocks 1–10 are complete; the new block 11 fixes are deferred. Further ideas and a Telegram Mini App require separate approval.
 
 ## 1. Mobile bugs and stability
 
@@ -190,3 +190,13 @@ Original animal photos and personal screenshots remain local references; only ga
 
 
 0.8.1 validation: automated tests and browser checks, 5,376 geometric hat attachment checks, six logical screen sizes. Physical iPhone/Android devices were not tested; real Safari installation and phone audio still need owner verification.
+
+## Next update — block 11: scene placement
+
+Recorded after publishing 0.8.1 and providing the release links to the owner. These fixes **are not included in 0.8.1 and are not being implemented yet**.
+
+- [ ] Muscular pug sleep animation: anchor the inflating snot bubble to the nose/face instead of the rear of the body. Check every sleep frame, including bed scenes.
+- [ ] Inspect every location and give each one a bed position on the ground or floor. Beds must not overlap walls, furniture or a sofa; specifically correct the Dubai apartment. Check every bed design and selected home skins.
+- [ ] Reduce the food bowl by 10% relative to 0.8.1 only in the Dubai apartment and the preceding location. Leave all other locations unchanged and align the tap area with the new size.
+
+Validation: iPhone 15 Pro Max (430 × 932 CSS pixels), smaller popular mobile sizes, standalone web-app mode and every sleep frame. Saves, prices and bonuses stay unchanged. Implementation requires a separate start instruction.
