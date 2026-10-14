@@ -1,0 +1,492 @@
+{
+  "updated": "2026-10-14",
+  "baseline": "0.6.0",
+  "implementation_started": true,
+  "blocks": [
+    {
+      "id": 1,
+      "ru": "Мобильные ошибки и стабильность",
+      "en": "Mobile bugs and stability",
+      "hours": [
+        2,
+        3
+      ],
+      "depends": [],
+      "req": [
+        16,
+        17,
+        20,
+        37
+      ],
+      "extra": [],
+      "tasks": [
+        [
+          "Разнести комбо, таймер множителя, баланс, уведомления и кнопки; проверить длинные числа и русский/английский интерфейс.",
+          "Separate the combo counter, multiplier timer, balance, notifications and buttons; check long numbers and both languages."
+        ],
+        [
+          "Устранить двойную голову Василия, мерцание машины и проверить прежнее зависание после найма и сброса прогресса.",
+          "Fix Vasiliy’s duplicate head and machinery flicker; check the earlier hiring freeze and reset regression."
+        ],
+        [
+          "Исправить горизонтальные/вертикальные свайпы в «трёх в ряд», сохранить тапы; сделать контрастные ячейки и убрать лишнее пустое место.",
+          "Fix horizontal/vertical match-three swipes while keeping tap selection; provide clear cells and remove excessive empty space."
+        ],
+        [
+          "Начать проверку с iPhone 15 Pro Max и меньших экранов; сенсорное управление и safe areas входят в каждый следующий блок.",
+          "Start viewport checks with iPhone 15 Pro Max and smaller screens; touch controls and safe areas remain part of every subsequent block."
+        ],
+        [
+          "Только вертикальная игра; на компьютере мобильное поле по центру, на горизонтальном телефоне просьба повернуть экран и пауза.",
+          "Portrait-only gameplay; centered mobile field on desktop, turn-phone notice and pause in landscape."
+        ]
+      ],
+      "done": [
+        "Готовность: элементы не перекрываются, у кота одна голова, игра не зависает, свайпы и сетка проверены. Различать эмуляцию и реальный телефон.",
+        "Done when HUD items do not overlap, the cat has one head, the game does not freeze, and swipe/grid behavior is checked. Distinguish emulation from physical-device testing."
+      ],
+      "status": "completed",
+      "release": "0.6.0"
+    },
+    {
+      "id": 2,
+      "ru": "Шапки и крепления к мопсу",
+      "en": "Hats and character attachment",
+      "hours": [
+        4,
+        7
+      ],
+      "depends": [
+        1
+      ],
+      "req": [
+        18,
+        36
+      ],
+      "extra": [],
+      "tasks": [
+        [
+          "Провести новую визуальную инспекцию всех десяти существующих шапок: каждая стадия, поза и промежуточный кадр; сидя, лёжа, в наклоне, при чихе и повороте спиной.",
+          "Visually inspect all ten existing hats across every stage, pose and intermediate frame: sitting, lying down, leaning, sneezing and facing away."
+        ],
+        [
+          "Перерисовать проблемные виды каждой шапки с правильными размером, объёмом, перспективой и глубиной посадки; общий сдвиг всего набора не считать решением.",
+          "Redraw problematic views of each hat with correct scale, volume, perspective and seating depth; moving the whole set is not sufficient."
+        ],
+        [
+          "Край должен прилегать к голове; глаза, уши и медаль не перекрываются случайно. Сзади соблюсти направление козырька и украшений, медаль остаётся спереди.",
+          "Seat the rim on the head; avoid unintended overlap with eyes, ears or medallion. Preserve visor/ornament orientation from behind and keep the medallion on the chest."
+        ],
+        [
+          "Использовать крепления головы для движения шапок и посадки птиц; подготовить совместимость с оружием блока 5. Новые секретные шапки проходят такую же проверку в блоке 7.",
+          "Use head attachments for hat motion and bird perches; prepare compatibility with block 5 weapons. New secret hats receive the same checks in block 7."
+        ],
+        [
+          "Сгладить мерцание, замедлить движения мопса и переходы; шапка следует одной голове без двойного наложения.",
+          "Remove pose flicker, slow pug motions and transitions; draw one hat following the interpolated head."
+        ]
+      ],
+      "done": [
+        "Готовность: сохранена визуальная матрица «шапка × стадия × поза», проверены переходы в движении и мобильный масштаб. Контакт пикселей не заменяет оценку красивой посадки.",
+        "Done when a hat × stage × pose visual matrix is available and motion transitions/mobile scale are checked. Pixel contact does not replace visual fit inspection."
+      ],
+      "status": "completed",
+      "release": "0.6.0"
+    },
+    {
+      "id": 3,
+      "ru": "Чёткие локации, миски и корм",
+      "en": "Detailed locations, bowls and food",
+      "hours": [
+        4,
+        6
+      ],
+      "depends": [
+        1
+      ],
+      "req": [
+        15,
+        45
+      ],
+      "extra": [],
+      "tasks": [
+        [
+          "Перерендерить все локации и стадии мисок/корма в утверждённом мультяшно-реалистичном стиле, с детализацией для iPhone 15 Pro Max.",
+          "Rerender all locations and bowl/food stages in the approved cartoon-realistic style with detail suitable for iPhone 15 Pro Max."
+        ],
+        [
+          "Сохранить развитие от пустой грязной миски до большой золотой горы; корм остаётся отдельным активным изображением с небольшой анимацией при тапе.",
+          "Preserve progression from an almost-empty dirty bowl to a large golden pile; food remains a separate interactive image with a small tap reaction."
+        ],
+        [
+          "Сохранить мобильную композицию: мопс левее, гора удобно доступна около середины экрана, видна локация. Устранить следы соседних ячеек и обрезанные хвосты.",
+          "Preserve the mobile composition: pug to the left, food conveniently reachable near the center, location visible. Remove neighboring-cell fragments and cropped-tail artifacts."
+        ],
+        [
+          "Подбирать размер под фактический экран и плотность, сжимать WebP и загружать нужную графику по мере необходимости; простое растягивание старого изображения не подходит.",
+          "Match image sizes to the actual display and pixel density, compress WebP assets and load needed art on demand; stretching old low-resolution images is not sufficient."
+        ],
+        [
+          "Увеличить миску/корм на 10%, уменьшить мопса на 10% и немного сдвинуть левее; область попадания меняется вместе с кормом.",
+          "Enlarge bowl/food by 10%, shrink the pug by 10% and move it slightly left; resize food hit bounds with the drawing."
+        ]
+      ],
+      "done": [
+        "Готовность: исходные мобильные кадры просмотрены в масштабе 100%, корм чёткий, композиция удобна, стартовая загрузка не тянет все детальные локации.",
+        "Done when mobile renders are inspected at 100%, food is detailed, composition is usable, and startup avoids loading every detailed location."
+      ],
+      "status": "completed",
+      "release": "0.6.0"
+    },
+    {
+      "id": 4,
+      "ru": "Экономика, магазин и покупки",
+      "en": "Economy, shop and purchases",
+      "hours": [
+        4,
+        6
+      ],
+      "depends": [
+        1
+      ],
+      "req": [
+        19,
+        25,
+        26,
+        27,
+        31,
+        32,
+        35,
+        44
+      ],
+      "extra": [],
+      "tasks": [
+        [
+          "Первые три-четыре улучшения мопса и дома сделать требовательнее, их бонусы заметнее; повысить полезность обычных шапок. Среднюю/позднюю часть ориентировать на примерно 10% более доступный прогресс без общей механической скидки.",
+          "Make the first three or four pug/home upgrades more demanding and rewarding; improve ordinary hat usefulness. Target roughly 10% easier mid/late progression without a blanket price discount."
+        ],
+        [
+          "Рассчитать Василия с базовым ориентиром один обычный тап в секунду после найма; уровни сохраняют смысл. Пересчитать цены и экспедиционные выплаты вместе.",
+          "Calculate Vasiliy around one ordinary tap per second at hire; levels still improve him. Rebalance prices and expedition payouts together."
+        ],
+        [
+          "Дом и мопс покупаются только по одному; ×1/×10/максимум остаются для инструментов и Василия. После успешной покупки дома/мопса закрыть магазин и показать превращение с солнечными лучами.",
+          "Pug/home progression is single-purchase only; retain ×1/×10/max for tools and Vasiliy. Successful pug/home purchases close the shop and show the transformation with sun rays."
+        ],
+        [
+          "Главный значок магазина: только первая покупка новой копалки, следующего дома или мопса. Значки категорий показывают доступные покупки своего раздела, включая обычную прокачку. Все условия, включая босса для дома, должны выполняться.",
+          "The main shop badge signals only a first purchase of a new digging tool, the next home or pug stage. Category badges signal available purchases in that category, including ordinary upgrades. All requirements, including home boss clearance, must be met."
+        ],
+        [
+          "Сохранить ближайшую цель в магазине; проверить одновременное влияние доходов, расходов, монеток, комбо, шапок, Василия и новых боёв. Согласованные отдельные формулы секретных предметов остаются.",
+          "Keep the nearest-goal display; simulate combined income, costs, coins, combos, hats, Vasiliy and upcoming boss gates. Preserve separately approved secret-item formulas."
+        ],
+        [
+          "Копалки: первая покупка показывает свою базовую добычу; улучшение — реальную прибавку общей обычной добычи за тап.",
+          "Tools: first purchase shows base power; upgrades show the actual increase to total ordinary tap power."
+        ],
+        [
+          "Полная победа в мини-игре: 8 × длительность в секундах × обычная сила тапа на старте; частичный успех пропорционален, временные усиления исключены.",
+          "Full minigame victory: 8 × planned seconds × ordinary tap power captured at start; partial success is proportional, temporary boosts excluded."
+        ]
+      ],
+      "done": [
+        "Готовность: сравнение старой/новой траектории для нескольких темпов игры, понятные цены и бонусы, корректные уведомления и отсутствие потери старых покупок.",
+        "Done when old/new progression is compared at several play rates, prices/bonuses are clear, badges behave correctly, and existing purchases are preserved."
+      ],
+      "status": "planned"
+    },
+    {
+      "id": 5,
+      "ru": "Василий, экспедиции, оружие и инвентарь",
+      "en": "Vasiliy, expeditions, weapons and inventory",
+      "hours": [
+        6,
+        9
+      ],
+      "depends": [
+        2,
+        4
+      ],
+      "req": [
+        14,
+        23,
+        24,
+        28,
+        32,
+        33,
+        34,
+        38,
+        39,
+        43
+      ],
+      "extra": [
+        3,
+        4
+      ],
+      "tasks": [
+        [
+          "Внедрить пересчитанную автодобычу около одного обычного тапа/с на базовом уровне. Временные монетки, комбо и Yuppi её не усиливают. «Ладно, поработаю»: ×2 на 10 секунд, перезарядка пять минут; недоступно в экспедиции и пока награда не забрана.",
+          "Implement rebalanced baseline production around one ordinary tap/second. Temporary coins, combos and Yuppi do not amplify it. “Fine, I’ll work”: ×2 for 10 seconds with a five-minute cooldown; unavailable during expeditions and while rewards await collection."
+        ],
+        [
+          "Экскаватор: маленький ржавый на уровнях 1–9, новый облик каждые 10 уровней до золота/бриллиантов на 100+. Размер ограничить эталонной миской, добыча после 100 может расти. Сохранить плавные поездки/копание, разрешить старые расцветки и наклейки без смены силы.",
+          "Excavator: small and rusty at levels 1–9, new appearance every ten levels up to gold/diamonds at 100+. Limit size to the reference bowl; production may continue growing. Preserve smooth travel/digging and allow older colors/stickers without changing strength."
+        ],
+        [
+          "Экспедиции 15 минут/час/три часа: награда фиксируется при отправке, не растёт после возвращения, забирается один раз. Добавить коллекционный хлам и небольшую ограниченную компенсацию за дубликаты.",
+          "Expeditions last 15 minutes/one hour/three hours; rewards are fixed at dispatch, do not grow after returning, and can be collected once. Add collectible junk and small capped duplicate compensation."
+        ],
+        [
+          "Оружие: бесплатная палка; три части → ржавая ложка → заточка из ложки → меч из зубной щётки → ржавая труба → монтировка → ржавый меч → меч тамплиера → меч паладина. После ложки каждый переход требует три одинаковых предмета. Готовое оружие постепенно появляется в добыче, иначе паладин потребовал бы 6 561 часть.",
+          "Weapons: free stick; three fragments → rusty spoon → spoon shiv → toothbrush sword → rusty pipe → crowbar → rusty sword → Templar sword → Paladin sword. Each step after the spoon consumes three identical items. Gradually introduce ready-made weapon drops; fragments alone would require 6,561 for a Paladin sword."
+        ],
+        [
+          "Первая учебная 15-минутная экспедиция гарантирует три части. Начальная обычная таблица: 15 минут — 35% на один трофей, час — 80% на три, три часа — 100% на восемь; показать проценты по уровням предметов и гарантию после неудач. Прогнанные птицы: 0,2% на базовую часть после открытия оружия. Финальные таблицы проверить по времени до боссов.",
+          "The first tutorial 15-minute expedition guarantees three fragments. Starting ordinary table: 15 minutes — 35% for one trophy, one hour — 80% for three, three hours — 100% for eight; show item-tier probabilities and the visible bad-luck guarantee. Chased birds: 0.2% for a base fragment after weapons unlock. Validate final tables against time to each boss."
+        ],
+        [
+          "Инвентарь показывает количество, урон, экипировку и рецепт объединения. Объединение вручную; расход и результат видны. Если потрачено надетое оружие, надеть результат. В обычной сцене оружие висит за спиной во всех позах, переключатель скрывает его без снятия; в бою всегда в лапе. За камушки оружие не продавать.",
+          "Inventory shows counts, damage, equipped state and merge recipes. Merging is manual with visible costs/results. Equip the result if the equipped item was consumed. In normal play, weapons hang on the back in every pose; a toggle hides them without unequipping. In combat they are always held. Weapons are not sold for pebbles."
+        ],
+        [
+          "В Новой жизни сохранять коллекцию/внешности, но доступ к сильным ступеням привязать к этапу нового витка. Во всех новых полях обеспечить перенос и сохранение прогресса.",
+          "New life preserves the collection/appearances while strong weapon access follows the new run’s milestones. Migrate and persist all new progress fields."
+        ],
+        [
+          "Косметические переключатели в инвентаре: копалка 500 тыс., мопс 1 млн, дом 1,5 млн; также независимый вид миски/горы, цену определить. Только открытые виды, бонусы не меняются.",
+          "Inventory cosmetic unlocks: tool 500k, pug 1m, home 1.5m; independent bowl/pile skin with price to be defined. Only unlocked looks, power unchanged."
+        ],
+        [
+          "Отмена поездки с подтверждением и без награды; однократное уведомление о готовой награде с кнопкой «Забрать», отложенное до конца боя.",
+          "Confirm expedition cancellation with no reward; one claimable completion banner, deferred until combat ends."
+        ]
+      ],
+      "done": [
+        "Готовность: Василий ощутимо добывает, экспедиция не начисляется дважды, рецепты/экипировка сохраняются, оружие выглядит естественно, следующая нужная ступень доступна до соответствующего босса.",
+        "Done when Vasiliy provides noticeable production, expeditions cannot pay twice, recipes/equipment persist, weapons fit naturally, and required tiers unlock before their bosses."
+      ],
+      "status": "planned"
+    },
+    {
+      "id": 6,
+      "ru": "Бои с енотом и большой вороной",
+      "en": "Raccoon and giant crow boss fights",
+      "hours": [
+        6,
+        10
+      ],
+      "depends": [
+        4,
+        5
+      ],
+      "req": [
+        24,
+        29,
+        30
+      ],
+      "extra": [],
+      "tasks": [
+        [
+          "Обучение появляется на седьмой локации «Дворик с лежанкой», первый босс открывает покупку восьмой «Скромный двор». Использовать устойчивые идентификаторы локаций. В начальную инструкцию боссов не добавлять.",
+          "Show combat onboarding at the seventh location, Yard with a bed; the first boss unlocks purchase of the eighth, Modest yard. Use stable location IDs. Keep bosses out of the initial tutorial."
+        ],
+        [
+          "Отрисовать два полноценных босса: наглый енот и большая ворона. Корм скрывается; мопс становится боком с оружием, шапка временно скрыта. Плавные стойки, несколько атак и защит обоих, попадания и победа; оружие точно следует лапе.",
+          "Draw two complete bosses: a cheeky raccoon and giant crow. Hide food; switch the pug to a side-facing armed stance and temporarily hide the hat. Provide smooth idle poses, multiple attacks/defenses, impacts and victory, with weapons tracking the paw."
+        ],
+        [
+          "За 30 секунд снять HP тапами. Первый ориентир: енот 200 HP, палка 1 урон, ложка 2, максимум шесть учитываемых ударов/с; палкой невозможно, ложкой достаточно около 3,34 тапа/с. Копалки и экономические множители не влияют на урон.",
+          "Deal damage by tapping within 30 seconds. First-boss baseline: raccoon 200 HP, stick 1 damage, spoon 2, maximum six counted hits/second; the stick cannot win, the spoon needs about 3.34 taps/second. Digging tools/economic multipliers do not affect damage."
+        ],
+        [
+          "При атаке мопса босс защищается/реагирует, при атаке босса мопс защищается. Защита не отменяет учтённый урон; отдельного HP мопса пока нет. Автодобыча и прочие события на время боя приостановлены, уход в фон не даёт выгодной паузы.",
+          "Pug attacks trigger boss defense/impact reactions; boss attacks trigger pug defenses. Defense never cancels counted damage; there is no pug HP initially. Pause automatic production and other events during combat; backgrounding must not provide an advantageous timer pause."
+        ],
+        [
+          "Тревожная музыка, плавный возврат обычной, разные взмахи/удары/защиты с учётом материала оружия и синхронного контакта. Соблюдать громкость и ограничение наложений.",
+          "Play tense music, then smoothly return to ordinary music; vary swings, impacts and blocks by weapon material and synchronize contact. Respect volume settings and overlapping-sound limits."
+        ],
+        [
+          "Победа один раз открывает переход; дом покупается отдельно, деньги не списываются за бой. Бесплатные повторы, нет потери оружия/баланса. Разовая награда = min(100 обычных тапов, 5% цены следующего дома), фиксированная при открытии. Старые дома остаются доступными.",
+          "Victory unlocks a transition once; the home is purchased separately and combat costs no currency. Free retries, no weapon/balance loss. One-time reward = min(100 ordinary taps, 5% of the next home’s price), fixed at encounter unlock. Existing homes remain accessible."
+        ],
+        [
+          "HP вороны и нужное оружие рассчитать вместе с экспедициями. Последующие боссы: барсук, дворовый пёс, гусь, кабан, королевский павлин — эскиз продолжения; два первых входят в оценку, отсутствующие боссы не блокируют старые/дальнейшие доступные дома.",
+          "Calculate crow HP/required weapons alongside expeditions. Later bosses—badger, yard dog, goose, boar, royal peacock—are follow-up concepts; the estimate covers the first two. Missing bosses must not block existing or otherwise available later homes."
+        ]
+      ],
+      "done": [
+        "Готовность: оба боя плавно работают на таче, предел урона честный, таймер/повторы не абузятся, одноразовые победы/награды сохраняются и переходы домов понятны.",
+        "Done when both fights run smoothly on touch, damage limits are fair, timers/retries cannot be exploited, victories/rewards persist once, and home transitions are clear."
+      ],
+      "status": "planned"
+    },
+    {
+      "id": 7,
+      "ru": "Yuppi, реакции, секреты и настройки",
+      "en": "Yuppi, reactions, secrets and settings",
+      "hours": [
+        5,
+        8
+      ],
+      "depends": [
+        2,
+        4,
+        5
+      ],
+      "req": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        40,
+        41
+      ],
+      "extra": [
+        1,
+        2,
+        5
+      ],
+      "tasks": [
+        [
+          "Тап по мопсу и Василию даёт ровно одно обычное ручное копание с соответствующей реакцией. До «Здорового мопса» включительно — чих; далее 2–3 поворота задом, натужная морда и коричневые облака. Василий недовольно мяукает.",
+          "Tapping the pug or Vasiliy grants exactly one ordinary manual dig with a reaction. Through Healthy pug inclusive: sneeze; later: two or three rear-turn variants, strained face and brown clouds. Vasiliy meows grumpily."
+        ],
+        [
+          "Разные реалистичные чихи/хрюки/пуканье/мяуканье; для пуков и мяуканья 3–4 записи. Облака могут закрыть весь экран, быстро исчезают и пропускают касания. Добавить интенсивность эффектов и ограничение звуковых наложений.",
+          "Provide varied realistic sneezes/snorts/farts/meows, including three or four fart/meow recordings. Clouds can cover the screen, disappear quickly and pass touch input through. Add effect intensity and overlapping-sound limits."
+        ],
+        [
+          "Достижение «Пук-пук или тук-тук?» по фактическому полному покрытию. Шапка 💩: 5% шанс удвоить ручную добычу, без усиления Yuppi, мини-игр или автодобычи; только надетая шапка. Щадящий режим не лишает достижения.",
+          "Award the “Fart-fart or knock-knock?” achievement for actual full coverage. Poop hat: 5% chance to double manual digging, no effect on Yuppi, minigames or automatic production; only the equipped hat applies. Reduced effects do not prevent the achievement."
+        ],
+        [
+          "Yuppi — толстый сердитый рыжий кот по фото, радуга и надпись “YIPPEEEE!”. После «Каменного дома»: раз в 20–35 минут активной главной сцены, максимум три оплачиваемых тапа ×100 обычной силы без монеток/комбо. На промах — язык/оглядывание без штрафа. Музыкальный референс Nyan Cat; конкретную публикуемую запись выбрать отдельно, плавно включать/выключать.",
+          "Yuppi is a fat grumpy ginger cat based on the reference, with a rainbow and “YIPPEEEE!”. After Stone house: once per 20–35 active main-scene minutes, at most three paid taps worth ×100 ordinary tap strength without coin/combo stacking. Misses trigger a tongue/look reaction without a penalty. Nyan Cat is a music reference; select the actual publishable track separately and fade it in/out."
+        ],
+        [
+          "Одноразовый сачок после ведра: только после «Каменного дома», без добычи и без обязательности для следующих копалок; описание «Что это и зачем — никто не знает». Цена 30 000P, поимка 45 000P, где оба значения фиксируются по обычной силе P при первом открытии. Первый успешный тап ловит кота вместо выплаты ×100; промах сохраняет сачок. После покупки предмет исчезает навсегда.",
+          "One-time net displayed after the bucket: only after Stone house, no digging power and not required for later tools; description “What is this for? Nobody knows.” Price 30,000P and capture reward 45,000P, both fixed using ordinary strength P at first unlock. The first successful hit captures instead of paying ×100; misses keep the net. It disappears permanently after purchase."
+        ],
+        [
+          "Поимка даёт скрытое достижение и йогуртовую шапку “Yuppi!” с мерцающей радугой: +10% экспедиции, фиксируется при отправке. Покупка сачка/поимка/шапка сохраняются в Новой жизни. Обе новые шапки проверяются во всех позах.",
+          "Capture grants a hidden achievement and a “Yuppi!” yogurt hat with a shimmering rainbow: +10% expedition reward, fixed at dispatch. Net purchase/capture/hat persist through New life. Inspect both new hats in every pose."
+        ],
+        [
+          "Альбом гостей: неизвестные силуэты, встреченные портреты/статистика. Разработчик: открыть скрытые предметы, вызвать Yuppi/Джека/будущих гостей, повторить тестовые сценарии без автоматической выдачи достижений; сохранять тестовую отметку.",
+          "Visitor album: unknown silhouettes and discovered portraits/statistics. Developer tools reveal hidden items, summon Yuppi/Jack/future visitors and repeat test scenarios without automatically granting achievements; keep the test-save marker."
+        ],
+        [
+          "В настройках убрать отдельную строку музыкальных прав, оставить источники в документации; добавить «© @doublden. Сделано из любви к мопсам и странным идеям» и «Поделиться» через системное меню iOS/Android, с копированием ссылки при отсутствии поддержки.",
+          "Remove the separate music-rights row from settings but retain attribution in documentation; add “© @doublden. Made with love for pugs and strange ideas” and native iOS/Android sharing with copy-link fallback."
+        ],
+        [
+          "Добавить два смешных случайных действия со звуками и синхронный звук мочи для редкой существующей анимации.",
+          "Add two funny random actions with sounds and synchronized ground urination sound for the existing rare animation."
+        ]
+      ],
+      "done": [
+        "Готовность: секреты открываются по реальным событиям, выплаты ограничены и сохраняются, быстрые тапы не оглушают, эффекты не мешают кнопкам, тайные предметы нельзя повторно фармить.",
+        "Done when secrets unlock from real events, rewards are capped/persistent, fast taps are not deafening, effects do not block controls, and secret items cannot be farmed repeatedly."
+      ],
+      "status": "planned"
+    },
+    {
+      "id": 8,
+      "ru": "Полная проверка, оптимизация и выпуск",
+      "en": "Final verification, optimization and release",
+      "hours": [
+        3,
+        6
+      ],
+      "depends": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "req": [
+        21
+      ],
+      "extra": [],
+      "tasks": [
+        [
+          "Проверить сохранения 0.5.0 и старые поддерживаемые форматы, Новую жизнь, полный сброс, оружие/секреты, несколько вкладок и повторные награды. В каждом блоке проверять свои изменения до общей регрессии.",
+          "Check 0.5.0 and supported legacy saves, New life, full reset, weapons/secrets, multiple tabs and duplicate rewards. Each block verifies its changes before final regression."
+        ],
+        [
+          "Основной телефон: iPhone 15 Pro Max — физически 1290×2796, логически 430×932, DPR 3. Дополнительные логические размеры: 375×812, 390×844, 393×852, 360×800, 412×915. Уточнить распространённые модели при подготовке проверки.",
+          "Primary phone: iPhone 15 Pro Max—1290×2796 physical pixels, 430×932 logical screen, DPR 3. Additional logical viewports: 375×812, 390×844, 393×852, 360×800, 412×915. Refine common device choices before testing."
+        ],
+        [
+          "Safari и установленное веб-приложение на iPhone, Chrome/установка на Android; безопасные отступы, меняющаяся высота браузера, поворот, жесты, звук после первого касания, установка и обновление офлайн-кэша. Реальные устройства и эмуляция отмечаются отдельно.",
+          "Check Safari/installed iPhone web app and Chrome/Android installation; safe areas, changing browser height, rotation, gestures, audio after first touch, installation and offline-cache updates. Report physical devices separately from emulation."
+        ],
+        [
+          "Проверить весь код, убрать ненужные слои/ассеты/повторения, ограничить память и начальную загрузку, проверить длинные игровые сессии с эффектами и анимациями. Не добавлять тяжёлые зависимости без необходимости.",
+          "Review the full code, remove unused layers/assets/duplication, constrain memory and startup loading, and check long sessions with effects/animation. Avoid unnecessary heavy dependencies."
+        ],
+        [
+          "Опубликовать проверенное обновление на GitHub Pages с русскими/английскими заметками и новой версией; дать ссылку для телефона, установки на главный экран и друзей.",
+          "Publish the verified update to GitHub Pages with RU/EN notes and a new version; provide the phone play/install/share link."
+        ]
+      ],
+      "done": [
+        "Готовность: проверки и их ограничения записаны, миграции не теряют покупки, новая опубликованная сборка проверена, ссылка открывается и PWA обновляется корректно.",
+        "Done when checks/limitations are recorded, migrations preserve purchases, the published build is verified, and its link/PWA update work correctly."
+      ],
+      "status": "planned"
+    },
+    {
+      "id": 9,
+      "ru": "Лежанки и сцены сна",
+      "en": "Beds and sleep scenes",
+      "hours": [
+        5,
+        8
+      ],
+      "depends": [
+        2,
+        4,
+        5,
+        6,
+        7
+      ],
+      "req": [
+        42
+      ],
+      "extra": [],
+      "status": "planned",
+      "tasks": [
+        [
+          "Шесть обычных лежанок и три скрытые за енота, ворону и меч паладина; одна выбранная лежанка на заднем плане.",
+          "Six ordinary beds and three secret beds unlocked by raccoon, crow and Paladin sword; one equipped bed in the background."
+        ],
+        [
+          "Мопс плавно идёт к лежанке, спит несколько секунд и возвращается; подобрать небольшие уникальные бонусы, работает выбранный.",
+          "The pug smoothly walks to its bed, sleeps briefly and returns; balance small unique bonuses, only the equipped bed applies."
+        ]
+      ],
+      "acceptance": [
+        "Готовность: сон и возвращение плавные, секретные открытия сохраняются, шапки/оружие корректны, бонусы проверены.",
+        "Done: smooth sleep and return, saved secret unlocks, correct hats/weapons and verified bonuses."
+      ]
+    }
+  ],
+  "research_requirement_completed": 22,
+  "active_release": "0.6.0",
+  "active_blocks": []
+}

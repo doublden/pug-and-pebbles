@@ -4,7 +4,7 @@
   "short_name": "Pug & Pebbles",
   "description": "Мопс, камушки и большие планы. A little pug with big plans.",
   "lang": "ru",
-  "start_url": "./?v=0.5.0",
+  "start_url": "./?v=0.6.0",
   "scope": "./",
   "display": "standalone",
   "background_color": "#eae7d7",
@@ -22,5 +22,6 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "orientation": "portrait"
 }

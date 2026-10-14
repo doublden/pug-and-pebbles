@@ -15,25 +15,26 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" type="image/png" href="favicon-v5.png" />
     <link rel="apple-touch-icon" href="icon-180-v5.png" />
-    <link rel="stylesheet" href="style.css?v=0.5.0" />
-    <script src="session.js?v=0.5.0"></script>
-    <script src="combo.js?v=0.5.0"></script>
-    <script src="game.js?v=0.5.0" defer></script>
-    <script src="icons.js?v=0.5.0" defer></script>
-    <script src="locale.js?v=0.5.0" defer></script>
-    <script src="bonuses.js?v=0.5.0" defer></script>
-    <script src="birds.js?v=0.5.0" defer></script>
-    <script src="idle.js?v=0.5.0" defer></script>
-    <script src="audio.js?v=0.5.0" defer></script>
-    <script src="sprites.js?v=0.5.0" defer></script>
-    <script src="minigames.js?v=0.5.0" defer></script>
-    <script src="extras.js?v=0.5.0" defer></script>
-    <script src="world.js?v=0.5.0" defer></script>
-    <script src="collections.js?v=0.5.0" defer></script>
-    <script src="mini-ui.js?v=0.5.0" defer></script>
-    <script src="app.js?v=0.5.0" defer></script>
+    <link rel="stylesheet" href="style.css?v=0.6.0" />
+    <script src="session.js?v=0.6.0"></script>
+    <script src="combo.js?v=0.6.0"></script>
+    <script src="game.js?v=0.6.0" defer></script>
+    <script src="icons.js?v=0.6.0" defer></script>
+    <script src="locale.js?v=0.6.0" defer></script>
+    <script src="bonuses.js?v=0.6.0" defer></script>
+    <script src="birds.js?v=0.6.0" defer></script>
+    <script src="idle.js?v=0.6.0" defer></script>
+    <script src="audio.js?v=0.6.0" defer></script>
+    <script src="sprites.js?v=0.6.0" defer></script>
+    <script src="minigames.js?v=0.6.0" defer></script>
+    <script src="extras.js?v=0.6.0" defer></script>
+    <script src="world.js?v=0.6.0" defer></script>
+    <script src="collections.js?v=0.6.0" defer></script>
+    <script src="mini-ui.js?v=0.6.0" defer></script>
+    <script src="app.js?v=0.6.0" defer></script>
   </head>
   <body>
+    <div id="rotate-screen" role="status"><span aria-hidden="true">↻</span><p data-i18n="rotatePhone">Поверни телефон вертикально</p></div>
     <main id="app" class="app-shell">
       <canvas id="world" tabindex="0" role="button" aria-label="Копать камушки"></canvas
       ><button id="sneeze-button" class="sr-only" data-i18n="sneeze">Чихнуть</button>
@@ -41,9 +42,20 @@
       <button id="food-hit" class="food-hit" aria-label="Копать камушки"></button
       ><canvas id="slobber" aria-hidden="true"></canvas>
       <header class="hud">
+        <div class="hud-main">
         <div class="wallet">
           <span class="kibble" aria-hidden="true"></span>
           <div><strong id="balance">0</strong><span id="wallet-label">камушки</span></div>
+        </div>
+        <div class="status-stack">
+      <div class="test-chip" id="test-chip" hidden data-i18n="testMode">Тестовый прогресс</div>
+      <div class="bonus-indicator" id="bonus-indicator" hidden>
+        <span id="bonus-value">×2</span><span id="bonus-seconds">30</span>
+      </div>
+      <div id="combo-indicator" class="combo-indicator" hidden>
+        <strong id="combo-rate"></strong><span id="combo-caption"></span>
+      </div>
+        </div>
         </div>
         <div class="hud-actions">
           <button id="achievements-open" class="round-button" aria-label="Достижения">
@@ -62,10 +74,6 @@
           </button>
         </div>
       </header>
-      <div class="test-chip" id="test-chip" hidden data-i18n="testMode">Тестовый прогресс</div>
-      <div class="bonus-indicator" id="bonus-indicator" hidden>
-        <span id="bonus-value">×2</span><span id="bonus-seconds">30</span>
-      </div>
       <button id="pet-coin" class="pet-coin" hidden>
         <span class="coin-face" aria-hidden="true"></span
         ><strong id="coin-value" aria-hidden="true">×2</strong>
@@ -74,9 +82,6 @@
         <canvas id="bird-canvas" class="bird-face" aria-hidden="true"></canvas>
       </button>
       <p class="tap-hint" id="tap-hint">Нажимай на камушки</p>
-      <div id="combo-indicator" class="combo-indicator" hidden>
-        <strong id="combo-rate"></strong><span id="combo-caption"></span>
-      </div>
       <div class="bottom-hud">
         <div class="scene-labels">
           <span id="pug-label">Чумазый мопс</span><span id="home-label">Свалка</span>
@@ -226,7 +231,7 @@
           data-i18n="audioCredits"
         ></a>
         <p id="settings-save-note" class="settings-note">Всё сохраняется автоматически</p>
-        <p class="version-note">Pug & Pebbles · 0.5.0</p>
+        <p class="version-note">Pug & Pebbles · 0.6.0</p>
       </div>
     </dialog>
     <dialog id="achievements-dialog" class="sheet awards-sheet" aria-labelledby="awards-title">

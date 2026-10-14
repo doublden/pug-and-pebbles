@@ -1,6 +1,7 @@
 'use strict';
 window.PugLocale = {
   ru: {
+    rotatePhone: 'Поверни телефон вертикально',
     shop: 'Магазин',
     settings: 'Настройки',
     currency: 'камушки',
@@ -307,6 +308,7 @@ window.PugLocale = {
     tabTools: 'Копалки',
   },
   en: {
+    rotatePhone: 'Turn your phone upright',
     shop: 'Shop',
     settings: 'Settings',
     currency: 'pebbles',

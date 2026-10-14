@@ -1,3 +1,16 @@
+# 0.6.0 — Blocks 1–3 / Блоки 1–3
+
+- RU: разнесены счётчики комбо и бонуса; исправлена двойная голова Василия. Свайпы трёх в ряд, контрастные клетки, вертикальная сцена и пауза при повороте.
+- RU: заново нарисованы все 10 шапок спереди, сбоку и сзади; проверены 3 600 сочетаний. Более медленные движения и плавное смешивание промежуточных кадров без двойной шапки.
+- RU: 14 детальных локаций и 14 стадий корма; загрузка текущей пары, ограниченные кэши и резервная графика для офлайн. Корм +10% по размеру, мопс −10% и немного левее.
+- EN: separate combo/bonus counters, repair Vasiliy’s duplicate head, add match-three swipes and readable cells, portrait scene with landscape pause.
+- EN: redraw all ten hats in front/side/rear views and inspect 3,600 fits; slower motions and intermediate-frame blending with one attached hat.
+- EN: rerender 14 locations and 14 food stages; load the current pair, bound memory caches and keep offline fallbacks. Food is 10% larger; the pug is 10% smaller and slightly left.
+
+Validation / Проверки: 78 Node tests pass. Six logical mobile sizes: 430×932, 375×812, 390×844, 393×852, 360×800, 412×915; landscape notice, hiring/upgrade rendering, reset, native horizontal swipe and offline startup were checked in the desktop browser. Vertical swipe, cancelled gestures and multi-touch are covered by automated UI tests. Physical iPhone/Safari tests remain to be performed on the device. Save schema and economy are preserved.
+
+Future scope / Дальше: blocks 4–9, including stronger mini-game rewards, inventory skins, expedition cancellation/claim banners, bosses, secrets and beds, are recorded in the bilingual roadmap and are not enabled here.
+
 # 0.5.0 — Mortik и экспедиции / Mortik and expeditions
 
 ## Русский

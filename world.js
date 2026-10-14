@@ -9,6 +9,7 @@
       this.sound = sound;
       this.images = {};
       this.loadingImages = new Map();
+      this.artRetryAt = new Map();
       this.extras = new PugExtras(this);
       this.coverageCanvas = document.createElement('canvas');
       this.coverageCanvas.width = 64;
@@ -36,9 +37,10 @@
       this.ready = false;
       this.reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
       this.resize = () => {
-        this.w = innerWidth;
-        this.h = innerHeight;
-        this.dpr = Math.min(devicePixelRatio || 1, 2);
+        const box = canvas.getBoundingClientRect();
+        this.w = box.width || innerWidth;
+        this.h = box.height || innerHeight;
+        this.dpr = Math.min(devicePixelRatio || 1, 3);
         this.backgroundFrames.clear();
         for (const c of [canvas, slobber].filter(Boolean)) {
           c.width = this.w * this.dpr;
@@ -56,10 +58,14 @@
         const i = new Image();
         i.onload = () => {
           this.images[key] = i;
+          this.artRetryAt.delete(key);
+          this.artRevision = (this.artRevision || 0) + 1;
+          if (key.startsWith('food-')) this.foodFrames.delete(Number(key.slice(5)));
           ok();
         };
         i.onerror = () => {
           this.loadingImages.delete(key);
+          this.artRetryAt.set(key, performance.now() + 30000);
           no(new Error(src));
         };
         i.src = src;
@@ -93,6 +99,8 @@
         home = homes[this.state.homeStage],
         critical = [
           [home, files[home]],
+          ['location-' + this.state.homeStage, this.artPath('background', this.state.homeStage)],
+          ['food-' + this.state.homeStage, this.artPath('food', this.state.homeStage)],
           ['food', 'food-mobile-v5.webp'],
           ['idle', 'pug-idle-mobile-v5.webp'],
         ];
@@ -102,7 +110,8 @@
       progress(0);
       await Promise.all(
         critical.map(async ([key, file]) => {
-          await this.image(key, file);
+          try { await this.image(key, file); }
+          catch (error) { if (!key.startsWith('location-') && !key.startsWith('food-')) throw error; }
           progress(Math.round((++finished / critical.length) * 100));
         }),
       );
@@ -113,13 +122,13 @@
         ['pugsEarly', 'pugs-early-mobile-v5.webp'],
         ['birds', 'birds-mobile-v5.webp'],
         ['birdMid', 'birds-mid-mobile-v5.webp'],
-        ['hats', 'hats-v5.webp'],
-        ['hatsSide', 'hats-side-v5.webp'],
-        ['hatsBack', 'hats-back-v5.webp'],
+        ['hats', 'hats-v6.webp'],
+        ['hatsSide', 'hats-side-v6.webp'],
+        ['hatsBack', 'hats-back-v6.webp'],
         ['rear', 'pug-rear-v5.webp'],
         ['kingHats', 'pug-king-hats-v5.webp'],
         ['helper', 'vasiliy-v4.webp'],
-        ['helperRig', 'vasiliy-rig-v5.webp'],
+        ['helperRig', 'vasiliy-rig-v6.webp'],
         ...[
           'look',
           'scratch',
@@ -158,6 +167,24 @@
         const i = new Image();
         i.onload = () => (this.toolImages[key] = i);
         i.src = 'data:image/svg+xml,' + encodeURIComponent(svg);
+      }
+    }
+    artPath(kind, stage) { return `artwork-v6/${kind}-${String(stage).padStart(2, '0')}.webp`; }
+    ensureSceneArt(stage) {
+      if (!Number.isInteger(stage) || stage < 0 || stage > 13) return;
+      for (const [prefix, kind] of [['location-', 'background'], ['food-', 'food']]) {
+        const key = prefix + stage;
+        if (this.images[key] || this.loadingImages.has(key)) continue;
+        if (performance.now() < (this.artRetryAt.get(key) || 0)) continue;
+        this.image(key, this.artPath(kind, stage)).then(() => {
+          this.backgroundFrames.clear();
+          const keep = new Set([stage, this.state.homeStage, this.transition?.from.homeStage]);
+          const keys = Object.keys(this.images).filter(k => k.startsWith(prefix));
+          for (const old of keys.slice(0, Math.max(0, keys.length - 4))) {
+            if (keep.has(Number(old.slice(prefix.length)))) continue;
+            delete this.images[old]; this.loadingImages.delete(old);
+          }
+        }).catch(() => { /* Keep the previously loaded scene when offline. */ });
       }
     }
     prepare(pose, stage) {
@@ -243,6 +270,7 @@
       }
       this.hasState = true;
       this.state = state;
+      if (this.ready) this.ensureSceneArt(state.homeStage);
     }
     cell(ctx, img, index, cols, rows, x, y, w, h) {
       const sw = img.width / cols,
@@ -250,6 +278,22 @@
       ctx.drawImage(img, (index % cols) * sw, Math.floor(index / cols) * sh, sw, sh, x, y, w, h);
     }
     background(ctx, stage, w, h) {
+      if (this.ready) this.ensureSceneArt(stage);
+      const detailed = this.images['location-' + stage];
+      if (detailed) {
+        // Preserve architecture proportions; stretch only empty foreground ground.
+        const split = detailed.height * 0.5;
+        const topHeight = Math.min(h * 0.57, split * w / detailed.width);
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(detailed, 0, 0, detailed.width, split, 0, 0, w, topHeight);
+        ctx.drawImage(detailed, 0, split, detailed.width, detailed.height - split, 0, topHeight, w, h - topHeight);
+        return;
+      }
+      if (!['backgrounds', 'poverty', 'early', 'homes'].some(k => this.images[k])) {
+        const fallback = Object.keys(this.images).find(k => k.startsWith('location-'));
+        if (fallback) ctx.drawImage(this.images[fallback], 0, 0, w, h);
+        return;
+      }
       const mapping = [
           ['backgrounds', 0, 2, 2],
           ['poverty', 0, 2, 1],
@@ -283,8 +327,8 @@
       let frame = this.backgroundFrames.get(key);
       if (!frame) {
         frame = document.createElement('canvas');
-        frame.width = w;
-        frame.height = h;
+        frame.width = Math.round(w * this.dpr);
+        frame.height = Math.round(h * this.dpr);
         const c = frame.getContext('2d'),
           scale = Math.max(w / sw, (h * 0.86) / sh),
           dw = sw * scale,
@@ -295,6 +339,8 @@
           top = h * 0.02,
           upper = top + dh * 0.25,
           lower = top + dh * 0.9;
+        c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+        c.imageSmoothingQuality = 'high';
         // Show a wider part of the original panorama; only sky and nearest ground extend vertically.
         c.drawImage(img, sx, sy, sw, sh * 0.25, left, 0, dw, upper);
         c.drawImage(img, sx, sy + sh * 0.25, sw, sh * 0.65, left, upper, dw, lower - upper);
@@ -306,18 +352,20 @@
       ctx.drawImage(frame, 0, 0, w, h);
     }
     foodFrame(stage) {
+      if (this.ready) this.ensureSceneArt(stage);
       if (this.foodFrames.has(stage)) return this.foodFrames.get(stage);
-      const img = this.images.food,
-        sx = Math.round(((stage % 4) * img.width) / 4),
-        sy = Math.round((Math.floor(stage / 4) * img.height) / 4),
-        w = Math.round((((stage % 4) + 1) * img.width) / 4) - sx,
-        h = Math.round(((Math.floor(stage / 4) + 1) * img.height) / 4) - sy,
+      const individual = this.images['food-' + stage],
+        img = individual || this.images.food,
+        sx = individual ? 0 : Math.round(((stage % 4) * img.width) / 4),
+        sy = individual ? 0 : Math.round((Math.floor(stage / 4) * img.height) / 4),
+        w = individual ? img.width : Math.round((((stage % 4) + 1) * img.width) / 4) - sx,
+        h = individual ? img.height : Math.round(((Math.floor(stage / 4) + 1) * img.height) / 4) - sy,
         pad = 24,
         canvas = document.createElement('canvas');
       canvas.width = w + pad * 2;
       canvas.height = h + pad * 2;
       const c = canvas.getContext('2d', { willReadFrequently: true });
-      c.drawImage(img, pad - sx, pad - sy);
+      c.drawImage(img, sx, sy, w, h, pad, pad, w, h);
       const pixels = c.getImageData(0, 0, canvas.width, canvas.height);
       PugSprites.isolate(pixels.data, canvas.width, canvas.height);
       c.putImageData(pixels, 0, 0);
@@ -335,6 +383,7 @@
           }
       const f = { canvas, x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
       this.foodFrames.set(stage, f);
+      if (this.foodFrames.size > 4) this.foodFrames.delete(this.foodFrames.keys().next().value);
       return f;
     }
     foodLayout(stage = this.state.homeStage, w = this.w, h = this.h) {
@@ -344,7 +393,7 @@
           0.51, 0.52, 0.53, 0.54, 0.55, 0.56, 0.57, 0.6, 0.64, 0.68, 0.72, 0.77, 0.81, 0.85,
         ][stage],
         width = portrait
-          ? w * extent
+          ? w * extent * 1.1
           : Math.min(w * (0.22 + stage * 0.012), h * (0.4 + stage * 0.037)),
         scale = Math.min(width / f.w, (h * (portrait ? 0.47 : 0.75)) / f.h),
         dw = f.w * scale,
@@ -509,12 +558,12 @@
         : this.idleEvent
           ? Math.min(
               1,
-              this.idleEvent.elapsed / 600,
-              (this.idleEvent.duration - this.idleEvent.elapsed) / 600,
+              this.idleEvent.elapsed / 850,
+              (this.idleEvent.duration - this.idleEvent.elapsed) / 850,
             )
           : pose === 'idle'
             ? 1
-            : Math.min(1, (now - this.poseStart) / 550, (this.poseEnd - now) / 550);
+            : Math.min(1, (now - this.poseStart) / 850, (this.poseEnd - now) / 850);
       p = Math.max(0, p);
       let h;
       if (pose === 'idle') h = head('idle');
@@ -572,7 +621,7 @@
       const l = this.foodLayout();
       return { x: l.cx, y: l.y + l.h * 0.55 };
     }
-    dog(ctx, stage, pose, x, y, size, alpha = 1) {
+    dog(ctx, stage, pose, x, y, size, alpha = 1, withHat = true) {
       const f = this.prepare(pose, stage);
       ctx.globalAlpha = alpha;
       ctx.save();
@@ -585,7 +634,7 @@
       );
       ctx.restore();
       ctx.globalAlpha = alpha;
-      this.extras.hat(ctx, this.state.hat, { x, y, size }, pose, performance.now(), f.head);
+      if (withHat) this.extras.hat(ctx, this.state.hat, { x, y, size }, pose, performance.now(), f.head);
       ctx.globalAlpha = 1;
       return f;
     }
@@ -607,10 +656,10 @@
     layout(now = performance.now()) {
       const portrait = this.w < this.h,
         size = portrait
-          ? Math.min(this.w * 0.65, this.h * 0.4)
+          ? Math.min(this.w * 0.585, this.h * 0.36)
           : Math.min(this.w * 0.43, this.h * 0.68),
         base = portrait ? this.h * 0.79 : this.h * 0.91,
-        x = portrait ? -this.w * 0.055 : this.w * 0.018;
+        x = portrait ? -this.w * 0.065 : this.w * 0.018;
       let l = {
         x,
         y: base - size + (this.reduced ? 0 : Math.sin(now / 950) * size * 0.003),
@@ -694,14 +743,14 @@
       this.poseEnd =
         now +
         (pose === 'scratch'
-          ? 2500
+          ? 4200
           : pose === 'yawn'
-            ? 3300
+            ? 5200
             : pose === 'pawlick'
-              ? 3400
+              ? 5400
               : pose === 'splay'
-                ? 4200
-                : 2300);
+                ? 6000
+                : 4200);
       this.nextPose = this.poseEnd + 6000 + Math.random() * 10000;
       if (pose === 'scratch') this.sound.play('scratch');
       else if (['look', 'left', 'lick'].includes(pose) && Math.random() < 0.35)
@@ -735,32 +784,43 @@
     }
     motionDog(ctx, stage, pose, l, p, alpha = 1) {
       if (p === 1 && !this.reduced && ['scratch', 'pawlick', 'lick'].includes(pose))
-        p =
-          0.82 + 0.18 * (0.5 + 0.5 * Math.sin(performance.now() / (pose === 'scratch' ? 95 : 180)));
+        p = 0.88 + 0.12 * (0.5 + 0.5 * Math.sin(performance.now() / (pose === 'scratch' ? 240 : 360)));
+      let a, b, mix;
       if (pose === 'back' && this.images.rear && p === 1) {
-        const turn = (1 + Math.cos(performance.now() / 1100)) / 2;
-        this.dog(ctx, stage, 'rear', l.x, l.y, l.size, alpha * (1 - turn));
-        this.dog(ctx, stage, 'back', l.x, l.y, l.size, alpha * turn);
-        return;
+        a = 'rear'; b = 'back'; mix = (1 + Math.cos(performance.now() / 1100)) / 2;
+      } else if (!this.images['mid-' + pose]) {
+        a = 'idle'; b = pose; mix = p;
+      } else {
+        const sequence = p * 2;
+        a = sequence < 1 ? 'idle' : 'mid-' + pose;
+        b = sequence < 1 ? 'mid-' + pose : pose;
+        mix = sequence >= 2 ? 1 : sequence % 1;
+        mix = mix * mix * (3 - 2 * mix);
       }
-      const mid = 'mid-' + pose,
-        hasMid = this.images[mid];
-      if (!hasMid) {
-        this.dog(ctx, stage, 'idle', l.x, l.y, l.size, alpha * (1 - p));
-        this.dog(ctx, stage, pose, l.x, l.y, l.size, alpha * p);
-        return;
+      // Normalize the blend in an opaque offscreen surface. Drawing two translucent
+      // characters directly onto the scene makes both body and clothing flash.
+      this.motionCanvas ||= document.createElement('canvas');
+      const renderSize = Math.ceil(l.size * Math.min(this.dpr || 2, 2));
+      const apron = Math.ceil(renderSize * 0.14), extent = renderSize + apron * 2;
+      if (this.motionCanvas.width !== extent || this.motionCanvas.height !== extent) {
+        this.motionCanvas.width = extent; this.motionCanvas.height = extent;
       }
-      const sequence = p * 2,
-        a = sequence < 1 ? 'idle' : mid,
-        b = sequence < 1 ? mid : pose,
-        mix = sequence % 1;
-      if (sequence >= 2) {
-        this.dog(ctx, stage, pose, l.x, l.y, l.size, alpha);
-        return;
-      }
-      const ease = mix * mix * (3 - 2 * mix);
-      this.dog(ctx, stage, a, l.x, l.y, l.size, alpha * (1 - ease));
-      this.dog(ctx, stage, b, l.x, l.y, l.size, alpha * ease);
+      const c = this.motionCanvas.getContext('2d');
+      c.clearRect(0, 0, extent, extent);
+      c.save();
+      c.globalCompositeOperation = 'source-over';
+      const f = this.prepare(a, stage).head, g = this.prepare(b, stage).head;
+      const hx = f.x + (g.x - f.x) * mix, hy = f.y + (g.y - f.y) * mix;
+      this.dog(c, stage, a, apron + (hx - f.x) * renderSize, apron + (hy - f.y) * renderSize, renderSize, 1 - mix, false);
+      c.globalCompositeOperation = 'lighter';
+      this.dog(c, stage, b, apron + (hx - g.x) * renderSize, apron + (hy - g.y) * renderSize, renderSize, mix, false);
+      c.restore();
+      ctx.save(); ctx.globalAlpha = alpha;
+      ctx.drawImage(this.motionCanvas, l.x - l.size * apron / renderSize, l.y - l.size * apron / renderSize, l.size * extent / renderSize, l.size * extent / renderSize);
+      const head = { x: f.x + (g.x - f.x) * mix, y: f.y + (g.y - f.y) * mix,
+        w: f.w + (g.w - f.w) * mix, tilt: (f.tilt || 0) + ((g.tilt || 0) - (f.tilt || 0)) * mix };
+      this.extras.hat(ctx, this.state.hat, l, mix < 0.5 ? a : b, performance.now(), head);
+      ctx.restore();
     }
     spitCoverage(now = performance.now()) {
       const c = this.coverageCanvas.getContext('2d', { willReadFrequently: true });
@@ -848,7 +908,7 @@
         this.dog(c, tr.from.pugStage, 'idle', l.x, l.y, l.size, 1 - mix);
       const weight = tr && mix < 1 && tr.from.pugStage !== s.pugStage ? mix : 1;
       if (e) {
-        const p = this.reduced ? 1 : Math.min(1, e.elapsed / 600, (e.duration - e.elapsed) / 600);
+        const p = this.reduced ? 1 : Math.min(1, e.elapsed / 1000, (e.duration - e.elapsed) / 1000);
         if (e.kind === 'pee' || e.kind === 'backlook') {
           const turn = this.reduced ? 0 : (1 - Math.cos((e.elapsed / 1500) * Math.PI)) / 2;
           this.motionDog(c, s.pugStage, active, l, Math.max(0, p), weight * (1 - turn));
@@ -863,7 +923,7 @@
       else {
         const p = Math.max(
           0,
-          Math.min(1, (now - this.poseStart) / 550, (this.poseEnd - now) / 550),
+          Math.min(1, (now - this.poseStart) / 850, (this.poseEnd - now) / 850),
         );
         this.motionDog(c, s.pugStage, this.pose, l, p, weight);
       }
@@ -1061,7 +1121,7 @@
         stage,
         this.state.homeStage,
         this.state.hat,
-        Object.keys(this.images).length,
+        this.artRevision || 0,
       ].join('-');
       if (canvas.dataset.preview === key) return;
       canvas.dataset.preview = key;

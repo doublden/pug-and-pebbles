@@ -3,9 +3,9 @@
   const TYPES = Object.freeze(
     [
       { kind: 'sleep', weight: 40, duration: 8000 },
-      { kind: 'whistle', weight: 25, duration: 5200 },
-      { kind: 'backlook', weight: 20, duration: 5600 },
-      { kind: 'stretch', weight: 14.8, duration: 4000 },
+      { kind: 'whistle', weight: 25, duration: 7500 },
+      { kind: 'backlook', weight: 20, duration: 8500 },
+      { kind: 'stretch', weight: 14.8, duration: 6500 },
       { kind: 'pee', weight: 0.2, duration: 9500 },
     ].map(Object.freeze),
   );

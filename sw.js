@@ -1,4 +1,4 @@
-const CACHE = 'pug-pebbles-v5-20261014c';
+const CACHE = 'pug-pebbles-v6-20261014a';
 const CORE = [
   './',
   'index.html',
@@ -23,6 +23,11 @@ const CORE = [
   'collections.js',
   'app.js',
   'backgrounds-mobile-v5.webp',
+  'homes-middle-mobile-v5.webp',
+  'homes-early-mobile-v5.webp',
+  'homes-poverty-mobile-v5.webp',
+  'artwork-v6/background-00.webp',
+  'artwork-v6/food-00.webp',
   'food-mobile-v5.webp',
   'pug-idle-mobile-v5.webp',
   'manifest.webmanifest',
@@ -39,12 +44,12 @@ const ART = [
   'pet-coins-mobile-v5.webp',
   'birds-mobile-v5.webp',
   'birds-mid-mobile-v5.webp',
-  'hats-v5.webp',
-  'hats-side-v5.webp',
-  'hats-back-v5.webp',
+  'hats-v6.webp',
+  'hats-side-v6.webp',
+  'hats-back-v6.webp',
   'pug-rear-v5.webp',
   'pug-king-hats-v5.webp',
-  'vasiliy-rig-v5.webp',
+  'vasiliy-rig-v6.webp',
   'vasiliy-v4.webp',
   ...[
     'look',
@@ -68,7 +73,7 @@ self.addEventListener('install', (event) =>
         cache.addAll(
           CORE.map(
             (file) =>
-              new Request(/\.(js|css)$/.test(file) ? file + '?v=0.5.0' : file, { cache: 'reload' }),
+              new Request(/\.(js|css)$/.test(file) ? file + '?v=0.6.0' : file, { cache: 'reload' }),
           ),
         ),
       )
@@ -95,7 +100,8 @@ self.addEventListener('message', (event) => {
   if (!warming)
     warming = (async () => {
       const cache = await caches.open(CACHE);
-      for (const file of ART)
+      const current = Array.isArray(event.data.art) ? event.data.art.filter(p => /^artwork-v6\/(background|food)-\d{2}\.webp$/.test(p)) : [];
+      for (const file of [...current, ...ART])
         try {
           if (!(await cache.match(file))) await cache.add(file);
         } catch (_) {

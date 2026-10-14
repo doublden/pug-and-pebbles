@@ -5,7 +5,7 @@
     BACKUP = 'pug-and-pebbles-v5-backup',
     LEGACY_BACKUP = 'pug-and-pebbles-v4-backup',
     OLDER_BACKUP = 'pug-and-pebbles-v3-backup',
-    VERSION = '0.5.0',
+    VERSION = '0.6.0',
     SHARE_URL = 'https://doublden.github.io/pug-and-pebbles/?v=' + VERSION,
     instance = Math.random().toString(36).slice(2) + Date.now();
   const session = PugSession.create(localStorage, 'pug-and-pebbles-session-v5', instance);
@@ -77,7 +77,7 @@
     world,
     format,
     sound,
-    isActive: () => session.owns(),
+    isActive: () => session.owns() && !portraitBlocked(),
     changed: () => {
       earned();
       render();
@@ -515,7 +515,7 @@
       persist();
     };
   function dig(x, y) {
-    if (!loaded || modalOpen()) return;
+    if (!loaded || modalOpen() || portraitBlocked()) return;
     sound.unlock();
     const s = game.getState(),
       amount = game.dig(
@@ -529,17 +529,20 @@
     dirty();
   }
   function sneeze() {
-    if (!loaded || modalOpen()) return;
+    if (!loaded || modalOpen() || portraitBlocked()) return;
     sound.unlock();
     game.sneeze();
     world.sneeze();
     earned();
     dirty();
   }
+  function portraitBlocked() { return matchMedia('(orientation: landscape) and (max-height: 600px)').matches; }
+  function scenePoint(e) { const r = $('world').getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
   $('food-hit').addEventListener('pointerdown', (e) => {
-    if (e.button !== 0 || modalOpen()) return;
-    if (world.hitPug(e.clientX, e.clientY) && !world.hitHelper(e.clientX, e.clientY)) sneeze();
-    else dig(e.clientX, e.clientY);
+    if (e.button !== 0 || modalOpen() || portraitBlocked()) return;
+    const p = scenePoint(e);
+    if (world.hitPug(p.x, p.y) && !world.hitHelper(p.x, p.y)) sneeze();
+    else dig(p.x, p.y);
   });
   $('food-hit').onclick = (e) => {
     if (e.detail === 0) {
@@ -548,13 +551,14 @@
     }
   };
   $('world').addEventListener('pointerdown', (e) => {
-    if (e.button !== 0 || modalOpen()) return;
-    if (world.hitPug(e.clientX, e.clientY) && !world.hitHelper(e.clientX, e.clientY)) {
+    if (e.button !== 0 || modalOpen() || portraitBlocked()) return;
+    const p = scenePoint(e);
+    if (world.hitPug(p.x, p.y) && !world.hitHelper(p.x, p.y)) {
       sneeze();
       return;
     }
-    if (world.hitFood(e.clientX, e.clientY) || world.hitHelper(e.clientX, e.clientY))
-      dig(e.clientX, e.clientY);
+    if (world.hitFood(p.x, p.y) || world.hitHelper(p.x, p.y))
+      dig(p.x, p.y);
   });
   $('world').addEventListener('keydown', (e) => {
     if (e.code === 'Space' || e.code === 'Enter') {
@@ -586,7 +590,7 @@
     if (modalOpen() || !birdState) return;
     const b = birdRunner.chase(birdState.id);
     if (!b) return;
-    const pos = PugBirds.position(b, world.birdAnchor(b.target), innerWidth, innerHeight);
+    const pos = PugBirds.position(b, world.birdAnchor(b.target), world.w, world.h);
     world.burstBird(b.type, pos.x, pos.y - 20);
     game.chaseBird(b.type);
     earned();
@@ -610,7 +614,7 @@
     $('bird').hidden = !b || !playing;
     if (!b || !playing) return;
     const type = PugBirds.TYPES[b.type],
-      p = PugBirds.position(b, world.birdAnchor(b.target), innerWidth, innerHeight),
+      p = PugBirds.position(b, world.birdAnchor(b.target), world.w, world.h),
       button = $('bird');
     button.dataset.birdId = b.id;
     button.style.left = p.x + 'px';
@@ -648,12 +652,12 @@
     lastTick = now;
     const owner = session.owns();
     if (owner && !document.hidden) session.heartbeat();
-    const playing = owner && loaded && !document.hidden && !modalOpen();
+    const playing = owner && loaded && !document.hidden && !modalOpen() && !portraitBlocked();
     bonusState = runner.tick(
       delta,
       playing && coinReady && (frameState.clicks >= 10 || frameState.testMode),
-      innerWidth,
-      innerHeight,
+      world.w,
+      world.h,
     );
     const coin = bonusState.coin;
     $('pet-coin').hidden = !coin || !playing;
@@ -693,6 +697,7 @@
       owner &&
       loaded &&
       !document.hidden &&
+      !portraitBlocked() &&
       (!modalOpen() || $('shop-dialog').open) &&
       frameState.helper
     ) {
@@ -1072,12 +1077,12 @@
       if (!settings.tutorialDone) showTutorial();
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.addEventListener('controllerchange', () =>
-          navigator.serviceWorker.controller?.postMessage({ type: 'WARM' }),
+          navigator.serviceWorker.controller?.postMessage({ type: 'WARM', art: [world.artPath('background', game.getState().homeStage), world.artPath('food', game.getState().homeStage)] }),
         );
         navigator.serviceWorker
           .register('sw.js', { updateViaCache: 'none' })
           .then(() => navigator.serviceWorker.ready)
-          .then((reg) => reg.active?.postMessage({ type: 'WARM' }))
+          .then((reg) => reg.active?.postMessage({ type: 'WARM', art: [world.artPath('background', game.getState().homeStage), world.artPath('food', game.getState().homeStage)] }))
           .catch(() => {});
       }
       requestAnimationFrame(tick);

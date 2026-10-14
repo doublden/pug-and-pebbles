@@ -2033,3 +2033,27 @@ canvas.mini-art {
   object-fit: contain;
   background: #dce3ca;
 }
+
+/* HUD indicators follow the wallet height, including long values and safe areas. */
+.hud { gap: 12px; }
+.hud-main { min-width: 0; flex: 1; max-width: 330px; }
+.wallet { min-width: 0; max-width: 100%; }
+.wallet > div { min-width: 0; }
+.wallet strong { max-width: 100%; overflow-wrap: anywhere; font-size: clamp(22px, 6.7vw, 34px); }
+.hud-actions { flex-shrink: 0; }
+.status-stack { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 10px; pointer-events: none; }
+.status-stack > .test-chip, .status-stack > .bonus-indicator, .status-stack > .combo-indicator { position: static; margin: 0; max-width: 100%; transform-origin: left center; }
+.status-stack > .combo-indicator { flex-wrap: wrap; }
+.status-stack > .bonus-indicator { pointer-events: none; }
+.mini-full[data-kind="match"] .mini-playfield { flex: none; width: min(100%, 480px); aspect-ratio: 1; min-height: 0; align-self: center; border: 3px solid #75815b; background: #89946e; box-shadow: inset 0 0 0 3px #f3e7c3; }
+.mini-full[data-kind="match"] .mini-playfield > canvas { position: absolute; inset: 0; }
+.mini-full[data-kind="match"] #mini-help { color: #626b4d; }
+
+/* The product has one portrait layout, including on wider desktop screens. */
+.app-shell { width: min(100%, 480px); left: 50%; right: auto; transform: translateX(-50%); }
+#rotate-screen { display: none; }
+@media (orientation: landscape) and (max-height: 600px) {
+  #rotate-screen { display: flex; position: fixed; inset: 0; z-index: 100; align-items: center; justify-content: center; flex-direction: column; gap: 14px; background: #f7f2e9; color: #393c32; text-align: center; padding: 24px; }
+  #rotate-screen > span { font-size: 62px; }
+  .app-shell, dialog[open] { visibility: hidden; }
+}

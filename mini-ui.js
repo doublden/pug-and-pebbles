@@ -24,49 +24,51 @@
       });
       const canvas = this.$('mini-canvas');
       canvas.onpointerdown = (e) => {
-        if (this.active?.kind === 'match' && !this.active.finished) {
-          const box = canvas.getBoundingClientRect(),
-            g = this.matchGrid();
-          const x = e.clientX - box.left,
-            y = e.clientY - box.top;
-          const col = Math.floor((x - g.x) / g.cell),
-            row = Math.floor((y - g.y) / g.cell);
+        if (!this.active || this.active.finished || this.pointer !== null) return;
+        if (this.active.kind === 'match') {
+          const box = canvas.getBoundingClientRect(), g = this.matchGrid();
+          const x = e.clientX - box.left, y = e.clientY - box.top;
+          const col = Math.floor((x - g.x) / g.cell), row = Math.floor((y - g.y) / g.cell);
           if (col < 0 || col > 5 || row < 0 || row > 5) return;
+          e.preventDefault();
           const index = row * 6 + col;
-          if (this.selected !== null && this.active.simulation.swap(this.selected, index)) {
-            this.selected = null;
-            this.sound.play('dig');
-          } else this.selected = index;
+          this.swipeStart = { index, x, y, previous: this.selected, moved: false };
+          this.selected = index;
           this.pointer = e.pointerId;
           canvas.setPointerCapture(e.pointerId);
-          this.swipeStart = { index, x, y };
-          return;
+        } else if (this.active.kind === 'brush') {
+          this.pointer = e.pointerId;
+          canvas.setPointerCapture(e.pointerId);
+          this.move(e);
         }
-        if (this.active?.kind !== 'brush') return;
-        this.pointer = e.pointerId;
-        canvas.setPointerCapture(e.pointerId);
-        this.move(e);
       };
       canvas.onpointermove = (e) => {
-        if (e.pointerId === this.pointer && this.active?.kind === 'match' && this.swipeStart) {
-          const box = canvas.getBoundingClientRect(),
-            dx = e.clientX - box.left - this.swipeStart.x,
-            dy = e.clientY - box.top - this.swipeStart.y,
-            g = this.matchGrid();
-          if (Math.max(Math.abs(dx), Math.abs(dy)) > g.cell * 0.3) {
-            const a = this.swipeStart.index,
-              b = a + (Math.abs(dx) > Math.abs(dy) ? Math.sign(dx) : Math.sign(dy) * 6);
-            if (this.active.simulation.swap(a, b)) this.sound.play('dig');
-            this.swipeStart = null;
+        if (e.pointerId !== this.pointer || this.active?.finished) return;
+        if (this.active?.kind === 'match' && this.swipeStart) {
+          const box = canvas.getBoundingClientRect(), g = this.matchGrid(), a = this.swipeStart;
+          const dx = e.clientX - box.left - a.x, dy = e.clientY - box.top - a.y;
+          if (!a.moved && Math.max(Math.abs(dx), Math.abs(dy)) > g.cell * 0.25) {
+            a.moved = true;
+            const horizontal = Math.abs(dx) > Math.abs(dy);
+            const col = a.index % 6 + (horizontal ? Math.sign(dx) : 0);
+            const row = Math.floor(a.index / 6) + (horizontal ? 0 : Math.sign(dy));
+            if (col >= 0 && col < 6 && row >= 0 && row < 6 && this.active.simulation.swap(a.index, row * 6 + col)) this.sound.play('dig');
             this.selected = null;
           }
-          return;
-        }
-        if (e.pointerId === this.pointer) this.move(e);
+        } else this.move(e);
       };
-      canvas.onpointerup = canvas.onpointercancel = (e) => {
-        this.pointer = null;
-        this.active?.simulation.release?.();
+      canvas.onpointerup = (e) => {
+        if (e.pointerId !== this.pointer) return;
+        const a = this.swipeStart;
+        if (this.active?.kind === 'match' && !this.active.finished && a && !a.moved && a.previous !== null && a.previous !== a.index) {
+          if (this.active.simulation.swap(a.previous, a.index)) { this.selected = null; this.sound.play('dig'); }
+        }
+        this.releasePointer(e);
+      };
+      canvas.onpointercancel = (e) => {
+        if (e.pointerId !== this.pointer) return;
+        this.selected = null;
+        this.releasePointer(e);
       };
       for (const button of document.querySelectorAll('[data-lane]'))
         button.onpointerdown = (e) => {
@@ -87,6 +89,13 @@
           this.choose(Number(e.key) - 1);
         }
       });
+    }
+    releasePointer(e) {
+      const canvas = this.$('mini-canvas');
+      if (canvas.hasPointerCapture?.(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+      this.pointer = null;
+      this.swipeStart = null;
+      this.active?.simulation.release?.();
     }
     renderMenu() {
       const w = this.words(),
@@ -162,6 +171,7 @@
         w[kind === 'brush' ? 'brushHelp' : kind === 'match' ? 'matchHelp' : 'catchHelp'];
       this.$('catch-controls').hidden = kind !== 'catch';
       this.$('mini-result').hidden = true;
+      this.$('mini-dialog').dataset.kind = kind;
       this.$('mini-dialog').showModal();
       this.resize();
       this.previous = performance.now();
@@ -266,10 +276,13 @@
         for (let i = 0; i < 36; i++) {
           const x = g.x + (i % 6) * g.cell,
             y = g.y + Math.floor(i / 6) * g.cell;
-          c.fillStyle = i === this.selected ? '#e6c772' : '#e5e3d3';
+          c.fillStyle = i === this.selected ? '#f2ce70' : (Math.floor(i / 6) + i % 6) % 2 ? '#fff5da' : '#f1e5c7';
           c.beginPath();
           c.roundRect(x + 2, y + 2, g.cell - 4, g.cell - 4, 8);
           c.fill();
+          c.strokeStyle = i === this.selected ? '#966428' : '#a5a07c';
+          c.lineWidth = i === this.selected ? 3 : 1.5;
+          c.stroke();
           const p = s.animation?.cells.includes(i) ? s.animation.p : 0;
           c.save();
           c.globalAlpha = 1 - p;

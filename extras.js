@@ -159,6 +159,10 @@
                     : 1,
         };
       }
+      if (key.startsWith('hats') && index === 8) {
+        f.mount = key === 'hatsBack' ? { x: 0.5, y: 0.73, span: 0.92 } : key === 'hatsSide' ? { x: 0.64, y: 0.94, span: 0.72 } : { x: 0.38, y: 0.96, span: 0.70 };
+      }
+      if (key.startsWith('hats') && index === 7) f.mount.span = 0.84;
       this.frames.set(cache, f);
       return f;
     }
@@ -301,10 +305,10 @@
       const anchor = head || { x: 0.52, y: 0.28, w: 0.44, tilt: 0 };
       const size = layout.size,
         mount = f.mount || { x: 0.5, y: 0.98, span: 1 },
-        wide = (size * anchor.w) / mount.span,
+        wide = (size * anchor.w * (index === 4 ? 1 : 1.08)) / mount.span,
         height = (wide * f.h) / f.w,
         left = layout.x + size * anchor.x - wide * mount.x,
-        bottom = layout.y + size * anchor.y;
+        bottom = layout.y + size * (anchor.y + (pose === 'rear' ? 0.035 : 0.045));
       ctx.save();
       ctx.translate(left + wide * mount.x, bottom);
       ctx.rotate(anchor.tilt || 0);
@@ -366,10 +370,10 @@
         ctx.clip();
         paint(
           face,
-          x + bodyW * 0.31,
-          y + bodyH * 0.045,
-          bodyW * 0.32,
-          (bodyW * 0.32 * face.h) / face.w,
+          x + bodyW * 0.27,
+          y + bodyH * 0.085,
+          bodyW * 0.40,
+          (bodyW * 0.40 * face.h) / face.w,
         );
         ctx.restore();
       }
