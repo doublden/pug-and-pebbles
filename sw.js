@@ -1,8 +1,13 @@
-const CACHE = 'pug-pebbles-v7-20261014a';
+const CACHE = 'pug-pebbles-v7-20261014d';
 const CORE = [
   './',
   'index.html',
   'style.css',
+  'inventory-rules.js',
+  'inventory-ui.js',
+  'battle-rules.js',
+  'battle-ui.js',
+  'battle-render.js',
   'game.js',
   'combo.js',
   'session.js',
@@ -37,6 +42,9 @@ const CORE = [
   'favicon-v5.png',
 ];
 const ART = [
+  'battle-v7/frames.json',
+  ...['raccoon','crow','pug-lean','pug-healthy','pug-rich'].map(id=>'battle-v7/'+id+'.webp'),
+  ...['stick','spoon','shank','toothbrush','pipe','crowbar','rustsword','templar','paladin'].map(id=>'weapons/'+id+'.svg'),
   'homes-middle-mobile-v5.webp',
   'homes-early-mobile-v5.webp',
   'homes-poverty-mobile-v5.webp',
@@ -73,7 +81,7 @@ self.addEventListener('install', (event) =>
         cache.addAll(
           CORE.map(
             (file) =>
-              new Request(/\.(js|css)$/.test(file) ? file + '?v=0.7.0' : file, { cache: 'reload' }),
+              new Request(/\.(js|css)$/.test(file) ? file + '?v=0.7.0d' : file, { cache: 'reload' }),
           ),
         ),
       )

@@ -119,7 +119,7 @@
             right = Math.max(right, col);
             bottom = Math.max(bottom, row);
           }
-      const f = { canvas, x, y, w: right - x + 1, h: bottom - y + 1 };
+      const f = { canvas, cacheKey: cache, x, y, w: right - x + 1, h: bottom - y + 1 };
       if (key.startsWith('hats')) {
         const rear = key === 'hatsBack',
           side = key === 'hatsSide';
@@ -330,25 +330,68 @@
       }
       ctx.restore();
     }
+    metalFrame(frame,tier){
+      // Cached material coloring works on Safari without Canvas filter support.
+      if(tier===2 || typeof document==='undefined')return null;
+      this.metals ||= new Map();
+      const key=[tier,frame.cacheKey ?? [frame.x,frame.y,frame.w,frame.h].join('-')].join('-');
+      if(this.metals.has(key))return this.metals.get(key);
+      const palette=[[131,87,58],[176,135,75],[236,174,45],[104,181,95],
+        [91,154,237],[85,195,190],[233,88,66],[237,239,245],
+        [244,194,92],[255,209,74],[255,220,109]][tier];
+      const canvas=document.createElement('canvas');canvas.width=Math.ceil(frame.w);canvas.height=Math.ceil(frame.h);
+      const c=canvas.getContext('2d',{willReadFrequently:true});
+      c.drawImage(frame.canvas,frame.x,frame.y,frame.w,frame.h,0,0,canvas.width,canvas.height);
+      const image=c.getImageData(0,0,canvas.width,canvas.height),data=image.data;
+      for(let i=0;i<data.length;i+=4){
+        const r=data[i],g=data[i+1],b=data[i+2];
+        if(data[i+3] && r>g*.9 && g>b*1.15 && r>b*1.4){
+          const shade=Math.min(255,(r*.3+g*.59+b*.11)*.85+30);
+          data[i]=shade*palette[0]/255;data[i+1]=shade*palette[1]/255;data[i+2]=shade*palette[2]/255;
+        }
+      }
+      c.putImageData(image,0,0);this.metals.set(key,canvas);
+      if(this.metals.size>32)this.metals.delete(this.metals.keys().next().value);
+      return canvas;
+    }
+    weapon(ctx,layout,pose,head){
+      const s=this.world.state;if(!s.weaponsUnlocked||!s.showWeapon)return;
+      const id=PugInventoryRules.WEAPONS[s.weaponEquipped]?.id,img=this.world.images['weapon-'+id];
+      if(!img)return;
+      const low=['sleep','stretch','mid-sleep','mid-stretch'].includes(pose),rear=pose==='rear',side=pose.includes('back');
+      const length=layout.size*(low?.46:.58),width=length/3;
+      ctx.save();
+      ctx.translate(layout.x+layout.size*(head.x+(rear?0:low||side?-head.w*.65:head.w*.65)),layout.y+layout.size*(head.y+(low?-.07:rear||side?.18:.05)));
+      ctx.rotate(low?1.35:rear?-.38:side?-.18:.46);
+      ctx.translate(0,length*.76);ctx.rotate(Math.PI);
+      ctx.drawImage(img,-width/2,-length*.12,width,length);
+      ctx.restore();
+    }
     rig(ctx, now, width, height, preview) {
       const base = this.frame('helperRig', 0, 4, 4);
       if (!base) return false;
+      const tier=this.world.state.helperTier||0;
       const cycle = (now / 1000) % 30,
         moving = !preview && !this.world.uiPaused && cycle > 12 && cycle < 23;
       const w = preview
-          ? Math.min(width * 0.66, height * 0.65)
-          : width * (width < height ? 0.4 : 0.2375),
+          ? Math.min(width * 0.66, height * 1.25)
+          : width * (width < height ? 0.4 : 0.2375) * (1+tier*.02),
         bodyW = w * 0.6,
         bodyH = (bodyW * base.h) / base.w;
       const x =
-        (preview ? width * 0.08 : width * (width < height ? 0.49 : 0.78)) +
+        (preview ? (width-w*1.23)/2 : width<height
+          ? Math.min(width*.49,width-w*1.23-width*.055) : width*.78) +
         (moving ? Math.sin(((cycle - 12) / 11) * Math.PI * 2) * width * 0.035 : 0);
       const y =
         height * (width < height ? 0.82 : 0.91) -
         bodyH +
         (moving ? Math.sin(((cycle - 12) / 11) * Math.PI) * height * 0.025 : 0);
-      if (!preview) this.helperBounds = { x, y, w: w * 1.2, h: bodyH + w * 0.22 };
-      const paint = (f, x, y, w, h) => ctx.drawImage(f.canvas, f.x, f.y, f.w, f.h, x, y, w, h);
+      if (!preview) this.helperBounds = { x, y, w: w * 1.23, h: bodyH + w * 0.22 };
+      const paint=(f,x,y,w,h,metal=true)=>{
+        const colored=metal?this.metalFrame(f,tier):null;
+        if(colored)ctx.drawImage(colored,0,0,colored.width,colored.height,x,y,w,h);
+        else ctx.drawImage(f.canvas,f.x,f.y,f.w,f.h,x,y,w,h);
+      };
       ctx.save();
       ctx.globalAlpha = 1;
       paint(base, x, y, bodyW, bodyH);
@@ -374,10 +417,11 @@
           y + bodyH * 0.085,
           bodyW * 0.40,
           (bodyW * 0.40 * face.h) / face.w,
+          false,
         );
         ctx.restore();
       }
-      const p = this.world.reduced || this.world.uiPaused || moving ? 0 : (now % 6500) / 6500;
+      const p = this.world.reduced || this.world.uiPaused || moving ? 0 : ((now*(this.world.state.helperBurstActive?2:1)) % 6500) / 6500;
       const a = -0.7 + Math.sin(p * Math.PI * 2) * 0.34,
         b = 0.92 + Math.sin(p * Math.PI * 2 + 0.8) * 0.42;
       const pivot = { x: x + bodyW * 0.86, y: y + bodyH * 0.62 },
@@ -414,6 +458,27 @@
           ctx.fill();
         }
       }
+      if(tier<2){
+        ctx.fillStyle='#6f412c';for(let i=0;i<7;i++){ctx.beginPath();ctx.ellipse(x+bodyW*(.07+(i*.13)% .7),y+bodyH*(.64+(i*.047)% .23),bodyW*.025,bodyH*.025,0,0,Math.PI*2);ctx.fill();}
+      }
+      if(tier>=10){
+        ctx.fillStyle='#9de5ec';ctx.strokeStyle='#eef9df';ctx.lineWidth=1;
+        for(let i=0;i<4;i++){const dx=x+bodyW*(.12+i*.19),dy=y+bodyH*.86;ctx.beginPath();ctx.moveTo(dx,dy-3);ctx.lineTo(dx+3,dy);ctx.lineTo(dx,dy+4);ctx.lineTo(dx-3,dy);ctx.closePath();ctx.fill();ctx.stroke();}
+      }
+      const sticker=this.world.state.helperSticker;
+      if(sticker && sticker!=='none'){
+        ctx.save();ctx.translate(x+bodyW*.15,y+bodyH*.73);
+        const size=bodyW*.08;ctx.fillStyle=tier>=8?'#544334':'#fff0d0';
+        if(sticker==='paw'){
+          ctx.beginPath();ctx.ellipse(0,size*.3,size*.46,size*.36,0,0,Math.PI*2);ctx.fill();
+          for(let i=0;i<4;i++){ctx.beginPath();ctx.ellipse((i-1.5)*size*.3,-size*.22+Math.abs(i-1.5)*size*.16,size*.14,size*.18,0,0,Math.PI*2);ctx.fill();}
+        }else if(sticker==='fish'){
+          ctx.beginPath();ctx.ellipse(0,0,size*.5,size*.28,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.moveTo(size*.35,0);ctx.lineTo(size*.8,-size*.3);ctx.lineTo(size*.8,size*.3);ctx.closePath();ctx.fill();
+        }else{
+          ctx.beginPath();for(let i=0;i<10;i++){const angle=i*Math.PI/5-Math.PI/2,r=i%2?size*.25:size*.6;ctx.lineTo(Math.cos(angle)*r,Math.sin(angle)*r);}ctx.closePath();ctx.fill();
+        }
+        ctx.restore();
+      }
       ctx.restore();
       return true;
     }
@@ -434,7 +499,7 @@
         moving = !preview && !this.world.uiPaused && cycle > 12 && cycle < 23;
       const travel = moving ? Math.sin(((cycle - 12) / 11) * Math.PI * 2) * width * 0.035 : 0;
       const w = preview
-          ? Math.min(width * 0.66, height * 0.65)
+          ? Math.min(width * 0.66, height * 1.25)
           : width * (width < height ? 0.4 : 0.2375),
         h = w * (f.canvas.height / f.canvas.width),
         x = (width < height ? width * 0.49 : width * 0.78) + travel,

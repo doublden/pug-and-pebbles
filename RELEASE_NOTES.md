@@ -2,31 +2,39 @@
 
 ## Русский
 
-Одно обновление: блоки 2.1 + 3.1 + 4.
+Одно обновление: блоки 2.1 + 3.1 + 4 + 5 + 6.
 
 - Убрано долгое наложение разных поз мопса. Кадры удерживаются дольше, шапки и птицы следуют видимой позе.
 - Василий с экскаватором увеличен на 25%; корм ещё на 10%, выше и по центру; мопс ещё на 10% меньше с прежней точкой привязки.
-- Первые покупки мопса/дома требовательнее, бонусы стадий и обычных шапок заметнее. Поздний темп в сравнительной модели примерно на 11% доступнее без мини-игр; это не обещание длительности прохождения.
+- Первые покупки мопса/дома требовательнее, бонусы стадий и обычных шапок заметнее. Поздний темп в сравнительной модели примерно на 11% доступнее при ручной стратегии без помощника и мини-игр; это не обещание длительности прохождения.
 - Дом/мопс покупаются по одной стадии; магазин закрывается, появляется превращение с лучами. ×1/×10/максимум остаются у копалок и Василия.
 - Главная точка магазина — только новая копалка, дом или мопс. У каждой категории своя точка; улучшения копалок показывают прибавку общей силы тапа.
 - Идеальные мини-игры: 160/240/360 обычных тапов, сила фиксируется на старте; частичный результат пропорционален. Ловля корма ограничена 30 секундами. Зайчик помогает вычёсывать, кастрюля замедляет падение, не увеличивая потолок награды.
-- Сохранены балансы, купленные уровни, коллекции, таймеры и уже отправленные экспедиции. Обновлён кэш веб-приложения; новых больших рисунков в этом выпуске нет.
+- Василий: базовый уровень 1 обычный тап/с, рост L^0.35; способность ×2 на 10 секунд раз в пять минут. 11 расцветок экскаватора, рост каждые 10 уровней, старые цвета и наклейки доступны отдельно.
+- Экспедиции: отмена с предупреждением, однократное уведомление о возвращении, хлам и оружие; деньги и находки фиксируются при отправке. Первая учебная поездка даёт три части; обычные шансы 35% / 80% / 100%, гарантия после двух неудач.
+- Инвентарь: девять видов оружия, объединение 3 → 1, экипировка и отображение за спиной. Выбор скинов инструмента/мопса/дома/корма за 500 тыс. / 1 млн / 1,5 млн / 750 тыс., без изменения силы.
+- Бои с енотом (200 HP) и большой вороной (400 HP): 30 секунд, разные атаки/защиты, оружие следует лапе, шапка и корм скрыты. Добыча и события на паузе; таймер идёт в фоне. Повтор бесплатный, приз и открытие покупки дома — один раз. Старые купленные дома сохранены.
+- Сохранены балансы, купленные уровни, коллекции, таймеры и уже отправленные экспедиции. Обновлён кэш веб-приложения и резервная версия сохранения. Боевые рисунки: 60 кадров, пять WebP-листов, около 1,16 МБ; загружаются перед боем, таймер во время загрузки не идёт.
 
-Проверка: 87 автоматических тестов; шесть мобильных размеров (включая 430×932), магазин/покупки, позы, касания и обновление кэша. Проверка в браузере не заменяет тест на физическом iPhone. Блоки 5–10 остаются в плане; новая система Василия и оружие здесь ещё не включены.
+Проверка: 115 автоматических теста; шесть мобильных размеров (включая 430×932), магазин/покупки, позы, касания и обновление кэша. Проверка в браузере не заменяет тест на физическом iPhone. Блоки 7–10 остаются в плане.
 
 ## English
 
-One release combines blocks 2.1 + 3.1 + 4.
+One release combines blocks 2.1 + 3.1 + 4 + 5 + 6.
 
 - Crisp held pug frames replace long pose crossfades; hats and birds track the visible frame.
 - Vasiliy/excavator +25%; food another +10%, raised and centered; pug another −10%, preserving its anchor.
-- More demanding first pug/home purchases and stronger stage/ordinary-hat benefits. Comparison-model late progression is about 11% faster without mini-games, not a playtime promise.
+- More demanding first pug/home purchases and stronger stage/ordinary-hat benefits. Comparison-model late progression is about 11% faster in a manual strategy without helper/mini-games, not a playtime promise.
 - Pug/home upgrades are single-step and close the shop with transformation rays. Tools/helper retain bulk buying.
 - Main badge only for a new tool, home or pug; category badges and actual total-tap upgrade gains.
 - Perfect mini-games award 160/240/360 ordinary taps using starting power; partial success scales proportionally. Catch food has a 30-second limit. Assistance hats improve the task without exceeding the payout cap.
-- Wallets, purchases, collections, cooldowns and dispatched expedition rewards survive. Updated PWA cache, no new large artwork payload.
+- Vasiliy starts at one ordinary tap/s, scales with level^0.35 and has a ×2 ten-second ability every five minutes. Eleven paint tiers, bounded growth, optional earlier paints/stickers.
+- Expeditions have cancellation, one-time ready notifications, junk and weapon loot fixed at dispatch. First training trip guarantees three parts; ordinary chances 35% / 80% / 100%, with a two-miss pity rule.
+- Nine weapons, 3-to-1 crafting and back equipment; cosmetic selectors cost 500k / 1m / 1.5m / 750k without changing power.
+- Raccoon (200 HP) and giant crow (400 HP): 30 seconds, multiple attacks/guards, weapon tracks the paw, hat/food hidden. Production/events pause; the deadline continues in the background. Free retries, one-time prize/home purchase clearance, existing homes preserved.
+- Wallets, purchases, collections, cooldowns and dispatched expedition rewards survive. Updated PWA cache and versioned save backup. Combat art: 60 frames in five WebP sheets, about 1.16 MB, loaded before the timer starts.
 
-Validation: 87 automated tests, six mobile layouts including 430×932, shop flows, pose/touch checks and cache update. Browser-size testing is not a physical iPhone test. Blocks 5–10 remain planned; the new helper/weapon systems are not enabled here.
+Validation: 115 automated tests, six mobile layouts including 430×932, shop flows, pose/touch checks and cache update. Browser-size testing is not a physical iPhone test. Blocks 7–10 remain planned.
 
 ---
 

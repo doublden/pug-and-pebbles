@@ -2,7 +2,9 @@
   'use strict';
   const $ = (id) => document.getElementById(id),
     KEY = 'pug-and-pebbles-v2',
-    BACKUP = 'pug-and-pebbles-v5-backup',
+    BACKUP = 'pug-and-pebbles-v8-backup',
+    V7_BACKUP = 'pug-and-pebbles-v7-backup',
+    PRIOR_BACKUP = 'pug-and-pebbles-v5-backup',
     LEGACY_BACKUP = 'pug-and-pebbles-v4-backup',
     OLDER_BACKUP = 'pug-and-pebbles-v3-backup',
     VERSION = '0.7.0',
@@ -12,7 +14,7 @@
   session.claim();
   function readEnvelope() {
     const candidates = [];
-    for (const key of [KEY, BACKUP, LEGACY_BACKUP, OLDER_BACKUP])
+    for (const key of [KEY, BACKUP, V7_BACKUP, PRIOR_BACKUP, LEGACY_BACKUP, OLDER_BACKUP])
       try {
         const e = JSON.parse(localStorage.getItem(key) || 'null');
         if (e?.game && PugGame.createGame(e.game).restoreStatus !== 'invalid') candidates.push(e);
@@ -71,6 +73,8 @@
     format,
     bulk: () => bulkMode,
   });
+  const inventoryUI = new PugInventoryUI({getGame:()=>game,words:()=>t(),format});
+  let cancelExpeditionEnds=null;
   const miniUI = new PugMiniUI({
     getGame: () => game,
     words: () => t(),
@@ -85,7 +89,14 @@
     },
   });
   const t = () => PugLocale[settings.language],
-    modalOpen = () => !!document.querySelector('dialog[open]');
+    modalOpen = () => battleUI.active || !!document.querySelector('dialog[open]');
+  const battleUI=new PugBattleUI({getGame:()=>game,words:()=>t(),world,sound,format,toast,
+    isActive:()=>session.owns()&&!document.hidden&&!portraitBlocked(),
+    changed:()=>{combo.reset();earned();render();persist();},
+    inventory:()=>{tab='inventory';selectShopTab();open('shop-dialog');},
+    home:()=>{tab='home';selectShopTab();open('shop-dialog');},
+  });
+  function selectShopTab(){for(const b of document.querySelectorAll('[data-tab]')){const active=b.dataset.tab===tab;b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active));}}
   function format(value) {
     const n = PugGame.Amount.from(value);
     if (!n.m) return '0';
@@ -118,6 +129,7 @@
       $(id).textContent = saveAvailable ? yes : t().saveError;
   }
   function adopt(e) {
+    battleUI.reset();
     envelope = e;
     revision = e.revision || 0;
     if (miniUI.active) miniUI.close(false);
@@ -138,7 +150,7 @@
         return;
       }
       const e = {
-        version: 6,
+        version: 7,
         release: VERSION,
         revision: revision + 1,
         instance,
@@ -190,8 +202,8 @@
     }
     $('balance').textContent = format(s.balance);
     $('shop-balance').textContent = format(s.balance);
-    $('equipped-icon').innerHTML = PugIcons[PugGame.TOOLS[s.tool].key];
-    $('equipped-name').textContent = t().toolNames[s.tool];
+    $('equipped-icon').innerHTML = PugIcons[PugGame.TOOLS[s.toolAppearance].key];
+    $('equipped-name').textContent = t().toolNames[s.toolAppearance];
     $('click-power').textContent =
       '+' +
       format(
@@ -201,8 +213,8 @@
             (developerUnlocked ? devTap : 1),
         ),
       );
-    $('pug-label').textContent = stageName('pug', s.pug);
-    $('home-label').textContent = stageName('home', s.home);
+    $('pug-label').textContent = stageName('pug', s.pugAppearance);
+    $('home-label').textContent = stageName('home', s.homeAppearance);
     $('tap-hint').hidden = s.clicks >= 5;
     $('life-status').textContent =
       t().lifeNumber +
@@ -229,6 +241,8 @@
   function translate() {
     const w = t();
     $('minigames-open').ariaLabel = w.minigames;
+    $('expedition-cancel-close').ariaLabel=w.close;
+    $('expedition-ready-dismiss').ariaLabel=w.close;
     for (const id of ['minigames-close', 'mini-exit']) $(id).ariaLabel = w.close;
     for (const button of document.querySelectorAll('[data-lane]'))
       button.ariaLabel = w.laneNames[Number(button.dataset.lane)];
@@ -246,6 +260,12 @@
       'tab-home': 'home',
       'tab-hats': 'hats',
       'tab-helper': 'helper',
+      'tab-inventory': 'inventory',
+      'expedition-ready-text': 'expeditionReady',
+      'expedition-ready-claim': 'collect',
+      'expedition-cancel-title': 'cancelExpedition',
+      'expedition-cancel-about': 'cancelExpeditionAbout',
+      'expedition-cancel-confirm': 'cancelExpedition',
       'language-label': 'language',
       'music-label': 'music',
       'effects-label': 'effects',
@@ -292,10 +312,11 @@
     const goal = goals[0],
       name = goal.kind === 'helper' ? t().helper : stageName(goal.kind, current[goal.kind] + 1);
     $('nearest-goal').innerHTML =
-      `<span>${t().nearestGoal}: <strong>${name}</strong></span><div class="track-progress"><span style="width:${current.balance.ratio(goal.cost) * 100}%"></span></div><small>${current.balance.compare(goal.cost) >= 0 ? t().ready : t().remaining + ': ' + format(goal.cost.subtract(current.balance))}</small>`;
+      `<span>${t().nearestGoal}: <strong>${name}</strong></span><div class="track-progress"><span style="width:${current.balance.ratio(goal.cost) * 100}%"></span></div><small>${goal.kind==='home'&&game.bossGate()!==null?t().bossGate:current.balance.compare(goal.cost) >= 0 ? t().ready : t().remaining + ': ' + format(goal.cost.subtract(current.balance))}</small>`;
     const s = game.getState(),
       w = t(),
       content = $('shop-content');
+    if(tab==='inventory'){inventoryUI.render(rebuild);$('shop-footnote').hidden=true;return;}
     if (['hats', 'helper'].includes(tab)) {
       collections.render(tab, rebuild);
       $('shop-footnote').hidden = true;
@@ -342,7 +363,9 @@
       $('track-caption').textContent = lv < last ? w.trackCaption : w.infinite;
       $('track-boost').textContent = '+' + (game.getTrackGain(tab) * 100).toFixed(1) + '%';
       $('track-price').textContent = format(cost);
-      $('upgrade-' + tab).disabled = !quote.count || s.balance.compare(cost) < 0;
+      $('upgrade-' + tab).disabled = !!quote.locked || !quote.count || s.balance.compare(cost) < 0;
+      const gate=tab==='home'?game.bossGate():null;
+      if(gate!==null){if(!$('shop-boss-open')){const b=document.createElement('button');b.id='shop-boss-open';b.className='setting-action';$('upgrade-home').before(b);} $('shop-boss-open').textContent=w.bossFight+' · '+w.bossNames[gate];$('shop-boss-open').onclick=()=>{$('shop-dialog').close();battleUI.open(gate);};$('track-caption').textContent=w.bossGate;}else $('shop-boss-open')?.remove();
       $('track-progress-fill').style.width = s.balance.ratio(cost) * 100 + '%';
       $('track-remaining').textContent =
         s.balance.compare(cost) >= 0
@@ -369,7 +392,7 @@
       .join('');
   }
   function open(id) {
-    if (!loaded) return;
+    if (!loaded || battleUI.active) return;
     sound.unlock();
     $(id).showModal();
     if (id === 'shop-dialog') {
@@ -426,7 +449,7 @@
   }
   $('shop-dialog').addEventListener('close', () => {
     if (revealFrom) {
-      world.transition = { from: revealFrom, start: performance.now() };
+      world.transition = { from: {...revealFrom,pugStage:revealFrom.pugAppearance,homeStage:revealFrom.homeAppearance,foodStage:revealFrom.foodAppearance}, start: performance.now() };
       revealFrom = null;
     }
   });
@@ -444,6 +467,7 @@
   $('shop-content').onclick = (e) => {
     const b = e.target.closest('button');
     if (!b || b.disabled) return;
+    if(b.dataset.inventoryJump){$(b.dataset.inventoryJump)?.scrollIntoView({block:'start',behavior:world.reduced?'auto':'smooth'});return;}
     const kind = b.dataset.upgrade;
     const before = kind ? game.getState() : null;
     let bought = false;
@@ -457,9 +481,15 @@
     if (b.dataset.expedition) {
       bought = game.sendExpedition(Number(b.dataset.expedition));
     }
-    if (b.dataset.collect) {
-      bought = game.claimExpedition().m > 0;
+    if (b.dataset.collect) { collectExpedition(); return; }
+    if (b.dataset.cancelExpedition) {
+      cancelExpeditionEnds=game.getState().expedition?.ends;
+      $('expedition-cancel-dialog').showModal();return;
     }
+    if(b.dataset.helperBurst){bought=game.activateHelper();if(bought){world.extras.react(performance.now());sound.play('sigh');}}
+    if(b.dataset.weapon!==undefined)bought=game.equipWeapon(Number(b.dataset.weapon));
+    if(b.dataset.merge!==undefined)bought=game.mergeWeapon(Number(b.dataset.merge));
+    if(b.dataset.cosmetic)bought=game.buyCosmetic(b.dataset.cosmetic);
     if (b.dataset.helper) bought = game.buyBulk('helper', 0, bulkMode);
     if (b.dataset.tool) bought = game.buyBulk('tool', Number(b.dataset.tool), bulkMode);
     if (kind) bought = game.buyBulk(kind, 0, 1);
@@ -480,6 +510,28 @@
         toast(text);
       }
     }
+  };
+  function collectExpedition(){
+    const amount=game.claimExpedition();if(!amount.m)return;
+    $('expedition-banner').hidden=true;sound.play('buy');
+    const loot=game.getState().lastLoot;
+    toast(t().collect+' +'+format(amount)+(loot.length?' · '+t().lootReceived+': '+loot.length:''));
+    earned();render();persist();
+  }
+  $('expedition-ready-claim').onclick=collectExpedition;
+  $('expedition-ready-dismiss').onclick=()=>{$('expedition-banner').hidden=true;};
+  for(const id of ['expedition-cancel-close'])$(id).onclick=()=>$('expedition-cancel-dialog').close();
+  $('expedition-cancel-confirm').onclick=()=>{
+    if(game.cancelExpedition(cancelExpeditionEnds)){render();persist();toast(t().expeditionCancelled);}
+    $('expedition-cancel-dialog').close();
+  };
+  $('shop-content').onchange=(e)=>{
+    const input=e.target;let changed=false;
+    if(input.dataset.skin)changed=game.chooseSkin(input.dataset.skin,input.value===''?null:Number(input.value));
+    if(input.dataset.showWeapon!==undefined)changed=game.showWeapon(input.checked);
+    if(input.dataset.helperSkin!==undefined)changed=game.chooseHelperSkin(input.value===''?null:Number(input.value));
+    if(input.dataset.helperSticker!==undefined)changed=game.chooseHelperSticker(input.value);
+    if(changed){render();persist();}
   };
   function updateSettings() {
     settings = {
@@ -519,7 +571,7 @@
         bonusState.multiplier * (developerUnlocked ? devTap : 1),
         combo.tap(performance.now()).multiplier,
       );
-    world.dig(PugGame.TOOLS[s.tool].key, '+' + format(amount), x, y);
+    world.dig(PugGame.TOOLS[s.toolAppearance].key, '+' + format(amount), x, y);
     sound.play('dig');
     earned();
     render();
@@ -638,6 +690,7 @@
   function tick(now) {
     requestAnimationFrame(tick);
     miniUI.tick(now);
+    battleUI.tick(now);
     const frameState = game.getState();
     const speed = combo.status(now);
     $('combo-indicator').hidden = !speed.rate || modalOpen();
@@ -669,7 +722,7 @@
       $('coin-value').textContent = '×' + coin.value;
       button.ariaLabel = t().catch + ' ×' + coin.value;
     }
-    $('bonus-indicator').hidden = bonusState.multiplier === 1;
+    $('bonus-indicator').hidden = battleUI.active || bonusState.multiplier === 1;
     $('bonus-value').textContent = '×' + bonusState.multiplier;
     $('bonus-seconds').textContent = bonusState.seconds + 's';
     runner.configure({
@@ -715,6 +768,11 @@
     }
     if (now - lastHud > 250) {
       lastHud = now;
+      if(playing&&!world.transition)battleUI.maybeIntro();
+      if(!game.getState().expedition)$('expedition-banner').hidden=true;
+      if(game.expeditionNotice(Date.now(), !owner || !playing || world.bossActive === true)){
+        $('expedition-banner').hidden=false;persist();
+      }
       if (world.drops.length) {
         const coverage = world.spitCoverage(now);
         if (game.markCoverage(coverage.covered, coverage.total)) {
@@ -793,6 +851,7 @@
     $('reset-cancel').click();
   });
   $('reset-confirm').onclick = () => {
+    battleUI.reset();
     game = PugGame.createGame();
     combo.reset();
     revealFrom = null;
@@ -925,6 +984,9 @@
       };
       setTimeout(spray, 0);
     }, true);
+  $('dev-inventory').onclick=()=>devAction(()=>game.devInventory());
+  $('dev-expedition-ready').onclick=()=>devAction(()=>game.devExpeditionReady());
+  $('dev-helper-ready').onclick=()=>devAction(()=>game.devHelperReady());
   $('dev-mini-reset').onclick = () => devAction(() => game.devMiniReady());
   $('dev-pose-apply').onclick = () => devAction(() => world.animatePose($('dev-pose').value), true);
   $('dev-exit').onclick = () => {
@@ -1045,7 +1107,7 @@
     world.setIdle(null);
   });
   addEventListener('storage', (e) => {
-    if (e.key === KEY || e.key === BACKUP || e.key === LEGACY_BACKUP || e.key === OLDER_BACKUP) {
+    if (e.key === KEY || e.key === BACKUP || e.key === V7_BACKUP || e.key === PRIOR_BACKUP || e.key === LEGACY_BACKUP || e.key === OLDER_BACKUP) {
       const latest = readEnvelope();
       if ((latest.revision || 0) > revision && latest.instance !== instance) {
         adopt(latest);

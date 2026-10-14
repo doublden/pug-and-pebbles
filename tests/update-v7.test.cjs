@@ -20,7 +20,7 @@ test('mini assistance hats never increase the perfect payout cap',()=>{
  for(const [hat,kind]of [['bunny','brush'],['pan','catch']]){const g=funded({hats:[hat],hat});const p=g.getState().power;g.beginMini(kind,0);assert.equal(g.finishMini(kind,1,true).compare(p.multiply(8*MINI_SECONDS[kind])),0);}
 });
 test('old v6 wallets, purchases, collection and expedition reward survive exactly',()=>{
- const old={...funded().serialize(),helper:12,hats:['carrot','pirate'],hat:'carrot',miniNext:{brush:1234,catch:5678,match:9999},expedition:{ends:9001000,duration:900,reward:{m:3.5,e:8}}};const g=createGame(old),s=g.serialize();for(const key of ['balance','total','pug','home','levels','helper','hats','hat','miniNext','expedition'])assert.deepEqual(JSON.parse(JSON.stringify(s[key])),JSON.parse(JSON.stringify(old[key])));assert.deepEqual(createGame(s).serialize(),s);
+ const old={...funded().serialize(),helper:12,hats:['carrot','pirate'],hat:'carrot',miniNext:{brush:1234,catch:5678,match:9999},expedition:{ends:9001000,duration:900,reward:{m:3.5,e:8}}};const g=createGame(old),s=g.serialize();for(const key of ['balance','total','pug','home','levels','helper','hats','hat','miniNext'])assert.deepEqual(JSON.parse(JSON.stringify(s[key])),JSON.parse(JSON.stringify(old[key])));assert.equal(s.expedition.reward.compare(old.expedition.reward),0);assert.equal(s.expedition.ends,old.expedition.ends);assert.deepEqual(createGame(s).serialize(),s);
 });
 function world(){const box={window:{},performance:{now:()=>3000}};vm.runInNewContext(fs.readFileSync(require.resolve('../world.js'),'utf8'),box);return box.window.PugWorld.prototype;}
 test('normal pug motion draws exactly one opaque body at every transition and action phase',()=>{

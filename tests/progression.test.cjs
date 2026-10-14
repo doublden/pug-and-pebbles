@@ -27,7 +27,7 @@ test('v4 saves preserve purchases and receive empty v5 collections exactly once'
   assert.equal(g.getState().pug, 4);
   assert.deepEqual(g.getState().levels, old.levels);
   assert.deepEqual(g.getState().hats, []);
-  assert.equal(g.serialize().version, 6);
+  assert.equal(g.serialize().version, 8);
   assert.deepEqual(createGame(g.serialize()).serialize(), g.serialize());
 });
 test('ten hats: six gated purchases and four event-only unlocks', () => {
@@ -95,7 +95,7 @@ test('helper is gated and costs grow; autonomous income does not count as taps',
   assert.equal(g.getHelperPrice().compare(675), 0);
   const before = g.getState(),
     amount = g.work(1);
-  assert.equal(amount.compare(before.power.multiply(0.15)), 0);
+  assert.equal(amount.compare(before.power), 0);
   assert.equal(g.getState().clicks, before.clicks);
   assert.equal(g.getState().balance.compare(before.balance.add(amount)), 0);
   assert.equal(g.work(-1).compare(0), 0);

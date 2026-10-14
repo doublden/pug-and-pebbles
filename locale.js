@@ -616,3 +616,71 @@ window.PugLocale = {
     tabTools: 'Tools',
   },
 };
+Object.assign(window.PugLocale.ru, {
+  testInventory:'Выдать тестовое оружие',testExpeditionReady:'Завершить текущую экспедицию',testHelperReady:'Сбросить отдых способности',
+  inventory:'Инвентарь',appearances:'Облики',weapons:'Оружие',parts:'Части оружия',damage:'Урон',merge:'Объединить',
+  weaponRule:'Оружие добывается в экспедициях. Три одинаковых предмета объединяются в следующий. Добычу камушков оно не меняет.',
+  weaponGate:'Оружие открывается на локации «Дворик с лежанкой».',showWeapon:'Показывать оружие за спиной',
+  weaponNames:['Палка','Ржавая ложка','Заточка из ложки','Меч из зубной щётки','Ржавая труба','Монтировка','Ржавый меч','Меч тамплиера','Меч паладина'],
+  cosmeticRule:'Внешность меняется отдельно от силы. Доступны только уже открытые облики; купленные переключатели остаются в Новой жизни. Покупка новой стадии показывает новый вид — прежний можно выбрать снова.',
+  cosmeticNames:{tool:'Вид копалки',pug:'Вид мопса',home:'Вид дома',food:'Вид миски / горы'},
+  currentLook:'По текущему прогрессу',unlockLooks:'Открыть выбор',junkTitle:'Хлам из экспедиций',
+  junkNames:['Одинокий носок','Игрушечная корона','Колбасная этикетка','Пуговица','Пружинка'],
+  junkRule:'Новые находки остаются в коллекции. Повторная находка даёт 2 обычных тапа по силе на старте поездки.',
+  lootChance:'Шанс оружейного трофея',lootRolls:'Предметов при успехе',lootConditional:'На каждый предмет при успехе',
+  trainingLoot:'Учебная поездка: три части оружия гарантированно',pityLoot:'После двух поездок без оружия следующая находка гарантирована.',
+  helperBurst:'Ладно, поработаю',helperBurstHelp:'×2 автодобычи на 10 секунд. Отдых — 5 минут; в экспедиции недоступно.',
+  helperBurstActive:'Интенсивная работа',helperColor:'Расцветка экскаватора',helperSticker:'Наклейка',
+  helperTiers:['Ржавый','Потрёпанный','Починенный','Зелёный','Синий','Бирюзовый','Красный','Серебряный','Золотистый','Золотой','Золото и бриллианты'],
+  stickerNames:['Без наклейки','Лапа','Рыбка','Звезда'],
+  cancelExpedition:'Отменить поездку',cancelExpeditionAbout:'Василий вернётся сразу. Камушки, оружие и хлам за незавершённую поездку не выдаются.',
+  expeditionReady:'Василий вернулся!',expeditionCancelled:'Поездка отменена',lootReceived:'Находки',
+});
+Object.assign(window.PugLocale.en, {
+  testInventory:'Grant test weapons',testExpeditionReady:'Finish current expedition',testHelperReady:'Reset ability cooldown',
+  inventory:'Inventory',appearances:'Appearances',weapons:'Weapons',parts:'Weapon parts',damage:'Damage',merge:'Merge',
+  weaponRule:'Find weapons in expeditions. Merge three matching items into the next tier. Weapons do not change pebble production.',
+  weaponGate:'Weapons unlock at Yard with a bed.',showWeapon:'Show weapon on his back',
+  weaponNames:['Stick','Rusty spoon','Spoon shank','Toothbrush sword','Rusty pipe','Crowbar','Rusty sword','Templar sword','Paladin sword'],
+  cosmeticRule:'Looks are separate from power. Choose previously unlocked appearances; purchased selectors survive New life. A new-stage purchase shows its new look; you can select an older look again.',
+  cosmeticNames:{tool:'Tool appearance',pug:'Pug appearance',home:'Home appearance',food:'Bowl / pile appearance'},
+  currentLook:'Follow current progress',unlockLooks:'Unlock selection',junkTitle:'Expedition junk',
+  junkNames:['Lonely sock','Toy crown','Sausage label','Button','Spring'],
+  junkRule:'New finds stay in the collection. A duplicate awards two ordinary taps at dispatch power.',
+  lootChance:'Weapon trophy chance',lootRolls:'Items on success',lootConditional:'Each item, conditional on success',
+  trainingLoot:'Training trip: three weapon parts guaranteed',pityLoot:'After two trips without weapons, the next trophy is guaranteed.',
+  helperBurst:'Fine, I’ll work',helperBurstHelp:'×2 auto production for 10 seconds. Five-minute cooldown; unavailable on expeditions.',
+  helperBurstActive:'Intensive work',helperColor:'Excavator paint',helperSticker:'Sticker',
+  helperTiers:['Rusty','Battered','Repaired','Green','Blue','Turquoise','Red','Silver','Gilded','Gold','Gold and diamonds'],
+  stickerNames:['No sticker','Paw','Fish','Star'],
+  cancelExpedition:'Cancel expedition',cancelExpeditionAbout:'Vasiliy returns immediately. An unfinished trip gives no pebbles, weapons or junk.',
+  expeditionReady:'Vasiliy is back!',expeditionCancelled:'Expedition cancelled',lootReceived:'Finds',
+});
+Object.assign(window.PugLocale.ru,{
+  lifeAbout:'Достигни стадии «Мопс король». Начни заново с постоянным бонусом. Шляпы, оружие, хлам и купленные облики останутся; сильное оружие снова открывается по мере развития дома.',
+  lifeConfirm:'Начнёшь со свалки: камушки, инструменты, мопс, дом и уровень Василия сбросятся. Шляпы, оружие, хлам, облики и достижения останутся. Доступ к сильному оружию зависит от нового дома. Следующий постоянный бонус: ',
+});
+Object.assign(window.PugLocale.en,{
+  lifeAbout:'Reach King pug and begin again with a permanent bonus. Keep hats, weapons, junk and purchased appearances; strong weapons unlock again as your new home develops.',
+  lifeConfirm:'Return to the dump: pebbles, tools, pug, home and Vasiliy levels reset. Keep hats, weapons, junk, appearances and achievements. Strong weapons are gated by your new home. Next permanent bonus: ',
+});
+Object.assign(window.PugLocale.ru,{
+ bossNames:['Наглый енот','Большая ворона'],bossIntro:'Перед новым домом нужно победить его хозяина. Собери оружие из находок Василия, экипируй его в инвентаре и тапай по боссу. На бой — 30 секунд.',
+ bossStart:'Начать бой',bossRetry:'Сразиться ещё раз',bossFight:'Сразиться с боссом',bossGate:'Победи босса, чтобы открыть покупку этого дома.',
+ bossAdvice:'Для спокойного темпа около 4 нажатий в секунду подойдёт: {weapon}. Палка не справится с енотом, а ложка — с вороной.',
+ bossRules:'Учитываются до 6 ударов в секунду. Урон зависит только от оружия; блоки — часть анимации и не отменяют урон. Добыча и события приостановлены, таймер продолжает идти при выходе из игры. Повтор бесплатный, оружие не теряется.',
+ bossReward:'Первая победа:',bossCleared:'Победа уже засчитана. Повторный бой без награды.',bossWon:'Победа! Теперь можно купить следующий дом.',bossLost:'Время вышло. Улучши оружие и попробуй ещё раз.',
+ bossTap:'Тапай по боссу справа!',bossLeave:'Выйти из боя',bossHome:'К покупке дома',bossLoadError:'Не удалось загрузить бой. Подключись к сети и попробуй ещё раз.',secondsShort:'сек.',
+});
+Object.assign(window.PugLocale.en,{
+ bossNames:['Cheeky raccoon','Giant crow'],bossIntro:'Defeat the owner before moving to the next home. Assemble weapons from Vasiliy’s finds, equip one in your inventory and tap the boss. You have 30 seconds.',
+ bossStart:'Start battle',bossRetry:'Fight again',bossFight:'Fight the boss',bossGate:'Defeat the boss to unlock this home purchase.',
+ bossAdvice:'At a comfortable pace of about 4 taps per second, use: {weapon}. A stick cannot defeat the raccoon; a spoon cannot defeat the crow.',
+ bossRules:'Up to 6 hits per second count. Only your weapon determines damage; blocks are animations and do not cancel damage. Mining and events pause, but the timer keeps running when you leave the game. Retry for free without losing equipment.',
+ bossReward:'First victory:',bossCleared:'Already defeated. Replays give no extra reward.',bossWon:'Victory! You can now buy the next home.',bossLost:'Time is up. Improve your weapon and try again.',
+ bossTap:'Tap the boss on the right!',bossLeave:'Leave battle',bossHome:'Buy the next home',bossLoadError:'The battle could not load. Connect to the internet and try again.',secondsShort:'sec',
+});
+window.PugLocale.ru.awardNames.push('Енот, на выход!','Не каркай');
+window.PugLocale.ru.awardDescriptions.push('Победить наглого енота.','Победить большую ворону.');
+window.PugLocale.en.awardNames.push('Raccoon, move along!','No cawing');
+window.PugLocale.en.awardDescriptions.push('Defeat the cheeky raccoon.','Defeat the giant crow.');

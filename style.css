@@ -2059,3 +2059,38 @@ canvas.mini-art {
 }
 
 .shop-tabs button{position:relative}.shop-tabs button.can-buy::after{content:"";position:absolute;width:7px;height:7px;background:#b87642;border:2px solid #f7f1e4;border-radius:50%;top:5px;right:7px}
+/* Inventory uses the same mobile sheet and keeps selectors stable during passive ticks. */
+.weapon-card img{display:block;width:64px;height:150px;object-fit:contain;margin:0 auto 8px}
+.weapon-card .setting-action{font-size:12px;padding:9px;margin:5px 0;width:100%}
+.parts-card,.cosmetic-card{padding:14px;background:#efeadb;border-radius:14px;margin:12px 0}
+.cosmetic-card label{display:grid;gap:8px;font-size:13px}
+.cosmetic-card select{max-width:100%;width:100%;padding:11px;border:1px solid #c9c9b8;border-radius:9px;background:#faf6ea;color:var(--ink)}
+.junk-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.junk-grid article{display:grid;gap:5px;background:#efeadb;border-radius:12px;padding:12px;font-size:12px}
+.junk-grid article>span{font-size:28px}
+.expedition-banner{display:flex;align-items:center;flex-wrap:wrap;gap:5px;padding:8px;background:#f4ecd2;border:1px solid #c9b77d;border-radius:13px;color:#414831;font-size:11px;max-width:230px;pointer-events:auto}
+.expedition-banner[hidden]{display:none}.expedition-banner button{border:0;border-radius:8px;padding:7px;background:#697b45;color:#fff;font:inherit}
+.helper-ability{width:100%;margin:8px 0;padding:12px;background:#e2e8d2;border-radius:13px;color:var(--ink);border:1px solid #b3bf97;font:inherit}
+.helper-ability:disabled{opacity:.65}.loot-odds{font-size:12px;line-height:1.5;padding:8px;border-radius:10px;background:#ede9d9;margin-bottom:13px}
+.shop-tabs{flex-wrap:wrap}.shop-tabs button{flex:1 0 28%;min-height:35px}
+.shop-tabs button{font-size:12px}
+.inventory-shortcuts{display:flex;gap:6px;position:sticky;top:0;background:#f7f2e7;z-index:1;padding:5px 0}
+.inventory-shortcuts button{font-size:11px;padding:8px;flex:1;margin:0;white-space:normal}
+/* Combat remains on the main scene, with a large touch target and a separate readable HUD. */
+#inventory-weapons,#inventory-looks,#inventory-junk{scroll-margin-top:55px}
+.battle-hud{position:absolute;z-index:8;top:calc(env(safe-area-inset-top) + 130px);left:18px;right:18px;background:#f5f0dfed;border-radius:20px;padding:16px;color:#353a2d;box-shadow:0 4px 18px #0003}
+.battle-heading{display:flex;justify-content:space-between;gap:12px;font-size:20px}
+.battle-health{height:14px;background:#4c3b3026;border-radius:8px;margin:10px 0;overflow:hidden}
+.battle-health span{display:block;background:#b84e38;height:100%;transition:width .1s linear}
+.battle-hud p{margin:6px 0;font-size:13px}.battle-hud .setting-action{min-height:38px;padding:6px 12px;margin:8px 0 0}
+.boss-target{position:absolute;z-index:7;left:49%;top:42%;width:49%;height:32%;border:0;background:transparent;touch-action:manipulation}
+.boss-target:focus-visible{outline:3px solid #ffdc6f;outline-offset:-8px;border-radius:20px}
+.in-battle .bottom-hud,.in-battle .hud-actions,.in-battle .status-stack,.in-battle #food-hit,.in-battle #sneeze-button{visibility:hidden;pointer-events:none}
+.in-battle .shade{opacity:.25}
+.boss-portrait{height:150px;overflow:hidden;display:flex;justify-content:center;margin:8px 0}
+.boss-portrait img{width:600px;height:450px;max-width:none;object-fit:contain;transform:translateX(225px)}
+#boss-dialog{max-height:90dvh;overflow-y:auto}#boss-dialog p{line-height:1.45;margin:10px 0}
+#boss-dialog .setting-action{margin:7px 0;min-height:46px}
+@media(max-height:720px){.battle-hud{top:calc(env(safe-area-inset-top) + 100px);padding:12px}.battle-hud p{font-size:12px}.battle-heading{font-size:17px}}
+
+.in-battle .tap-hint{display:none}

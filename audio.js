@@ -159,6 +159,15 @@
     }
     play(kind, variant = 0) {
       if (!this.effects) return;
+      if(['weaponSwing','weaponImpact','weaponBlock','battleStart','battleLose'].includes(kind)){
+        const now=performance.now();if(now-(this.lastCombatSound||0)<70)return;this.lastCombatSound=now;
+        if(kind==='weaponSwing')this.noise(.14,.022,1800+Math.random()*500);
+        else if(kind==='weaponImpact'||kind==='weaponBlock'){
+          const f=(variant===0?230:variant===3?350:670)+Math.random()*120;
+          this.noise(.10,.028,2400);this.tone(f,.12,.018,'triangle');this.tone(f*1.53,.08,.012,'sine',.015);
+        }else if(kind==='battleStart'){this.tone(146.83,.3,.028,'triangle');this.tone(110,.5,.025,'triangle',.15);}
+        else this.tone(98,.5,.018,'sine');return;
+      }
       if (this.ctx && this.ctx.state !== 'running') {
         this.ctx
           .resume()
@@ -177,6 +186,10 @@
         this.noise(0.13, 0.04, 500);
         this.noise(0.26, 0.085, 3000, 0.1);
         this.tone(95, 0.17, 0.014, 'sawtooth', 0.1);
+      }
+      if (kind === 'sigh') {
+        this.noise(0.45, 0.05, 430);
+        this.tone(120, 0.3, 0.012, 'triangle');
       }
       if (kind === 'snore') {
         this.noise(0.6, 0.05, 280);
@@ -259,12 +272,20 @@
         g.disconnect();
       };
     }
+    setBattle(active){
+      this.battle=active;this.step=0;this.schedule();
+      if(this.ctx&&this.musicBus){const t=this.ctx.currentTime,g=this.musicBus.gain;g.cancelScheduledValues(t);g.setTargetAtTime(0,t,.045);g.setTargetAtTime(this.music?this.musicVolume/100*10:0,t+.12,.18);}
+    }
     schedule() {
       if (this.timer) {
         clearInterval(this.timer);
         this.timer = null;
       }
       if (!this.music || !this.ctx || document.hidden) return;
+      if(this.battle){
+        const notes=[146.83,146.83,0,164.81,146.83,0,174.61,164.81];
+        this.timer=setInterval(()=>{const f=notes[this.step++%notes.length];if(f)this.tone(f,.24,.021,'triangle',0,true);if(this.step%4===1)this.tone(73.42,.65,.018,'sine',0,true);},220);return;
+      }
       const notes = [
         196, 0, 293.66, 0, 246.94, 0, 293.66, 0, 220, 0, 329.63, 0, 246.94, 0, 293.66, 0,
       ];

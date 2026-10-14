@@ -178,7 +178,7 @@
         if (performance.now() < (this.artRetryAt.get(key) || 0)) continue;
         this.image(key, this.artPath(kind, stage)).then(() => {
           this.backgroundFrames.clear();
-          const keep = new Set([stage, this.state.homeStage, this.transition?.from.homeStage]);
+          const keep = new Set([stage, this.state.homeStage, this.state.foodStage, this.transition?.from.homeStage, this.transition?.from.foodStage]);
           const keys = Object.keys(this.images).filter(k => k.startsWith(prefix));
           for (const old of keys.slice(0, Math.max(0, keys.length - 4))) {
             if (keep.has(Number(old.slice(prefix.length)))) continue;
@@ -259,6 +259,9 @@
       return frame;
     }
     setState(state) {
+      state={...state,pugStage:state.pugAppearance ?? state.pugStage,
+        homeStage:state.homeAppearance ?? state.homeStage,foodStage:state.foodAppearance ?? state.homeStage,
+        tool:state.toolAppearance ?? state.tool};
       if (
         this.hasState &&
         (state.pugStage !== this.state.pugStage || state.homeStage !== this.state.homeStage)
@@ -270,7 +273,15 @@
       }
       this.hasState = true;
       this.state = state;
-      if (this.ready) this.ensureSceneArt(state.homeStage);
+      if (this.ready) {
+        this.ensureSceneArt(state.homeStage);
+        if(state.foodStage!==state.homeStage)this.ensureSceneArt(state.foodStage);
+        if(state.weaponsUnlocked && state.showWeapon){
+          const id=PugInventoryRules.WEAPONS[state.weaponEquipped].id,key='weapon-'+id;
+          if(!this.images[key]&&!this.loadingImages.has(key)&&performance.now()>=(this.artRetryAt.get(key)||0))
+            this.image(key,'weapons/'+id+'.svg').catch(()=>{});
+        }
+      }
     }
     cell(ctx, img, index, cols, rows, x, y, w, h) {
       const sw = img.width / cols,
@@ -386,7 +397,7 @@
       if (this.foodFrames.size > 4) this.foodFrames.delete(this.foodFrames.keys().next().value);
       return f;
     }
-    foodLayout(stage = this.state.homeStage, w = this.w, h = this.h) {
+    foodLayout(stage = this.state.foodStage ?? this.state.homeStage, w = this.w, h = this.h) {
       const f = this.foodFrame(stage),
         portrait = w < h,
         extent = [
@@ -623,6 +634,8 @@
       const f = this.prepare(pose, stage);
       ctx.globalAlpha = alpha;
       ctx.save();
+      const rear=pose==='rear'||pose.includes('back')||['sleep','stretch','mid-sleep','mid-stretch'].includes(pose);
+      if(!rear)this.extras.weapon(ctx,{x,y,size},pose,f.head);
       ctx.drawImage(
         f.canvas,
         x - (f.pad / f.cellWidth) * size,
@@ -630,6 +643,7 @@
         (size * f.canvas.width) / f.cellWidth,
         (size * f.canvas.height) / f.cellWidth,
       );
+      if(rear)this.extras.weapon(ctx,{x,y,size},pose,f.head);
       ctx.restore();
       ctx.globalAlpha = alpha;
       if (withHat) this.extras.hat(ctx, this.state.hat, { x, y, size }, pose, performance.now(), f.head);
@@ -782,10 +796,10 @@
         });
       this.drops = this.drops.slice(-220);
     }
-    motionDog(ctx, stage, pose, l, p, alpha = 1) {
+    motionDog(ctx, stage, pose, l, p, alpha = 1, now = performance.now()) {
       // Hold one fully opaque drawing: dissolving two different bodies blurred
       // the face, doubled legs/medals and made every animation look smeared.
-      const frame = this.poseFrame(pose, p);
+      const frame = this.poseFrame(pose, p, now);
       this.dog(ctx, stage, frame, l.x, l.y, l.size, alpha);
     }
     spitCoverage(now = performance.now()) {
@@ -826,6 +840,7 @@
         tr = this.transition,
         mix = tr ? Math.min(1, (now - tr.start) / 1300) : 1;
       this.background(c, s.homeStage, w, h);
+      if(this.bossActive){PugBattleRender.draw(this,now);return;}
       if (tr && mix < 1 && tr.from.homeStage !== s.homeStage) {
         c.globalAlpha = 1 - mix;
         this.background(c, tr.from.homeStage, w, h);
@@ -833,14 +848,14 @@
       }
       this.food(
         c,
-        s.homeStage,
+        s.foodStage ?? s.homeStage,
         w,
         h,
         now,
-        tr && mix < 1 && tr.from.homeStage !== s.homeStage ? mix : 1,
+        tr && mix < 1 && (tr.from.foodStage ?? tr.from.homeStage) !== (s.foodStage ?? s.homeStage) ? mix : 1,
       );
-      if (tr && mix < 1 && tr.from.homeStage !== s.homeStage)
-        this.food(c, tr.from.homeStage, w, h, now, 1 - mix);
+      if (tr && mix < 1 && (tr.from.foodStage ?? tr.from.homeStage) !== (s.foodStage ?? s.homeStage))
+        this.food(c, tr.from.foodStage ?? tr.from.homeStage, w, h, now, 1 - mix);
       if (tr && mix < 1 && !this.reduced) {
         c.save();
         c.translate(l.x + l.size * 0.5, l.y + l.size * 0.45);
@@ -891,9 +906,9 @@
           c.scale(-1, 1);
           c.translate(-l.x - l.size * 0.5, 0);
         }
-        this.motionDog(c, s.pugStage, active, l, this.poseProgress(now), weight);
+        this.motionDog(c, s.pugStage, active, l, this.poseProgress(now), weight, now);
       } else if (this.pose === 'idle') this.dog(c, s.pugStage, 'idle', l.x, l.y, l.size, weight);
-      else this.motionDog(c, s.pugStage, this.pose, l, this.poseProgress(now), weight);
+      else this.motionDog(c, s.pugStage, this.pose, l, this.poseProgress(now), weight, now);
 
       c.restore();
       this.drawIdle(now, l);

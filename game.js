@@ -1,5 +1,9 @@
 (function (root) {
   'use strict';
+  const Inventory = typeof module === 'object' && module.exports
+    ? require('./inventory-rules.js') : root.PugInventoryRules;
+  const Battle = typeof module === 'object' && module.exports
+    ? require('./battle-rules.js') : root.PugBattleRules;
   // Small immutable scientific-number type: currency continues well beyond 1e308.
   class Amount {
     constructor(m = 0, e = 0) {
@@ -155,6 +159,8 @@
       { id: 'foreman', target: 25, progress: (s) => s.helper },
       { id: 'king', target: 14, progress: (s) => s.pug },
       { id: 'newlife', target: 1, progress: (s) => s.lives },
+      { id: 'raccoon', target: 1, progress: (s) => s.bossCollection[0] },
+      { id: 'crowboss', target: 1, progress: (s) => s.bossCollection[1] },
     ].map(Object.freeze),
   );
   function toolPrice(index, level) {
@@ -172,7 +178,7 @@
   function integer(v, fallback = 0) {
     return Number.isInteger(v) && v >= 0 && v <= MAX_LEVEL ? v : fallback;
   }
-  function createGame(saved) {
+  function createGame(saved, random = Math.random, clock = Date.now) {
     let state = {
         balance: new Amount(),
         total: new Amount(),
@@ -202,12 +208,14 @@
         miniNext: { brush: 0, catch: 0, match: 0 },
         matchWins: 0,
         expedition: null,
+        ...Inventory.fresh(),
+        bossWins:[false,false],bossOffers:[null,null],bossCollection:[0,0],bossIntroDone:false,
       },
       restoreStatus = 'new';
     const safeCount = (v) => (Number.isSafeInteger(v) && v >= 0 ? v : 0);
     if (saved) {
       restoreStatus = 'invalid';
-      if ([2, 3, 4, 5, 6].includes(saved.version))
+      if ([2, 3, 4, 5, 6, 7, 8].includes(saved.version))
         try {
           const balance = Amount.from(saved.balance),
             total = Amount.from(saved.total);
@@ -298,13 +306,54 @@
               match: safeCount(saved.miniNext?.match),
             },
           });
+          const fresh = Inventory.fresh();
+          Object.assign(state, fresh, {
+            weapons: Inventory.WEAPONS.map((_,i) => Math.max(i === 0 ? 1 : 0, integer(saved.weapons?.[i]))),
+            weaponParts: integer(saved.weaponParts),
+            weapon: integer(saved.weapon) < 9 ? integer(saved.weapon) : 0,
+            showWeapon: saved.showWeapon !== false,
+            junk: Inventory.JUNK.map((_,i) => integer(saved.junk?.[i])),
+            expeditionMisses: Math.min(2, integer(saved.expeditionMisses)),
+            trainingDone: saved.trainingDone === true,
+            lastLoot: Array.isArray(saved.lastLoot)?saved.lastLoot.slice(0,11).filter(id=>['part',...Inventory.JUNK,...Inventory.WEAPONS.map(w=>w.id)].includes(id)):[],
+            cosmeticUnlocks: array(saved.cosmeticUnlocks, Object.keys(Inventory.COSMETICS)),
+            ownedToolSkins: [...new Set([0,...array(saved.ownedToolSkins, TOOLS.map((_,i)=>i)),...levels.flatMap((n,i)=>n?[i]:[])])],
+            maxPugSkin: Math.max(Math.min(14,pug),Math.min(14,integer(saved.maxPugSkin))),
+            maxHomeSkin: Math.max(Math.min(13,home),Math.min(13,integer(saved.maxHomeSkin))),
+            maxHelperSkin: Math.max(Math.min(10,Math.floor(state.helper/10)),Math.min(10,integer(saved.maxHelperSkin))),
+            helperSkin: Number.isInteger(saved.helperSkin) && saved.helperSkin>=0 && saved.helperSkin<=10 ? saved.helperSkin : null,
+            helperSticker: ['none','paw','fish','star'].includes(saved.helperSticker) ? saved.helperSticker : 'none',
+            helperBurstUntil: safeCount(saved.helperBurstUntil),
+            helperBurstNext: safeCount(saved.helperBurstNext),
+          });
+          for (const kind of Object.keys(Inventory.COSMETICS)) {
+            const v=saved.skins?.[kind],max=kind==='pug'?state.maxPugSkin:state.maxHomeSkin;
+            if(state.cosmeticUnlocks.includes(kind) && Number.isInteger(v) && v>=0 &&
+              (kind==='tool'?state.ownedToolSkins.includes(v):v<=max))state.skins[kind]=v;
+          }
+          if(!state.weapons[state.weapon])state.weapon=0;
+          if(state.helperSkin>state.maxHelperSkin)state.helperSkin=null;
+          if(state.expedition && saved.expedition){
+            const ex=state.expedition, raw=saved.expedition;
+            ex.weaponLoot=Array.isArray(raw.weaponLoot)?raw.weaponLoot.slice(0,8).filter(i=>Number.isInteger(i)&&i>=-1&&i<9):[];
+            ex.junkLoot=Array.isArray(raw.junkLoot)?raw.junkLoot.slice(0,3).filter(i=>Number.isInteger(i)&&i>=0&&i<5):[];
+            ex.weaponSuccess=raw.weaponSuccess===true;ex.training=raw.training===true;
+            ex.weaponEligible=raw.weaponEligible===true;ex.notified=raw.notified===true;
+            ex.duplicateReward=raw.duplicateReward?Amount.from(raw.duplicateReward):new Amount();
+          }
+          Object.assign(state,{
+            bossWins:Battle.BOSSES.map((b,i)=>saved.version<8?home>b.home:saved.bossWins?.[i]===true),
+            bossOffers:Battle.BOSSES.map((_,i)=>saved.version===8&&saved.bossOffers?.[i]?Amount.from(saved.bossOffers[i]):null),
+            bossCollection:Battle.BOSSES.map((_,i)=>safeCount(saved.bossCollection?.[i])),
+            bossIntroDone:saved.bossIntroDone===true||(saved.version<8&&home>6),
+          });
           restoreStatus = legacy ? 'migrated' : 'restored';
         } catch (_) {
           /* Try backup storage in the UI before starting a fresh session. */
         }
     }
     let pending = [],
-      miniTicket = null;
+      miniTicket = null, battle = null;
     const hatEffect = (kind) => {
       const h = HATS.find((h) => h.id === state.hat);
       return h?.bonus === kind ? h.factor : 1;
@@ -329,9 +378,8 @@
           toolPower(i, lv).compare(toolPower(best, state.levels[best])) > 0 ? i : best,
         0,
       );
-    const power = () => {
-      const index = bestTool(),
-        n = toolPower(index, state.levels[index]);
+    const power = (index=bestTool()) => {
+      const n = toolPower(index, state.levels[index]);
       return Amount.log(
         Math.log10(n.m) +
           n.e +
@@ -341,15 +389,37 @@
           Math.log10(hatEffect('tap')),
       );
     };
+    const bossIndex=()=>Battle.BOSSES.findIndex(b=>b.home===state.home);
+    const bossGate=()=>{const i=bossIndex();return i>=0&&!state.bossWins[i]?i:null;};
+    const ensureBossOffer=()=>{
+      const i=bossIndex();if(i<0||state.bossWins[i]||state.bossOffers[i])return;
+      const tap=power().multiply(100),cap=trackPrice(state.home,'home').multiply(.05);
+      state.bossOffers[i]=tap.compare(cap)<0?tap:cap;
+    };
+    ensureBossOffer();
+    const battleActive=()=>battle?.status==='active';
     const credit = (amount) => {
       state.balance = state.balance.add(amount);
       state.total = state.total.add(amount);
       return amount;
     };
-    const helperRate = () =>
-      state.helper
-        ? power().multiply(0.15 * state.helper ** 0.75 * hatEffect('helper'))
-        : new Amount();
+    const helperBaseRate = (p=null) => state.helper
+      ? (p || power()).multiply(state.helper ** 0.35 * hatEffect('helper')) : new Amount();
+    const helperRate = () => state.expedition ? new Amount()
+      : helperBaseRate().multiply(clock() < state.helperBurstUntil ? 2 : 1);
+    const expeditionCopy = () => state.expedition ? {...state.expedition,
+      weaponLoot:[...state.expedition.weaponLoot],junkLoot:[...state.expedition.junkLoot]} : null;
+    const appearance = (tool=bestTool()) => ({
+      toolAppearance: state.skins.tool ?? tool,
+      pugAppearance: state.skins.pug ?? Math.min(14,state.pug),
+      homeAppearance: state.skins.home ?? Math.min(13,state.home),
+      foodAppearance: state.skins.food ?? Math.min(13,state.home),
+      weaponEquipped: state.home>=6 && state.weapon<=Inventory.maxTier(state.home) ? state.weapon : 0,
+      weaponsUnlocked: state.home>=6,
+      helperTier: state.helperSkin ?? Math.min(10,Math.floor(state.helper/10)),
+      helperBurstActive: !!state.helper && !state.expedition && clock()<state.helperBurstUntil,
+      helperBurstSeconds: Math.max(0,Math.ceil((state.helperBurstNext-clock())/1000)),
+    });
     const helperPrice = () => price(500, state.helper, 1.35).multiply(hatEffect('helperPrice'));
     const spend = (cost) => {
       if (state.balance.compare(cost) < 0) return false;
@@ -408,7 +478,7 @@
             ? index > 1 && !state.levels[index - 1]
             : kind === 'helper'
               ? state.pug < 4
-              : false;
+              : kind === 'home' && bossGate() !== null;
       if (lv >= MAX_LEVEL) return { count: 0, cost: new Amount() };
       if (locked) {
         const count = mode === 10 ? 10 : 1;
@@ -450,18 +520,25 @@
     return Object.freeze({
       restoreStatus,
       getState() {
+        const tool=bestTool(),p=power(tool),base=helperBaseRate(p);
         return {
           ...state,
+          bossWins:[...state.bossWins],bossOffers:[...state.bossOffers],bossCollection:[...state.bossCollection],
           hats: [...state.hats],
           idleSeen: [...state.idleSeen],
           miniNext: { ...state.miniNext },
-          expedition: state.expedition ? { ...state.expedition } : null,
-          helperRate: helperRate(),
+          expedition: expeditionCopy(),
+          weapons: [...state.weapons], junk: [...state.junk], skins: {...state.skins},
+          cosmeticUnlocks: [...state.cosmeticUnlocks], ownedToolSkins: [...state.ownedToolSkins],
+          lastLoot: [...state.lastLoot],
+          ...appearance(tool),
+          helperRate: state.expedition ? new Amount() : base.multiply(clock()<state.helperBurstUntil?2:1),
+          helperBaseRate: base,
           lifeBoost: newLifeBoost(state.lives),
           levels: [...state.levels],
           achievements: [...state.achievements],
-          tool: bestTool(),
-          power: power(),
+          tool,
+          power: p,
           pugStage: Math.min(14, state.pug),
           homeStage: Math.min(13, state.home),
         };
@@ -469,14 +546,18 @@
       serialize() {
         return {
           ...state,
-          version: 6,
+          version: 8,
+          bossWins:[...state.bossWins],bossOffers:state.bossOffers.map(n=>n?.toJSON()??null),bossCollection:[...state.bossCollection],
           balance: state.balance.toJSON(),
           total: state.total.toJSON(),
           helperTotal: state.helperTotal.toJSON(),
           hats: [...state.hats],
           idleSeen: [...state.idleSeen],
           miniNext: { ...state.miniNext },
-          expedition: state.expedition ? { ...state.expedition } : null,
+          expedition: expeditionCopy(),
+          weapons: [...state.weapons], junk: [...state.junk], skins: {...state.skins},
+          cosmeticUnlocks: [...state.cosmeticUnlocks], ownedToolSkins: [...state.ownedToolSkins],
+          lastLoot: [...state.lastLoot],
           levels: [...state.levels],
           achievements: [...state.achievements],
         };
@@ -514,11 +595,39 @@
         const tools = TOOLS.some((_, i) => i > 0 && (i === 1 || state.levels[i - 1]) && state.levels[i] < MAX_LEVEL && state.balance.compare(toolPrice(i, state.levels[i])) >= 0),
           newTool = TOOLS.some((_, i) => i > 0 && !state.levels[i] && (i === 1 || state.levels[i - 1]) && state.balance.compare(toolPrice(i, 0)) >= 0),
           pug = state.pug < MAX_LEVEL && state.balance.compare(trackPrice(state.pug, 'pug')) >= 0,
-          home = state.home < MAX_LEVEL && state.balance.compare(trackPrice(state.home, 'home')) >= 0,
+          home = bossGate() === null && state.home < MAX_LEVEL && state.balance.compare(trackPrice(state.home, 'home')) >= 0,
           hats = HATS.some(h => !h.award && !state.hats.includes(h.id) && state.pug >= h.stage && state.balance.compare(h.cost) >= 0),
           helper = state.pug >= 4 && state.helper < MAX_LEVEL && state.balance.compare(helperPrice()) >= 0;
-        return { main: newTool || pug || home, tools, pug, home, hats, helper };
+        const inventory=Object.entries(Inventory.COSMETICS).some(([kind,cost])=>!state.cosmeticUnlocks.includes(kind)&&state.balance.compare(cost)>=0)||
+          (state.home>=6&&(state.weaponParts>=3||state.weapons.some((n,i)=>i>0&&i<Inventory.maxTier(state.home)&&n>=3)));
+        return { main: newTool || pug || home, tools, pug, home, hats, helper, inventory };
       },
+      bossGate,
+      bossOffer(index=bossIndex()) {
+        if(!Battle.BOSSES[index]||state.home<Battle.BOSSES[index].home)return null;
+        ensureBossOffer();
+        return{...Battle.BOSSES[index],index,won:state.bossWins[index],reward:state.bossOffers[index]||new Amount(),
+          damage:Inventory.WEAPONS[appearance().weaponEquipped].damage,introDone:state.bossIntroDone};
+      },
+      ackBossIntro(){state.bossIntroDone=true;},
+      startBoss(index=bossIndex(),now=clock()) {
+        if(battleActive()||miniTicket||!Battle.BOSSES[index]||state.home<Battle.BOSSES[index].home)return false;
+        ensureBossOffer();battle=Battle.create(index,Inventory.WEAPONS[appearance().weaponEquipped].damage,now);
+        return !!battle;
+      },
+      battleStatus(now=clock()){return Battle.status(battle,now);},
+      attackBoss(now=clock()) {
+        const result=Battle.hit(battle,now);
+        result.reward=new Amount();
+        if(result.accepted&&result.status==='won'&&!state.bossWins[result.index]){
+          state.bossWins[result.index]=true;
+          result.reward=credit(state.bossOffers[result.index]||new Amount());
+          state.bossCollection[result.index]=Math.min(Number.MAX_SAFE_INTEGER,state.bossCollection[result.index]+1);
+          checkAchievements();
+        }
+        return result;
+      },
+      cancelBoss(){if(battle)battle.status='cancelled';},
       miniRewardLimit(kind) {
         return Object.hasOwn(MINI_SECONDS, kind)
           ? power().multiply(8 * MINI_SECONDS[kind]) : new Amount();
@@ -538,6 +647,7 @@
         return ids;
       },
       dig(multiplier = 1, combo = 1) {
+        if(battleActive())return new Amount();
         if (
           !Number.isFinite(multiplier) ||
           multiplier < 1 ||
@@ -559,13 +669,18 @@
         if (i > 1 && state.levels[i - 1] === 0) return false;
         if (!spend(toolPrice(i, state.levels[i]))) return false;
         state.levels[i]++;
+        if(!state.ownedToolSkins.includes(i))state.ownedToolSkins.push(i);
         checkAchievements();
         return true;
       },
       upgrade(kind) {
-        if (!['pug', 'home'].includes(kind) || state[kind] >= MAX_LEVEL) return false;
+        if (battleActive() || (kind==='home'&&bossGate()!==null) || !['pug', 'home'].includes(kind) || state[kind] >= MAX_LEVEL) return false;
         if (!spend(trackPrice(state[kind], kind))) return false;
         state[kind]++;
+        state.skins[kind]=null;
+        if(kind === 'pug') state.maxPugSkin=Math.max(state.maxPugSkin,Math.min(14,state.pug));
+        else state.maxHomeSkin=Math.max(state.maxHomeSkin,Math.min(13,state.home));
+        ensureBossOffer();
         checkAchievements();
         return true;
       },
@@ -593,7 +708,9 @@
       devStages(pug, home) {
         state.testMode = true;
         state.pug = Math.min(14, integer(pug));
+        state.maxPugSkin=Math.max(state.maxPugSkin,state.pug);
         state.home = Math.min(13, integer(home));
+        state.maxHomeSkin=Math.max(state.maxHomeSkin,state.home);
         checkAchievements();
       },
       devMiniReady() {
@@ -601,11 +718,23 @@
         state.miniNext = { brush: 0, catch: 0, match: 0 };
         miniTicket = null;
       },
+      devInventory() {
+        state.testMode=true;state.weaponParts=9;
+        state.weapons=state.weapons.map(n=>Math.max(3,n));
+      },
+      devExpeditionReady(now=clock()) {
+        if(!state.expedition || !Number.isSafeInteger(now) || now<0)return false;
+        state.testMode=true;state.expedition.ends=now;return true;
+      },
+      devHelperReady() {
+        state.testMode=true;state.helperBurstNext=0;state.helperBurstUntil=0;
+      },
       devTool(index, level) {
         if (!Number.isInteger(index) || index < 1 || index >= TOOLS.length) return false;
         state.testMode = true;
         for (let i = 1; i < index; i++) state.levels[i] = Math.max(1, state.levels[i]);
         state.levels[index] = Math.max(1, Math.min(500, integer(level, 1)));
+        state.ownedToolSkins=[...new Set([...state.ownedToolSkins,...state.levels.flatMap((n,i)=>n?[i]:[])])];
         checkAchievements();
         return true;
       },
@@ -617,6 +746,7 @@
         return amount;
       },
       chaseBird(type) {
+        if(state.home>=6 && random()<0.002)state.weaponParts=Math.min(MAX_LEVEL,state.weaponParts+1);
         state.birdsChased = Math.min(Number.MAX_SAFE_INTEGER, state.birdsChased + 1);
         if (type === 'pirate') state.piratesChased++;
         checkAchievements();
@@ -644,42 +774,107 @@
       },
       quote,
       buyBulk(kind, index = 0, mode = 1) {
+        if(battleActive())return false;
         const q = quote(kind, index, mode);
         if (q.locked || !q.count || !spend(q.cost)) return 0;
         if (kind === 'tool') state.levels[index] += q.count;
         else state[kind] += q.count;
+        if(kind === 'tool' && !state.ownedToolSkins.includes(index))state.ownedToolSkins.push(index);
+        if(kind === 'helper')state.maxHelperSkin=Math.max(state.maxHelperSkin,Math.min(10,Math.floor(state.helper/10)));
+        if(kind==='pug'||kind==='home')state.skins[kind]=null;
+        if(kind === 'pug')state.maxPugSkin=Math.max(state.maxPugSkin,Math.min(14,state.pug));
+        if(kind === 'home')state.maxHomeSkin=Math.max(state.maxHomeSkin,Math.min(13,state.home));
+        ensureBossOffer();
         checkAchievements();
         return q.count;
       },
       expeditionOffer(duration) {
-        if (![900, 3600, 10800].includes(duration)) return null;
-        // 15–25% above the passive production sacrificed. Snapshot excludes later upgrades.
-        return helperRate().multiply(duration * { 900: 1.15, 3600: 1.2, 10800: 1.25 }[duration]);
+        if (!Inventory.DURATIONS.includes(duration)) return null;
+        return helperBaseRate().multiply(duration * {900:1.15,3600:1.2,10800:1.25}[duration]);
       },
-      sendExpedition(duration, now = Date.now()) {
-        if (!state.helper || state.expedition || !Number.isSafeInteger(now) || now < 0)
-          return false;
-        const reward = this.expeditionOffer(duration);
-        if (!reward) return false;
-        state.expedition = { duration, ends: now + duration * 1000, reward };
+      expeditionLootOffer(duration) {
+        return Inventory.offer(duration,state.home,state.expeditionMisses,state.trainingDone);
+      },
+      sendExpedition(duration, now = clock()) {
+        if(battleActive())return false;
+        if (!state.helper || state.expedition || !Number.isSafeInteger(now) || now < 0) return false;
+        const reward=this.expeditionOffer(duration), offer=this.expeditionLootOffer(duration);
+        if(!reward || !offer)return false;
+        state.expedition={duration,ends:now+duration*1000,reward,
+          ...Inventory.roll(offer,random),weaponEligible:state.home>=6,notified:false,
+          duplicateReward:power().multiply(2)};
+        state.helperBurstUntil=0;
         return true;
       },
-      claimExpedition(now = Date.now()) {
-        if (!state.expedition || !Number.isSafeInteger(now) || now < state.expedition.ends)
-          return new Amount();
-        const amount = state.expedition.reward;
-        state.expedition = null;
-        credit(amount);
-        return amount;
+      claimExpedition(now = clock()) {
+        if(!state.expedition || !Number.isSafeInteger(now) || now<state.expedition.ends)return new Amount();
+        const ex=state.expedition;state.expedition=null;state.lastLoot=[];
+        for(const i of ex.weaponLoot){
+          if(i<0)state.weaponParts=Math.min(MAX_LEVEL,state.weaponParts+1);
+          else state.weapons[i]=Math.min(MAX_LEVEL,state.weapons[i]+1);
+          state.lastLoot.push(i<0?'part':Inventory.WEAPONS[i].id);
+        }
+        let compensation=new Amount();
+        for(const i of ex.junkLoot){
+          if(state.junk[i])compensation=compensation.add(ex.duplicateReward);
+          state.junk[i]=Math.min(MAX_LEVEL,state.junk[i]+1);state.lastLoot.push(Inventory.JUNK[i]);
+        }
+        if(ex.training)state.trainingDone=true;
+        if(ex.weaponEligible)state.expeditionMisses=ex.weaponSuccess?0:Math.min(2,state.expeditionMisses+1);
+        return credit(ex.reward.add(compensation));
+      },
+      cancelExpedition(expectedEnds, now = clock()) {
+        if(!state.expedition || state.expedition.ends!==expectedEnds || now>=state.expedition.ends)return false;
+        state.expedition=null;return true;
+      },
+      expeditionNotice(now = clock(), blocked = false) {
+        if(blocked || !Number.isSafeInteger(now) || now<0 || !state.expedition || now<state.expedition.ends || state.expedition.notified)return false;
+        state.expedition.notified=true;return true;
+      },
+      activateHelper(now = clock()) {
+        if(!state.helper || state.expedition || !Number.isSafeInteger(now) || now<state.helperBurstNext)return false;
+        state.helperBurstUntil=now+10000;state.helperBurstNext=now+300000;return true;
+      },
+      equipWeapon(index) {
+        if(!Number.isInteger(index)||index<0||index>=9||!state.weapons[index]||state.home<6||index>Inventory.maxTier(state.home))return false;
+        state.weapon=index;return true;
+      },
+      showWeapon(value) { state.showWeapon=!!value;return true; },
+      mergeWeapon(index) {
+        if(!Number.isInteger(index)||index<-1||index>=8||state.home<6||index+1>Inventory.maxTier(state.home))return false;
+        if(state.weapons[index===-1?1:index+1]>=MAX_LEVEL)return false;
+        if(index===-1){if(state.weaponParts<3)return false;state.weaponParts-=3;state.weapons[1]++;}
+        else {if(index===0||state.weapons[index]<3)return false;state.weapons[index]-=3;state.weapons[index+1]++;if(state.weapon===index)state.weapon=index+1;}
+        return true;
+      },
+      buyCosmetic(kind) {
+        if(!Object.hasOwn(Inventory.COSMETICS,kind)||state.cosmeticUnlocks.includes(kind)||!spend(Inventory.COSMETICS[kind]))return false;
+        state.cosmeticUnlocks.push(kind);return true;
+      },
+      chooseSkin(kind,index) {
+        if(!state.cosmeticUnlocks.includes(kind))return false;
+        if(index!==null && (!Number.isInteger(index)||index<0||
+          (kind==='tool'?!state.ownedToolSkins.includes(index):index>(kind==='pug'?state.maxPugSkin:state.maxHomeSkin))))return false;
+        state.skins[kind]=index;return true;
+      },
+      chooseHelperSkin(index) {
+        if(index!==null&&(!Number.isInteger(index)||index<0||index>state.maxHelperSkin))return false;
+        state.helperSkin=index;return true;
+      },
+      chooseHelperSticker(id) {
+        if(!['none','paw','fish','star'].includes(id))return false;
+        state.helperSticker=id;return true;
       },
       getHelperPrice: helperPrice,
       buyHelper() {
         if (state.pug < 4 || state.helper >= MAX_LEVEL || !spend(helperPrice())) return false;
         state.helper++;
+        state.maxHelperSkin=Math.max(state.maxHelperSkin,Math.min(10,Math.floor(state.helper/10)));
         checkAchievements();
         return true;
       },
       work(seconds) {
+        if(battleActive())return new Amount();
         if (state.expedition || !Number.isFinite(seconds) || seconds <= 0) return new Amount();
         const amount = helperRate().multiply(Math.min(seconds, 1));
         credit(amount);
@@ -724,9 +919,11 @@
           pug: 0,
           home: 0,
           helper: 0,
+          helperBurstUntil: 0, helperBurstNext: 0,
+          bossWins:[false,false],bossOffers:[null,null],bossIntroDone:false,
           expedition: null,
         };
-        miniTicket = null;
+        miniTicket = null; battle=null;
         checkAchievements();
         return true;
       },
@@ -758,6 +955,7 @@
         };
       },
       beginMini(kind, now = Date.now()) {
+        if(battleActive())return false;
         const status = this.miniStatus(kind, now);
         if (!status || !status.unlocked || status.seconds || !Number.isSafeInteger(now) || now < 0)
           return false;

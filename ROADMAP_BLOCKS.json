@@ -273,7 +273,8 @@
         "Готовность: Василий ощутимо добывает, экспедиция не начисляется дважды, рецепты/экипировка сохраняются, оружие выглядит естественно, следующая нужная ступень доступна до соответствующего босса.",
         "Done when Vasiliy provides noticeable production, expeditions cannot pay twice, recipes/equipment persist, weapons fit naturally, and required tiers unlock before their bosses."
       ],
-      "status": "planned"
+      "status": "shipped",
+      "release": "0.7.0"
     },
     {
       "id": 6,
@@ -327,7 +328,8 @@
         "Готовность: оба боя плавно работают на таче, предел урона честный, таймер/повторы не абузятся, одноразовые победы/награды сохраняются и переходы домов понятны.",
         "Done when both fights run smoothly on touch, damage limits are fair, timers/retries cannot be exploited, victories/rewards persist once, and home transitions are clear."
       ],
-      "status": "planned"
+      "status": "shipped",
+      "release": "0.7.0"
     },
     {
       "id": 7,
@@ -616,12 +618,10 @@
     }
   ],
   "remaining_hours": [
-    35,
-    57
+    23,
+    38
   ],
   "recommended_order": [
-    5,
-    6,
     7,
     10,
     9,
