@@ -628,12 +628,15 @@
       ctx.translate(l.x, l.y);
       ctx.scale(l.size, l.size);
       const b = p.body;
-      ctx.save();
-      ctx.translate(p.tail.x, p.tail.y);
-      ctx.rotate(p.wag);
-      ctx.scale(p.tail.scale, 1);
-      this.paint(ctx, stage, 7, -0.2, -0.14, 0.24, 0.23);
-      ctx.restore();
+      const paintTail = () => {
+        ctx.save();
+        ctx.translate(p.tail.x, p.tail.y);
+        ctx.rotate(p.wag);
+        ctx.scale(p.tail.scale, 1);
+        this.paint(ctx, stage, 7, -0.2, -0.14, 0.24, 0.23);
+        ctx.restore();
+      };
+      if (b.part !== 4) paintTail();
       for (const layer of p.bodyLayers) {
         ctx.save();
         ctx.globalAlpha *= layer.alpha;
@@ -661,6 +664,7 @@
         ctx.restore();
       }
       this.coat(ctx, stage, p);
+      if (b.part === 4) paintTail();
       if (p.legAlpha > 0.01) {
         ctx.save();
         ctx.globalAlpha *= p.legAlpha;
