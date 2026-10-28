@@ -67,13 +67,14 @@
     "PWA paths and entrypoint hashes"
   ],
   "public_verification": {
-    "status": "initial_deployment_passed",
-    "code_commit": "85d44f9f3eccf7662c7579c83d9d29b61f7a955c",
-    "pages_workflow_run": 40691103354,
+    "status": "final_deployment_passed",
+    "code_commit": "39147fe30fb377bc4b587deb0f8132148016a2e8",
+    "pages_workflow_run": 40693381184,
     "console_errors": 0,
     "save_before_display": "14.8 trillion / muscle pug / patched shed / child shovel +83.2",
     "save_after_display": "14.8 trillion / muscle pug / patched shed / child shovel +83.2",
-    "public_test_grants_or_reset_performed": false
+    "public_test_grants_or_reset_performed": false,
+    "visible_settings_version": "0.9.0"
   },
   "limitations": [
     "No physical iPhone/Android installation or sustained thermal/FPS benchmark.",
@@ -82,3 +83,4 @@
     "A brief aligned torso-only blend remains during lying/chase transitions; heads do not dissolve."
   ]
 }
+
