@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-14",
+  "updated": "2026-10-28",
   "baseline": "0.6.0",
   "implementation_started": true,
   "blocks": [
@@ -571,7 +571,7 @@
       "id": 11,
       "title_ru": "Размещение в сцене: сон, лежанки и миски",
       "title_en": "Scene placement: sleep, beds and bowls",
-      "status": "planned_not_started",
+      "status": "released",
       "tasks": [
         [
           "Сопля сна мопса-качка должна надуваться возле носа во всех кадрах, включая сон в лежанке.",
@@ -587,14 +587,23 @@
         ]
       ],
       "reported_against_release": "0.8.1",
-      "implementation_authorized": false,
+      "implementation_authorized": true,
       "recorded_after_release_links": true,
       "ru": "Размещение в сцене: сон, лежанки и миски",
       "en": "Scene placement: sleep, beds and bowls",
       "depends": [
         9,
         10
-      ]
+      ],
+      "release": "0.9.0"
+    },
+    {
+      "id": 12,
+      "title_ru": "Полная переработка анимаций",
+      "title_en": "Full animation overhaul",
+      "status": "released",
+      "release": "0.9.0",
+      "implementation_authorized": true
     }
   ],
   "research_requirement_completed": 22,
@@ -660,16 +669,14 @@
     9,
     8
   ],
-  "latest_release": "0.8.1",
-  "remaining_blocks": [
-    11
-  ],
+  "latest_release": "0.9.0",
+  "remaining_blocks": [],
   "publication_authorized": true,
-  "status": "released_with_deferred_followup",
+  "status": "all_approved_blocks_complete",
   "next_update_feedback": {
     "block": 11,
-    "scope": "documentation_only",
-    "implementation_started": false,
-    "requires_start_instruction": true
+    "implementation_started": true,
+    "status": "released",
+    "release": "0.9.0"
   }
 }

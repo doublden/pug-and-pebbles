@@ -72,8 +72,59 @@
       $('boss-home').hidden = !offer.won;
       $('boss-start').disabled = this.loading;
       $('boss-note').textContent = w.bossRules;
-      $('boss-image').src = `battle-v7/${PugBattleRules.BOSSES[this.index].id}.webp`;
+      const portraitKey = this.index === 1 ? 'motionCrowBoss' : 'motionRaccoonBoss';
+      if (!this.world.images[portraitKey] || typeof PugCharacterMotion === 'undefined')
+        $('boss-image').src = `battle-v7/${PugBattleRules.BOSSES[this.index].id}.webp`;
       $('boss-image').alt = w.bossNames[this.index];
+      const index = this.index,
+        generation = this.generation;
+      const key = index === 1 ? 'motionCrowBoss' : 'motionRaccoonBoss';
+      const showRigPortrait = () => {
+        if (
+          this.active ||
+          this.index !== index ||
+          this.generation !== generation ||
+          !this.world.images[key] ||
+          typeof PugCharacterMotion === 'undefined'
+        )
+          return;
+        let canvas = $('boss-rig-preview');
+        if (!canvas) {
+          canvas = document.createElement('canvas');
+          canvas.id = 'boss-rig-preview';
+          canvas.width = 320;
+          canvas.height = 300;
+          canvas.style.cssText = 'width:160px;height:150px;max-width:100%';
+          canvas.setAttribute('role', 'img');
+          $('boss-image').parentNode.append(canvas);
+        }
+        canvas.hidden = false;
+        canvas.setAttribute('aria-label', this.words().bossNames[index]);
+        const c = canvas.getContext('2d');
+        c.setTransform(2, 0, 0, 2, 0, 0);
+        c.clearRect(0, 0, 160, 150);
+        const scene = {
+          index,
+          started: 0,
+          attackAt: -10000,
+          bossAttackAt: -10000,
+          hitAt: -10000,
+          status: 'active',
+        };
+        if (PugCharacterMotion.drawBoss(this.world, c, scene, { x: 5, y: 6, size: 145 }, 0))
+          $('boss-image').hidden = true;
+      };
+      $('boss-image').hidden = false;
+      if ($('boss-rig-preview')) $('boss-rig-preview').hidden = true;
+      if (this.world.images[key]) showRigPortrait();
+      else if (
+        typeof PugCharacterMotion !== 'undefined' &&
+        performance.now() >= (this.world.artRetryAt?.get(key) || 0)
+      )
+        this.world
+          .image(key, `assets-motion-v9/boss-${index === 1 ? 'crow' : 'raccoon'}-rig.webp`)
+          .then(showRigPortrait)
+          .catch(() => {});
     }
     async start() {
       if (this.loading || this.active || !this.isActive()) return;
@@ -92,39 +143,53 @@
       $('boss-start').disabled = true;
       $('boss-start').textContent = this.words().loading;
       try {
-        if (!this.metadata) {
-          const r = await fetch('battle-v7/frames.json');
-          if (!r.ok) throw Error('frames');
-          this.metadata = await r.json();
+        const stage = state.pugAppearance ?? state.pugStage ?? Math.min(15, state.pug || 0);
+        const bossId = PugBattleRules.BOSSES[this.index].id;
+        const bossKey = this.index === 1 ? 'motionCrowBoss' : 'motionRaccoonBoss';
+        let renderMode = 'legacy';
+        if (this.world.rig && typeof PugCharacterMotion !== 'undefined') {
+          try {
+            await Promise.all([
+              this.world.rig.preload(stage),
+              this.world.image(bossKey, `assets-motion-v9/boss-${bossId}-rig.webp`),
+            ]);
+            if (this.world.rig.ready(stage) && this.world.images[bossKey]) renderMode = 'rig';
+          } catch (_) {
+            // A cached legacy scene remains available when new optional artwork is offline.
+          }
         }
-        if (group === 'muscle' && !this.metadata.sheets['pug-muscle']) {
-          const mr = await fetch('assets-v8/muscle-combat.json');
-          if (!mr.ok) throw Error('muscle mounts');
-          this.metadata.sheets['pug-muscle'] = await mr.json();
+        if (token !== this.generation || game !== this.getGame() || !this.isActive()) return;
+        if (renderMode === 'legacy') {
+          if (!this.metadata) {
+            const r = await fetch('battle-v7/frames.json');
+            if (!r.ok) throw Error('frames');
+            this.metadata = await r.json();
+          }
+          if (group === 'muscle' && !this.metadata.sheets['pug-muscle']) {
+            const mr = await fetch('assets-v8/muscle-combat.json');
+            if (!mr.ok) throw Error('muscle mounts');
+            this.metadata.sheets['pug-muscle'] = await mr.json();
+          }
+          await Promise.all([
+            this.world.image(
+              'battle-pug-' + group,
+              group === 'muscle' ? 'assets-v8/muscle-combat.webp' : `battle-v7/pug-${group}.webp`,
+            ),
+            this.world.image('battle-' + bossId, `battle-v7/${bossId}.webp`),
+          ]);
         }
-        const keep = new Set([
-          'battle-pug-' + group,
-          'battle-' + PugBattleRules.BOSSES[this.index].id,
-        ]);
+        const keep = new Set(
+          renderMode === 'legacy' ? ['battle-pug-' + group, 'battle-' + bossId] : [],
+        );
         for (const key of Object.keys(this.world.images))
           if (key.startsWith('battle-') && !keep.has(key)) {
             delete this.world.images[key];
             this.world.loadingImages.delete(key);
           }
-        await Promise.all([
-          this.world.image(
-            'battle-pug-' + group,
-            group === 'muscle' ? 'assets-v8/muscle-combat.webp' : `battle-v7/pug-${group}.webp`,
-          ),
-          this.world.image(
-            'battle-' + PugBattleRules.BOSSES[this.index].id,
-            `battle-v7/${PugBattleRules.BOSSES[this.index].id}.webp`,
-          ),
-          this.world.image(
-            'weapon-' + state.weaponEquipped,
-            `weapons/${PugInventoryRules.WEAPONS[state.weaponEquipped].id}.svg`,
-          ),
-        ]);
+        await this.world.image(
+          'weapon-' + state.weaponEquipped,
+          `weapons/${PugInventoryRules.WEAPONS[state.weaponEquipped].id}.svg`,
+        );
         if (token !== this.generation || game !== this.getGame() || !this.isActive()) return;
         this.wallStart = Date.now();
         this.monotonicStart = performance.now();
@@ -140,6 +205,8 @@
         this.world.battle = {
           index: this.index,
           group,
+          renderMode,
+          rigStage: stage,
           weapon: state.weaponEquipped,
           metadata: this.metadata,
           started: performance.now(),

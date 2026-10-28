@@ -1,0 +1,59 @@
+{
+  "format": "mortik-layered-2d-v1",
+  "renderer": "character-motion.js",
+  "principle_ru": "Одна согласованная модель, независимые суставы и локальная мимика; без растворения целых персонажей между кадрами.",
+  "principle_en": "One coherent model, independent joints and local expressions; no whole-character frame dissolves.",
+  "birds": {
+    "species": ["crow", "sparrow", "pirate"],
+    "sheet": "birds-rig.webp",
+    "columns": 4,
+    "rows": 3,
+    "parts": ["body_tail_feet", "head", "near_wing", "far_wing"],
+    "clips": {"flight": {"flap_period_ms": 785, "folds_on_arrival": true}, "perch": {"breathing": true, "blink_period_ms": 6200}, "peck": {"duration_ms": 660, "head_and_body": true}, "takeoff": {"unfold_fraction": 0.13}},
+    "economy_changed": false
+  },
+  "bosses": {
+    "species": ["raccoon", "crow"],
+    "sheets": ["boss-raccoon-rig.webp", "boss-crow-rig.webp"],
+    "columns": 4,
+    "rows": 2,
+    "parts": ["body_legs", "head", "near_upper_limb", "near_forelimb", "far_upper_limb", "far_forelimb", "tail", "closed_head"],
+    "clips": {"stance": {"breathing": true, "blink_period_ms": 7100}, "attack": {"duration_ms": 640, "variants": ["forward", "overhead"], "continuous_target_follow_ms": 45}, "guard": {"duration_ms": 500, "continuous_target_follow_ms": 45}, "defeat": {"duration_ms": 720}},
+    "economy_changed": false
+  },
+  "insects": {
+    "species": ["butterfly", "bee"],
+    "sheet": "insects-rig.webp",
+    "columns": 3,
+    "rows": 2,
+    "parts": ["body_head_legs", "near_wing", "far_wing"],
+    "clips": {"butterfly_flight": {"continuous_wings": true, "half_flap_period_ms": 314}, "bee_flight": {"continuous_wings": true, "half_flap_period_ms": 107}},
+    "legacy_bee_first_complete_cell": 7,
+    "economy_changed": false
+  },
+  "friends": {
+    "species": ["tabby", "tuxedo", "cloudy_eye_tabby", "corgi", "cream_spitz"],
+    "sheet": "friends-rig.webp",
+    "columns": 5,
+    "rows": 2,
+    "clips": ["head_tilt", "breathing", "local_eyelid_blink"],
+    "medallion_stays_fixed": true,
+    "economy_changed": false
+  },
+  "yuppi": {
+    "sheet": "../assets-v8/yuppi.webp",
+    "base_cell": 0,
+    "clips": ["continuous_body_wave", "local_eyelid_blink", "local_tongue_on_miss", "rainbow_trail"],
+    "no_whole_character_frame_swap": true,
+    "economy_changed": false
+  },
+  "vasiliy": {
+    "sheet": "../vasiliy-rig-v6.webp",
+    "renderer": "../extras.js",
+    "clips": {"dig": {"period_ms": 8500}, "travel": {"cycle_ms": 30000, "eased_interval_ms": [12000,23000], "moving_treads": true}, "blink": {"period_ms": 7400}, "look": {"interval_ms": [17000,21200]}, "yawn": {"interval_ms": [24000,27000]}, "annoyed_eye_roll": {"duration_ms": 1400}, "burst": {"speed": 2, "phase_preserved": true}},
+    "local_pause_clock": true,
+    "no_duplicate_head": true,
+    "tiers_preserved": 11,
+    "economy_changed": false
+  }
+}

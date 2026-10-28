@@ -2,7 +2,7 @@
 
 [Русский](ROADMAP.ru.md)
 
-Updated: 14 October 2026. Blocks 1–3 shipped in 0.6.0; follow-ups 2.1 + 3.1 and current block 4 economy ship together in 0.7.0. Blocks 5–6 are included in the same release. Blocks 7–10 are completed in one 0.8.1 release.
+Updated: 28 October 2026. Blocks 1–3 shipped in 0.6.0; follow-ups 2.1 + 3.1 and current block 4 economy ship together in 0.7.0. Blocks 5–6 are included in the same release. Blocks 7–10 are completed in one 0.8.1 release.
 
 ## Sequence and estimates
 
@@ -21,7 +21,7 @@ Updated: 14 October 2026. Blocks 1–3 shipped in 0.6.0; follow-ups 2.1 + 3.1 an
 | 9 | Beds and sleep scenes | 5–8 | shipped, 0.8.1 |
 | 10 | Hidden late stage: Dubai and muscular pug | 8–12 | shipped, 0.8.1 |
 
-All previously approved blocks 1–10 are complete; the new block 11 fixes are deferred. Further ideas and a Telegram Mini App require separate approval.
+All previously approved blocks 1–10 are complete; block 11 fixes and the block 12 animation overhaul ship in 0.9.0. Further ideas and a Telegram Mini App require separate approval.
 
 ## 1. Mobile bugs and stability
 
@@ -193,10 +193,20 @@ Original animal photos and personal screenshots remain local references; only ga
 
 ## Next update — block 11: scene placement
 
-Recorded after publishing 0.8.1 and providing the release links to the owner. These fixes **are not included in 0.8.1 and are not being implemented yet**.
+Recorded after publishing 0.8.1 and providing the release links to the owner. These fixes were not included in 0.8.1; completed in 0.9.0.
 
-- [ ] Muscular pug sleep animation: anchor the inflating snot bubble to the nose/face instead of the rear of the body. Check every sleep frame, including bed scenes.
-- [ ] Inspect every location and give each one a bed position on the ground or floor. Beds must not overlap walls, furniture or a sofa; specifically correct the Dubai apartment. Check every bed design and selected home skins.
-- [ ] Reduce the food bowl by 10% relative to 0.8.1 only in the Dubai apartment and the preceding location. Leave all other locations unchanged and align the tap area with the new size.
+- [x] Muscular pug sleep animation: anchor the inflating snot bubble to the nose/face instead of the rear of the body. Check every sleep frame, including bed scenes.
+- [x] Inspect every location and give each one a bed position on the ground or floor. Beds must not overlap walls, furniture or a sofa; specifically correct the Dubai apartment. Check every bed design and selected home skins.
+- [x] Reduce the food bowl by 10% relative to 0.8.1 only in the Dubai apartment and the preceding location. Leave all other locations unchanged and align the tap area with the new size.
 
-Validation: iPhone 15 Pro Max (430 × 932 CSS pixels), smaller popular mobile sizes, standalone web-app mode and every sleep frame. Saves, prices and bonuses stay unchanged. Implementation requires a separate start instruction.
+Validation: iPhone 15 Pro Max (430 × 932 CSS pixels), smaller popular mobile sizes, standalone web-app mode and every sleep frame. Saves, prices and bonuses stay unchanged. Implemented as part of the 0.9.0 animation overhaul.
+
+## 12. Full animation overhaul — 0.9.0
+
+- [x] Layered models across all pug stages: short neck, independent torso/head/paws/tail, continuous motion and local facial animation.
+- [x] Inspect all 14 hats across all 16 stages and key views/actions; fix clipped source-atlas bands.
+- [x] Update Vasiliy, every bird, insect, Yuppi, friend and both bosses; grip weapons by their handles.
+- [x] Preserve economy, purchases, mini-games, expeditions, inventory and Safari/PWA launch.
+- [x] Inspect models/transitions and mobile placement; version the animation catalogue and validation.
+
+Limit: this is 2D animation; some views use separate drawings. Physical-device installation and sustained heat/FPS testing still require owner device validation.

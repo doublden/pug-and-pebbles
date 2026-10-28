@@ -1,0 +1,102 @@
+{
+  "cell": 384,
+  "columns": 3,
+  "parts": [
+    {
+      "index": 0,
+      "source": {
+        "left": 0,
+        "top": 0,
+        "width": 512,
+        "height": 580
+      },
+      "bounds": [
+        24,
+        26,
+        336,
+        333
+      ],
+      "aspect": 1.0084269662921348
+    },
+    {
+      "index": 1,
+      "source": {
+        "left": 512,
+        "top": 0,
+        "width": 512,
+        "height": 580
+      },
+      "bounds": [
+        449,
+        24,
+        255,
+        336
+      ],
+      "aspect": 0.758095238095238
+    },
+    {
+      "index": 2,
+      "source": {
+        "left": 1024,
+        "top": 0,
+        "width": 512,
+        "height": 580
+      },
+      "bounds": [
+        859,
+        24,
+        202,
+        336
+      ],
+      "aspect": 0.6
+    },
+    {
+      "index": 3,
+      "source": {
+        "left": 0,
+        "top": 590,
+        "width": 512,
+        "height": 434
+      },
+      "bounds": [
+        24,
+        425,
+        336,
+        303
+      ],
+      "aspect": 1.1092436974789917
+    },
+    {
+      "index": 4,
+      "source": {
+        "left": 512,
+        "top": 590,
+        "width": 512,
+        "height": 434
+      },
+      "bounds": [
+        408,
+        439,
+        336,
+        275
+      ],
+      "aspect": 1.220125786163522
+    },
+    {
+      "index": 5,
+      "source": {
+        "left": 1024,
+        "top": 590,
+        "width": 512,
+        "height": 434
+      },
+      "bounds": [
+        792,
+        412,
+        336,
+        329
+      ],
+      "aspect": 1.0227272727272727
+    }
+  ]
+}

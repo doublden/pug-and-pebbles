@@ -1,0 +1,66 @@
+{
+  "version": "0.9.0",
+  "assets": [
+    {
+      "path": "assets-pug-v9/healthy.webp",
+      "bytes": 645120,
+      "git_blob_sha": "399e1471718df24573dc4889194e278de6219b1c"
+    },
+    {
+      "path": "assets-pug-v9/muscle.webp",
+      "bytes": 583152,
+      "git_blob_sha": "8e72d3f18854bc073b8cc178bed28dcc887a0d8d"
+    },
+    {
+      "path": "assets-pug-v9/round.webp",
+      "bytes": 626006,
+      "git_blob_sha": "769ebc9bf89873fda12a172e8784bfe190af7bec"
+    },
+    {
+      "path": "assets-pug-v9/skinny.webp",
+      "bytes": 616936,
+      "git_blob_sha": "3975f7c20f35672e32173cedf2b80732a9d40b67"
+    },
+    {
+      "path": "assets-v9/hats-back.webp",
+      "bytes": 363254,
+      "git_blob_sha": "a10b53deec4c95b8d8ca43bfadc578e7447fe350"
+    },
+    {
+      "path": "assets-v9/hats-front.webp",
+      "bytes": 317844,
+      "git_blob_sha": "3591a55df4be4d97c2216feff913301c54714e30"
+    },
+    {
+      "path": "assets-v9/hats-side.webp",
+      "bytes": 378938,
+      "git_blob_sha": "23558629baa261c83ba71521a2f8145426df943a"
+    },
+    {
+      "path": "assets-motion-v9/birds-rig.webp",
+      "bytes": 407168,
+      "git_blob_sha": "dd98f82ad44cff52d57c3e7841db3e3ff39c606f"
+    },
+    {
+      "path": "assets-motion-v9/boss-crow-rig.webp",
+      "bytes": 277122,
+      "git_blob_sha": "12c78b17d7f853c31f31fcf3c78f0b16d51fd652"
+    },
+    {
+      "path": "assets-motion-v9/boss-raccoon-rig.webp",
+      "bytes": 319098,
+      "git_blob_sha": "2bdc1621161c0ce121a89d783984d9fa5d32f2b0"
+    },
+    {
+      "path": "assets-motion-v9/friends-rig.webp",
+      "bytes": 554000,
+      "git_blob_sha": "b1d3335a812e14e8d675e871e469f1d183abd54a"
+    },
+    {
+      "path": "assets-motion-v9/insects-rig.webp",
+      "bytes": 258796,
+      "git_blob_sha": "e9d8ec430b933fcf53f8598fb4154d8e17cd5841"
+    }
+  ],
+  "total_bytes": 5347434
+}

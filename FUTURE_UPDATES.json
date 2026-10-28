@@ -2,7 +2,7 @@
   "title": "Будущие обновления Mortik",
   "created": "2026-10-14",
   "base_release": "0.5.0",
-  "status": "released_with_deferred_followup",
+  "status": "all_approved_blocks_complete",
   "implementation_started": true,
   "specification": "FUTURE_UPDATES.md",
   "requirements": 60,
@@ -10,7 +10,7 @@
   "additional_ideas_status": "approved_in_scope",
   "private_reference": "User-supplied animal photographs kept locally; only game illustrations are published.",
   "publication_authorized": true,
-  "updated": "2026-10-14",
+  "updated": "2026-10-28",
   "core_requirements": 55,
   "accepted_additional_mechanics": 5,
   "economy_easing": {
@@ -319,7 +319,7 @@
       "id": 11,
       "title_ru": "Размещение в сцене: сон, лежанки и миски",
       "title_en": "Scene placement: sleep, beds and bowls",
-      "status": "planned_not_started",
+      "status": "released",
       "tasks": [
         [
           "Сопля сна мопса-качка должна надуваться возле носа во всех кадрах, включая сон в лежанке.",
@@ -335,8 +335,17 @@
         ]
       ],
       "reported_against_release": "0.8.1",
-      "implementation_authorized": false,
-      "recorded_after_release_links": true
+      "implementation_authorized": true,
+      "recorded_after_release_links": true,
+      "release": "0.9.0"
+    },
+    {
+      "id": 12,
+      "title_ru": "Полная переработка анимаций",
+      "title_en": "Full animation overhaul",
+      "status": "released",
+      "release": "0.9.0",
+      "implementation_authorized": true
     }
   ],
   "public_roadmap_files": [
@@ -441,14 +450,12 @@
     "ordinary_power_snapshot": "spawn",
     "balance": "provisional_until_block_4"
   },
-  "latest_release": "0.8.1",
-  "remaining_blocks": [
-    11
-  ],
+  "latest_release": "0.9.0",
+  "remaining_blocks": [],
   "next_update_feedback": {
     "block": 11,
-    "scope": "documentation_only",
-    "implementation_started": false,
-    "requires_start_instruction": true
+    "implementation_started": true,
+    "status": "released",
+    "release": "0.9.0"
   }
 }

@@ -1,10 +1,12 @@
-# Мопс и камушки / Pug & Pebbles — 0.8.1
+# Мопс и камушки / Pug & Pebbles — 0.9.0
 
-[Играть / Play](https://doublden.github.io/pug-and-pebbles/?v=0.8.1) · [GitHub](https://github.com/doublden/pug-and-pebbles)
+[Играть / Play](https://doublden.github.io/pug-and-pebbles/?v=0.9.0) · [GitHub](https://github.com/doublden/pug-and-pebbles)
 
 [План следующих обновлений](ROADMAP.ru.md) · [Next update roadmap](ROADMAP.en.md)
 
 ## Русский
+
+**0.9.0 — новая система анимации:** независимые части персонажей вместо смены целых изображений: четыре анатомических семейства и 16 визуальных стадий мопса, короткая шея, суставные лапы, локальная мимика, сон и повороты. Обновлены Василий, птицы, боссы, насекомые, Юпи и пять друзей. Перепакованы 30 видов обычных шапок, все 14 шапок следуют за макушкой. Лежанки расставлены по полу всех 15 локаций, пузырь сна привязан к носу, миски двух последних домов уменьшены на 10%. Экономика, покупки и формат сохранений не меняются.
 
 **0.8.1 — оставшиеся блоки 7–10 в одном выпуске:** Юпи перерисован по новому фото пушистого рыжего перса. Добавлены редкие гости, одноразовый сачок, альбом, бабочки/пчёлы, четыре скрытые шапки и восемь достижений. Тапы по мопсу и Василию теперь дают обычную добычу; поздний мопс поворачивается и пускает облака. Четыре отдельных пука и четыре мяуканья, икота, охота за хвостом и звук воды. Девять лежанок со сном и небольшими бонусами. Скрытые Дубай и мопс-качок, 24 обычных/редких позы и 12 боевых кадров. Старые покупки и заслуженный доступ к Новой жизни сохраняются. Ползунок слюней/облаков, расширенные тестовые вызовы, «Поделиться», обновлённый PWA-кэш.
 
@@ -23,6 +25,8 @@
 Настройки: русский/английский, музыка и эффекты с отдельной громкостью, проверка звуков, инструкция, полный сброс с подтверждением. Режим разработчика с кодом **1435** предназначен для тестов и отмечает тестовый прогресс.
 
 ## English
+
+**0.9.0 — layered character animation:** four anatomical families and 16 visual pug stages, a short neck, articulated paws, local facial motion, sleep and turns. Vasiliy, birds, bosses, insects, Yuppi and all five friends use continuous local motion. Thirty regular hat views are repacked; all 14 hats follow skull mounts. Beds use floor anchors in all 15 homes; the sleep bubble follows the nose; the final two bowls are 10% smaller. Economy, purchases and save format remain compatible.
 
 **0.8.1 — remaining blocks 7–10 together:** Yuppi now follows the new fluffy ginger Persian reference. Rare guests, a one-use net, guest album, butterflies/bees, four secret hats and eight achievements. Pug/Vasiliy taps also dig; later pugs turn around and release clouds. Four distinct fart and four meow recordings, hiccups, tail chase and water audio. Nine beds with sleep scenes and small bonuses. Secret Dubai and muscle pug tiers, 24 regular/rare poses and 12 combat drawings. Existing purchases and earned New life access survive migration. Adjustable effect intensity, more developer summons, sharing and updated PWA cache.
 
@@ -55,3 +59,5 @@ node --test tests/*.test.cjs
 [Economy / Экономика](ECONOMY.md) · [Release notes / Изменения](RELEASE_NOTES.md) · [Sound credits / Источники звуков](AUDIO_CREDITS.md) · [Artwork / Рисунки](ART_BRIEF_V6.md)
 
 0.8.1 checks and limits: see [VERIFICATION_V8.json](VERIFICATION_V8.json). Browser validation does not certify physical Safari/Android installation or speaker playback.
+
+0.9.0 animation catalogue: [ANIMATIONS_V9.json](ANIMATIONS_V9.json). Art production: [ARTWORK_V9.md](ARTWORK_V9.md). Validation and device limits: [VERIFICATION_V9.json](VERIFICATION_V9.json).

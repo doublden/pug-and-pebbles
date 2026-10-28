@@ -1,4 +1,4 @@
-const CACHE = 'pug-pebbles-v8-20261014b';
+const CACHE = 'pug-pebbles-v9-20261028a';
 const CORE = [
   './',
   'index.html',
@@ -11,6 +11,9 @@ const CORE = [
   'game.js',
   'guests.js',
   'scene-v8.js',
+  'pug-rig-v9.js',
+  'hat-attachments-v9.js',
+  'character-motion.js',
   'secret-ui.js',
   'locale-v8.js',
   'combo.js',
@@ -46,69 +49,54 @@ const CORE = [
   'favicon-v5.png',
 ];
 const ART = [
-  ...[
-    'beds',
-    'yuppi',
-    'insects',
-    'hats-front',
-    'hats-side',
-    'hats-back',
-    'background-14',
-    'food-14',
-    'muscle-0',
-    'muscle-1',
-    'muscle-2',
-    'muscle-3',
-    'muscle-4',
-    'muscle-5',
-    'muscle-combat',
-  ].map((id) => 'assets-v8/' + id + '.webp'),
+  'assets-pug-v9/skinny.webp',
+  'assets-pug-v9/healthy.webp',
+  'assets-pug-v9/round.webp',
+  'assets-pug-v9/muscle.webp',
+  'assets-v9/hats-front.webp',
+  'assets-v9/hats-side.webp',
+  'assets-v9/hats-back.webp',
+  'assets-motion-v9/birds-rig.webp',
+  'assets-motion-v9/insects-rig.webp',
+  'assets-motion-v9/friends-rig.webp',
+  'assets-motion-v9/boss-raccoon-rig.webp',
+  'assets-motion-v9/boss-crow-rig.webp',
+  'assets-v8/beds.webp',
+  'assets-v8/yuppi.webp',
+  'assets-v8/insects.webp',
+  'assets-v8/hats-front.webp',
+  'assets-v8/hats-side.webp',
+  'assets-v8/hats-back.webp',
+  'assets-v8/background-14.webp',
+  'assets-v8/food-14.webp',
+  'vasiliy-rig-v6.webp',
   'battle-v7/frames.json',
   'assets-v8/muscle-combat.json',
-  ...['fart-1', 'fart-2', 'fart-3', 'meow-0', 'meow-1', 'meow-2', 'meow-3', 'yuppi'].map(
-    (id) => 'sounds/' + id + '.wav',
-  ),
-  ...['raccoon', 'crow', 'pug-lean', 'pug-healthy', 'pug-rich'].map(
-    (id) => 'battle-v7/' + id + '.webp',
-  ),
-  ...[
-    'stick',
-    'spoon',
-    'shank',
-    'toothbrush',
-    'pipe',
-    'crowbar',
-    'rustsword',
-    'templar',
-    'paladin',
-  ].map((id) => 'weapons/' + id + '.svg'),
-  'homes-middle-mobile-v5.webp',
-  'homes-early-mobile-v5.webp',
-  'homes-poverty-mobile-v5.webp',
-  'pugs-early-mobile-v5.webp',
+  'battle-v7/raccoon.webp',
+  'battle-v7/crow.webp',
+  'battle-v7/pug-lean.webp',
+  'battle-v7/pug-healthy.webp',
+  'battle-v7/pug-rich.webp',
+  'weapons/stick.svg',
+  'weapons/spoon.svg',
+  'weapons/shank.svg',
+  'weapons/toothbrush.svg',
+  'weapons/pipe.svg',
+  'weapons/crowbar.svg',
+  'weapons/rustsword.svg',
+  'weapons/templar.svg',
+  'weapons/paladin.svg',
+  'sounds/fart-1.wav',
+  'sounds/fart-2.wav',
+  'sounds/fart-3.wav',
+  'sounds/meow-0.wav',
+  'sounds/meow-1.wav',
+  'sounds/meow-2.wav',
+  'sounds/meow-3.wav',
+  'sounds/yuppi.wav',
   'pet-coins-mobile-v5.webp',
   'birds-mobile-v5.webp',
   'birds-mid-mobile-v5.webp',
-  'hats-v6.webp',
-  'hats-side-v6.webp',
-  'hats-back-v6.webp',
-  'pug-rear-v5.webp',
-  'pug-king-hats-v5.webp',
-  'vasiliy-rig-v6.webp',
-  'vasiliy-v4.webp',
-  ...[
-    'look',
-    'scratch',
-    'yawn',
-    'lick',
-    'left',
-    'pawlick',
-    'splay',
-    'sleep',
-    'whistle',
-    'back',
-    'stretch',
-  ].flatMap((p) => [`pug-${p}-mobile-v5.webp`, `pug-${p}-mid-mobile-v5.webp`]),
 ];
 self.addEventListener('install', (event) =>
   event.waitUntil(
@@ -118,7 +106,7 @@ self.addEventListener('install', (event) =>
         cache.addAll(
           CORE.map(
             (file) =>
-              new Request(/\.(js|css)$/.test(file) ? file + '?v=0.8.1a' : file, {
+              new Request(/\.(js|css)$/.test(file) ? file + '?v=0.9.0a' : file, {
                 cache: 'reload',
               }),
           ),
@@ -149,7 +137,9 @@ self.addEventListener('message', (event) => {
       const cache = await caches.open(CACHE);
       const current = Array.isArray(event.data.art)
         ? event.data.art.filter((p) =>
-            /^(artwork-v6\/(background|food)-\d{2}|assets-v8\/[a-z0-9-]+)\.webp$/.test(p),
+            /^(artwork-v6\/(background|food)-\d{2}|(?:assets-v8|assets-pug-v9|assets-motion-v9|assets-v9)\/[a-z0-9-]+)\.webp$/.test(
+              p,
+            ),
           )
         : [];
       for (const file of [...current, ...ART])

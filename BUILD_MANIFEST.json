@@ -1,5 +1,5 @@
 {
-  "version": "0.8.1",
+  "version": "0.9.0",
   "runtime": {
     "style.css": "daf2684f0d3c6b918e23182c564d95bb0270a3ac",
     "session.js": "261c03fec375ad41a5997e768a93e3733cc4f3ed",
@@ -17,15 +17,18 @@
     "audio.js": "f7c665a0cf61ad75721ca40b60727b24cf3f7423",
     "sprites.js": "4eee529341b5ca2893a91249b11922c8b966d528",
     "minigames.js": "31c9f4294bcea6c4c9c7564c526d4bd2873385f7",
-    "extras.js": "c13444876e63db0969aa1e61c13905ec0d88ff48",
-    "scene-v8.js": "87b5b4743970257fd9cf9b460b583f5302914d49",
-    "world.js": "676fac8c2b6ace670eea82c57b5723dbf760bff3",
+    "extras.js": "beeb6a2c15bde28b56948ebaf70f0b867458eb0d",
+    "character-motion.js": "93ed61ff003b219baa7e27d78ff3e71e612fd471",
+    "scene-v8.js": "11f88185ffdc455f31e0ce675f30eccedf2cb10c",
+    "hat-attachments-v9.js": "ac4714529856d1bb7d39e1e0a24ed5f4d03eaa4c",
+    "pug-rig-v9.js": "a5029ee8f8f6feafeec590fcb72d7cf0b5943705",
+    "world.js": "50824e9c29c9972d36be4368c70c1faa7d20c774",
     "inventory-ui.js": "af285d21eb4243259a21a7ae16de78defc121012",
     "collections.js": "74fdf03d098420bde8db6ea4686770f72d31cf85",
     "mini-ui.js": "2c8b2aa50e414ba82b72bb1bc9f2ce85f68e240a",
-    "battle-render.js": "0aeea3eb48338c8967c94cea379da04865e9c1a7",
-    "battle-ui.js": "f1c2760286986e4a0b06d8bf3dcec52180a9e33a",
+    "battle-render.js": "0d708879b68a81a2218e1574b13f41e67c193a69",
+    "battle-ui.js": "bdd76ec08bde67d6fe46d153a676defba637e1ae",
     "secret-ui.js": "82a479d298f9293e59b78c957980f122034834ec",
-    "app.js": "0e3c4465de16d9305addf70e7a73672294366da0"
+    "app.js": "722301f121ae450b835b94a394f37457356c1e9b"
   }
 }

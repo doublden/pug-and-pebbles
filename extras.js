@@ -432,6 +432,22 @@
       const id = PugInventoryRules.WEAPONS[s.weaponEquipped]?.id,
         img = this.world.images['weapon-' + id];
       if (!img) return;
+      if (this.world.rig?.ready(this.world.state.pugStage)) {
+        const m = this.world.rig.measure(this.world.state.pugStage, pose, layout),
+          b = m.body;
+        const lying = m.lie > 0.5,
+          rear = m.view === 'back';
+        const length = layout.size * (lying ? 0.46 : 0.58),
+          width = length / 3;
+        const px = b.x + b.w * (lying ? 0.72 : rear ? 0.51 : 0.23),
+          py = b.y + b.h * (lying ? 0.25 : 0.18);
+        ctx.save();
+        ctx.translate(layout.x + px * layout.size, layout.y + py * layout.size);
+        ctx.rotate(lying ? -1.4 : Math.PI + (rear ? -0.35 : 0.36));
+        ctx.drawImage(img, -width * 0.5, -length * 0.8, width, length);
+        ctx.restore();
+        return;
+      }
       const low = ['sleep', 'stretch', 'mid-sleep', 'mid-stretch'].includes(pose),
         rear = pose === 'rear',
         side = pose.includes('back');
@@ -453,8 +469,24 @@
       const base = this.frame('helperRig', 0, 4, 4);
       if (!base) return false;
       const tier = this.world.state.helperTier || 0;
-      const cycle = (now / 1000) % 30,
-        moving = !preview && !this.world.uiPaused && cycle > 12 && cycle < 23;
+      // A local motion clock prevents a jump when a modal or reduced-motion mode pauses the scene.
+      const last = this.helperMotionLast ?? now;
+      this.helperMotionLast = now;
+      if (!preview && !this.world.reduced && !this.world.uiPaused) {
+        const delta = Math.max(0, Math.min(80, now - last));
+        this.helperMotionTime = (this.helperMotionTime || 0) + delta;
+        this.helperWorkTime =
+          (this.helperWorkTime || 0) + delta * (this.world.state.helperBurstActive ? 2 : 1);
+      }
+      const time = preview ? 1600 : this.helperMotionTime || 0;
+      const workTime = preview ? 1600 : this.helperWorkTime || 0;
+      const cycle = (time / 1000) % 30;
+      const smooth = (p) => {
+        p = Math.max(0, Math.min(1, p));
+        return p * p * (3 - 2 * p);
+      };
+      const moveAmount = smooth((cycle - 12) / 1.3) * (1 - smooth((cycle - 21.7) / 1.3));
+      const moving = moveAmount > 0;
       const w = preview
           ? Math.min(width * 0.66, height * 1.25)
           : width * (width < height ? 0.4 : 0.2375) * (1 + tier * 0.02),
@@ -466,11 +498,11 @@
           : width < height
             ? Math.min(width * 0.49, width - w * 1.23 - width * 0.055)
             : width * 0.78) +
-        (moving ? Math.sin(((cycle - 12) / 11) * Math.PI * 2) * width * 0.035 : 0);
+        Math.sin(((cycle - 12) / 11) * Math.PI * 2) * width * 0.035 * moveAmount;
       const y =
         height * (width < height ? 0.82 : 0.91) -
         bodyH +
-        (moving ? Math.sin(((cycle - 12) / 11) * Math.PI) * height * 0.025 : 0);
+        Math.sin(((cycle - 12) / 11) * Math.PI) * height * 0.012 * moveAmount;
       if (!preview) this.helperBounds = { x, y, w: w * 1.23, h: bodyH + w * 0.22 };
       const paint = (f, x, y, w, h, metal = true) => {
         const colored = metal ? this.metalFrame(f, tier) : null;
@@ -479,39 +511,113 @@
       };
       ctx.save();
       ctx.globalAlpha = 1;
+      const groundY = y + bodyH * 0.98;
+      ctx.fillStyle = 'rgba(36,24,13,.17)';
+      ctx.beginPath();
+      ctx.ellipse(x + bodyW * 0.5, groundY, bodyW * 0.51, bodyW * 0.055, 0, 0, Math.PI * 2);
+      ctx.fill();
       paint(base, x, y, bodyW, bodyH);
-      let phase = 5;
-      if (!this.world.reduced && !this.world.uiPaused) {
-        if (now - (this.reactionAt || -10000) < 1400) phase = 13;
-        else if (cycle > 24 && cycle < 27) {
-          const p = (cycle - 24) / 3;
-          phase = p < 0.25 ? 10 : p < 0.7 ? 11 : 12;
-        } else if (cycle > 19 && cycle < 21) phase = 8;
-        else if (cycle > 21 && cycle < 23) phase = 9;
-        else if (now % 8000 < 320) phase = now % 8000 < 100 ? 6 : now % 8000 < 220 ? 7 : 6;
+      if (moveAmount > 0.01) {
+        ctx.save();
+        ctx.globalAlpha = moveAmount * 0.22;
+        ctx.beginPath();
+        ctx.ellipse(
+          x + bodyW * 0.5,
+          y + bodyH * 0.88,
+          bodyW * 0.46,
+          bodyH * 0.08,
+          0,
+          0,
+          Math.PI * 2,
+        );
+        ctx.clip();
+        ctx.strokeStyle = '#c5b99d';
+        ctx.lineWidth = Math.max(0.7, bodyW * 0.006);
+        const spacing = bodyW * 0.06,
+          offset = (time / 55) % spacing;
+        for (let tread = -1; tread < 19; tread++) {
+          const tx = x + tread * spacing + offset;
+          ctx.beginPath();
+          ctx.moveTo(tx, y + bodyH * 0.81);
+          ctx.lineTo(tx - bodyW * 0.035, y + bodyH * 0.96);
+          ctx.stroke();
+        }
+        ctx.restore();
       }
-      const face = this.frame('helperRig', phase, 4, 4);
+      const face = this.frame('helperRig', 5, 4, 4);
       if (face) {
+        const hx = x + bodyW * (0.27 + Math.sin(time / 3400) * 0.008),
+          hy = y + bodyH * (0.085 + Math.sin(time / 1300) * 0.003),
+          hw = bodyW * 0.4,
+          hh = (hw * face.h) / face.w;
+        const blinkAge = time % 7400,
+          blink = Math.max(0, 1 - Math.abs(blinkAge - 4200) / 155);
+        const yawn = smooth((cycle - 24) / 0.8) * (1 - smooth((cycle - 26.2) / 0.8));
+        const look = (smooth((cycle - 17) / 1.2) - smooth((cycle - 20) / 1.2)) * 0.055;
+        const reactionAge = now - (this.reactionAt ?? -10000);
+        const reaction =
+          reactionAge >= 0 && reactionAge < 1400
+            ? smooth(reactionAge / 220) * (1 - smooth((reactionAge - 900) / 500))
+            : 0;
         ctx.save();
         ctx.beginPath();
         ctx.rect(x + bodyW * 0.24, y + bodyH * 0.04, bodyW * 0.5, bodyH * 0.49);
         ctx.clip();
-        paint(
-          face,
-          x + bodyW * 0.27,
-          y + bodyH * 0.085,
-          bodyW * 0.4,
-          (bodyW * 0.4 * face.h) / face.w,
-          false,
-        );
+        ctx.translate(hx + hw * 0.5, hy + hh * 0.68);
+        ctx.rotate(Math.sin(time / 2600) * 0.023 + look + reaction * 0.06);
+        ctx.scale(1 - Math.abs(look), 1);
+        const fx = -hw * 0.5,
+          fy = -hh * 0.68;
+        paint(face, fx, fy, hw, hh, false);
+        const eye = this.frame('helperRig', 7, 4, 4);
+        if (eye && blink > 0) {
+          ctx.save();
+          ctx.globalAlpha = smooth(blink);
+          ctx.beginPath();
+          ctx.ellipse(0, fy + hh * 0.6, hw * 0.35, hh * 0.105, 0, 0, Math.PI * 2);
+          ctx.clip();
+          paint(eye, fx, fy, hw, hh, false);
+          ctx.restore();
+        }
+        if (reaction > 0) {
+          const annoyedEyes = this.frame('helperRig', 13, 4, 4);
+          if (annoyedEyes) {
+            ctx.save();
+            ctx.globalAlpha = reaction;
+            ctx.beginPath();
+            ctx.ellipse(0, fy + hh * 0.57, hw * 0.35, hh * 0.14, 0, 0, Math.PI * 2);
+            ctx.clip();
+            paint(annoyedEyes, fx, fy, hw, hh, false);
+            ctx.restore();
+          }
+        }
+        // A local mouth patch opens continuously; the skull, ears and silhouette never dissolve.
+        if (yawn > 0.01) {
+          const mouth = this.frame('helperRig', 11, 4, 4);
+          if (mouth) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.ellipse(
+              hw * 0.015,
+              fy + hh * 0.79,
+              hw * 0.17,
+              hh * (0.08 + yawn * 0.15),
+              0,
+              0,
+              Math.PI * 2,
+            );
+            ctx.clip();
+            ctx.globalAlpha = smooth(yawn);
+            paint(mouth, fx, fy - hh * 0.005, hw, hh, false);
+            ctx.restore();
+          }
+        }
         ctx.restore();
       }
-      const p =
-        this.world.reduced || this.world.uiPaused || moving
-          ? 0
-          : ((now * (this.world.state.helperBurstActive ? 2 : 1)) % 6500) / 6500;
-      const a = -0.7 + Math.sin(p * Math.PI * 2) * 0.34,
-        b = 0.92 + Math.sin(p * Math.PI * 2 + 0.8) * 0.42;
+      const p = (workTime % 8500) / 8500;
+      const working = 1 - moveAmount * 0.78;
+      const a = -0.7 + Math.sin(p * Math.PI * 2) * 0.34 * working,
+        b = 0.92 + Math.sin(p * Math.PI * 2 + 0.8) * 0.42 * working;
       const pivot = { x: x + bodyW * 0.86, y: y + bodyH * 0.62 },
         l1 = w * 0.27,
         l2 = w * 0.27;
@@ -529,12 +635,32 @@
       const joint = { x: pivot.x + Math.cos(a) * l1, y: pivot.y + Math.sin(a) * l1 };
       link(2, joint, b, l2);
       const tip = { x: joint.x + Math.cos(b) * l2, y: joint.y + Math.sin(b) * l2 },
-        bucket = this.frame('helperRig', p > 0.35 && p < 0.8 ? 4 : 3, 4, 4);
+        bucket = this.frame('helperRig', 3, 4, 4);
       if (bucket) {
         ctx.save();
         ctx.translate(tip.x, tip.y);
         ctx.rotate(-0.45 + Math.sin(p * Math.PI * 2) * 0.55);
         paint(bucket, -w * 0.07, -w * 0.025, w * 0.22, (w * 0.22 * bucket.h) / bucket.w);
+        const load = smooth((p - 0.2) / 0.15) * (1 - smooth((p - 0.68) / 0.13));
+        if (load > 0) {
+          ctx.save();
+          ctx.globalAlpha = load;
+          for (let i = 0; i < 7; i++) {
+            ctx.fillStyle = i % 2 ? '#b47a35' : '#8d592b';
+            ctx.beginPath();
+            ctx.ellipse(
+              w * (-0.025 + (i % 4) * 0.027),
+              w * (0.075 - Math.floor(i / 4) * 0.023),
+              w * 0.018,
+              w * 0.015,
+              i * 0.7,
+              0,
+              Math.PI * 2,
+            );
+            ctx.fill();
+          }
+          ctx.restore();
+        }
         ctx.restore();
       }
       if (p > 0.75 && !moving && !this.world.reduced) {
@@ -660,7 +786,8 @@
         ctx.drawImage(r.canvas, x, y, w, h);
       };
       draw(f, 1);
-      draw(g, mix);
+      // Optional legacy fallback stays on one opaque drawing; never dissolve entire machines.
+      // The normal path above uses the independent articulated rig.
       if (!this.world.reduced && frame > 6) {
         const p = (frame - 6) / 2;
         ctx.globalAlpha = 1;

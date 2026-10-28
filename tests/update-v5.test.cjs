@@ -197,20 +197,44 @@ test('articulated rig draws the chassis at full opacity throughout digging and d
     uiPaused: false,
     reduced: false,
   });
-  extras.frame = () => ({ canvas: {}, x: 0, y: 0, w: 240, h: 200 });
-  let draws = 0;
+  const chassis = {},
+    localPart = {};
+  extras.frame = (key, index) => ({
+    canvas: index === 0 ? chassis : localPart,
+    x: 0,
+    y: 0,
+    w: 240,
+    h: 200,
+  });
+  let draws = 0,
+    chassisDraws = 0;
+  const alphaStack = [];
   const ctx = {
     globalAlpha: 1,
-    save() {},
-    restore() {},
+    save() {
+      alphaStack.push(this.globalAlpha);
+    },
+    restore() {
+      this.globalAlpha = alphaStack.pop() ?? 1;
+    },
     translate() {},
     rotate() {},
+    scale() {},
     beginPath() {},
     rect() {},
     clip() {},
     fill() {},
+    stroke() {},
+    closePath() {},
+    moveTo() {},
+    lineTo() {},
     drawImage(...a) {
-      assert.equal(this.globalAlpha, 1);
+      // The chassis must never flicker; local eyelid/mouth masks may blend independently.
+      if (a[0] === chassis) {
+        assert.equal(this.globalAlpha, 1);
+        chassisDraws++;
+      }
+      assert.ok(this.globalAlpha >= 0 && this.globalAlpha <= 1);
       assert.ok(a.slice(1).every(Number.isFinite));
       draws++;
     },
@@ -220,4 +244,6 @@ test('articulated rig draws the chassis at full opacity throughout digging and d
   };
   for (let t = 0; t < 35000; t += 30) extras.helper(ctx, t, 390, 844, 1);
   assert.ok(draws > 4000);
+  assert.equal(chassisDraws, Math.ceil(35000 / 30));
+  assert.equal(alphaStack.length, 0);
 });

@@ -53,6 +53,27 @@
     [0.6, 0.43, 0.34],
     [0.66, 0.59, 0.34],
   ];
+  // Floor anchors measured against each location's architecture, not a universal wall height.
+  // [left, floor baseline, width] in viewport fractions. The displayed home skin selects the floor.
+  const BED_FLOORS = Object.freeze(
+    [
+      [0.03, 0.49, 0.34],
+      [0.04, 0.51, 0.32],
+      [0.06, 0.5, 0.34],
+      [0.04, 0.5, 0.34],
+      [0.06, 0.51, 0.34],
+      [0.05, 0.5, 0.34],
+      [0.04, 0.53, 0.34],
+      [0.03, 0.51, 0.34],
+      [0.04, 0.52, 0.34],
+      [0.03, 0.54, 0.34],
+      [0.05, 0.52, 0.34],
+      [0.04, 0.53, 0.34],
+      [0.05, 0.54, 0.34],
+      [0.06, 0.55, 0.34],
+      [0.05, 0.56, 0.34],
+    ].map(Object.freeze),
+  );
   class Scene {
     constructor(world) {
       this.world = world;
@@ -111,13 +132,18 @@
     bedLayout() {
       const w = this.world.w,
         h = this.world.h,
-        width = w * 0.35;
+        stage = Math.max(
+          0,
+          Math.min(BED_FLOORS.length - 1, Math.floor(this.world.state.homeStage || 0)),
+        ),
+        [left, floor, extent] = BED_FLOORS[stage],
+        width = w * extent;
       return {
-        x: w * 0.025,
-        y: h * 0.39 - width * 0.55,
+        x: w * left,
+        y: h * floor - width * 0.55,
         w: width,
         h: width * 0.55,
-        base: h * 0.39,
+        base: h * floor,
       };
     }
     bed(ctx, lip = false) {
@@ -181,6 +207,7 @@
       return !!this.world.images.yuppi && !!this.world.images.insects;
     }
     drawGuest(canvas, a, now = performance.now()) {
+      if (window.PugCharacterMotion?.drawGuest(this.world, canvas, a, now)) return;
       if (canvas.width !== 256) {
         canvas.width = 256;
         canvas.height = 256;
@@ -285,5 +312,6 @@
   }
   Scene.poses = Object.freeze(POSES);
   Scene.heads = Object.freeze(HEADS);
+  Scene.bedFloors = BED_FLOORS;
   window.PugScene = Scene;
 })();

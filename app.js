@@ -8,7 +8,7 @@
     PRIOR_BACKUP = 'pug-and-pebbles-v5-backup',
     LEGACY_BACKUP = 'pug-and-pebbles-v4-backup',
     OLDER_BACKUP = 'pug-and-pebbles-v3-backup',
-    VERSION = '0.8.1',
+    VERSION = '0.9.0',
     SHARE_URL = 'https://doublden.github.io/pug-and-pebbles/?v=' + VERSION,
     instance = Math.random().toString(36).slice(2) + Date.now();
   const session = PugSession.create(localStorage, 'pug-and-pebbles-session-v5', instance);
@@ -630,7 +630,8 @@
       b.disabled = true;
       try {
         const stage = Math.min(kind === 'pug' ? 15 : 14, game.getState()[kind] + 1);
-        if (kind === 'pug' && stage === 15) await world.scene.preloadPug();
+        if (kind === 'pug' && world.rig) await world.rig.preload(stage);
+        else if (kind === 'pug' && stage === 15) await world.scene.preloadPug();
         else if (kind === 'home')
           await Promise.all([
             world.image('location-' + stage, world.artPath('background', stage)),
@@ -921,6 +922,8 @@
       button.style.transform = `translate(-50%,-50%) rotate(${coin.angle}deg)`;
       button.querySelector('.coin-face').style.backgroundPosition =
         `${(coin.pet % 3) * 50}% ${Math.floor(coin.pet / 3) * 100}%`;
+      if (typeof PugCharacterMotion !== 'undefined')
+        PugCharacterMotion.drawFriend(world, button.querySelector('.coin-face'), coin);
       $('coin-value').textContent = '×' + coin.value;
       button.ariaLabel = t().catch + ' ×' + coin.value;
     }

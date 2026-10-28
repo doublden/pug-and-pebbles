@@ -1,0 +1,103 @@
+{
+  "version": 9,
+  "scope": "hat_artwork_and_attachments",
+  "models": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "hats": 14,
+  "rendered_and_visually_reviewed": [
+    {
+      "pose": "idle",
+      "time_ms": 4000,
+      "combinations": 224
+    },
+    {
+      "pose": "left",
+      "time_ms": 4000,
+      "combinations": 224
+    },
+    {
+      "pose": "rear",
+      "time_ms": 4000,
+      "combinations": 224
+    },
+    {
+      "pose": "sleep",
+      "time_ms": 4000,
+      "combinations": 224
+    },
+    {
+      "pose": "stretch",
+      "time_ms": 4000,
+      "combinations": 224
+    },
+    {
+      "pose": "look",
+      "time_ms": 2300,
+      "combinations": 224
+    },
+    {
+      "pose": "look",
+      "time_ms": 7500,
+      "combinations": 224
+    },
+    {
+      "pose": "scratch",
+      "time_ms": 4000,
+      "combinations": 224
+    },
+    {
+      "pose": "pawlick",
+      "time_ms": 4000,
+      "combinations": 224
+    }
+  ],
+  "visual_combinations": 2016,
+  "automated_transform_cases": 1680,
+  "hat_test_cases_passed": 4,
+  "repaired": [
+    "Original v6 art crossed equal atlas row and column boundaries, slicing knit bands and ushanka flaps. All 30 first-ten-hat views were isolated and safely repacked.",
+    "Explicit wearing openings exclude pan handle, nightcap tassel and bunny/bee/butterfly decorations from skull fit.",
+    "World-space skull crown, rotation and perspective now drive hats continuously. Rear cap uses the forward-projecting brim view.",
+    "Umbrella rain and yogurt rainbow move with the hat transform."
+  ],
+  "inspection_result": "No floating bands, eyebrow obstruction or clipped source silhouettes found in the reviewed hat combinations.",
+  "other_issue_reported_to_root": "Sleep eyelid mask issue was reported and root fixed it. Follow-up actual-renderer offline checks show fully closed sleep and blink eyes in all four families.",
+  "proof_location": "Local output/v9-qa/hat-all16-*.png contact sheets; local QA tools are not gameplay/save access.",
+  "limitations": [
+    "Desktop browser visual inspection; physical phone fit/performance remains device testing.",
+    "Nine representative rig states cover all three head perspectives, lying positions and positive/negative head tilts; not every millisecond of every motion was reviewed."
+  ],
+  "followup_checks": {
+    "backend": "Bundled offline Canvas2D executing current PugRigV9, PugExtras and HatAttachmentsV9 source, not a browser or physical phone check",
+    "sleep_and_blink_families": [
+      "skinny",
+      "healthy",
+      "round",
+      "muscle"
+    ],
+    "blink_time_ms": 2900,
+    "sleep_time_ms": 4000,
+    "stage14_wider_body_hats": 14,
+    "result": "Closed eyes verified in sleep and normal blink; all 14 hats remain seated with clear forehead after wider stage14 body change.",
+    "local_proofs": [
+      "output/v9-qa/eyes-v9-offline-recheck.png",
+      "output/v9-qa/hat-stage14-width-recheck.png"
+    ]
+  }
+}

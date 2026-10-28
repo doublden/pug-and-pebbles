@@ -122,7 +122,7 @@
     // Feet stay planted while the chest expands gently.
     ctx.save(); ctx.translate(312, 1268); ctx.scale(1 + breath * .006, 1 + breath * .009);
     paint(art.body, -220, -442, 440, 442); ctx.restore();
-    ctx.save(); ctx.translate(326 + look * 5, 887 - breath * 2.7);
+    ctx.save(); ctx.translate(326 + look * 5, 937 - breath * 2.7);
     ctx.rotate(-.018 + Math.sin(t * .56) * .016 + tilt * .11 - look * .045);
     ctx.scale(1 - look * .025, 1);
     const x = -200, y = -282, width = 407, height = width * art.head.height / art.head.width;

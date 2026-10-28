@@ -12,6 +12,7 @@
       this.artRetryAt = new Map();
       this.extras = new PugExtras(this);
       this.scene = new PugScene(this);
+      this.rig = typeof PugRigV9 === 'function' ? new PugRigV9(this) : null;
       this.coverageCanvas = document.createElement('canvas');
       this.coverageCanvas.width = 64;
       this.coverageCanvas.height = 96;
@@ -119,18 +120,25 @@
           progress(Math.round((++finished / critical.length) * 100));
         }),
       );
-      if (this.state.pugStage === 15) await this.scene.preloadPug().catch(() => {});
+      if (this.rig) await this.rig.preload(this.state.pugStage).catch(() => {});
+      if (!this.rig?.ready(this.state.pugStage) && this.state.pugStage === 15)
+        await this.scene.preloadPug().catch(() => {});
       this.scene?.load();
       this.ready = true;
       this.frame(0);
       const extra = [
+        ['motionBirdRig', 'assets-motion-v9/birds-rig.webp'],
+        ['motionInsectRig', 'assets-motion-v9/insects-rig.webp'],
+        ['motionRaccoonBoss', 'assets-motion-v9/boss-raccoon-rig.webp'],
+        ['motionCrowBoss', 'assets-motion-v9/boss-crow-rig.webp'],
+        ['motionFriends', 'assets-motion-v9/friends-rig.webp'],
         ...Object.entries(files),
         ['pugsEarly', 'pugs-early-mobile-v5.webp'],
         ['birds', 'birds-mobile-v5.webp'],
         ['birdMid', 'birds-mid-mobile-v5.webp'],
-        ['hats', 'hats-v6.webp'],
-        ['hatsSide', 'hats-side-v6.webp'],
-        ['hatsBack', 'hats-back-v6.webp'],
+        ['hats', 'assets-v9/hats-front.webp'],
+        ['hatsSide', 'assets-v9/hats-side.webp'],
+        ['hatsBack', 'assets-v9/hats-back.webp'],
         ['rear', 'pug-rear-v5.webp'],
         ['kingHats', 'pug-king-hats-v5.webp'],
         ['helper', 'vasiliy-v4.webp'],
@@ -156,7 +164,22 @@
       this.extraLoad = (async () => {
         for (const [key, file] of extra.filter(
           ([k]) =>
-            !['look', 'scratch', 'yawn', 'lick', 'left', 'pawlick', 'splay'].includes(k) &&
+            (!this.rig?.ready(this.state.pugStage) ||
+              ![
+                'look',
+                'scratch',
+                'yawn',
+                'lick',
+                'left',
+                'pawlick',
+                'splay',
+                'sleep',
+                'whistle',
+                'back',
+                'rear',
+                'stretch',
+                'kingHats',
+              ].includes(k)) &&
             !k.startsWith('mid-'),
         )) {
           await new Promise((resolve) =>
@@ -306,7 +329,9 @@
       this.hasState = true;
       this.state = state;
       if (this.ready) {
-        if (state.pugStage === 15) this.scene.preloadPug().catch(() => {});
+        if (this.rig) this.rig.preload(state.pugStage).catch(() => {});
+        if (!this.rig?.ready(state.pugStage) && state.pugStage === 15)
+          this.scene.preloadPug().catch(() => {});
         this.ensureSceneArt(state.homeStage);
         if (state.foodStage !== state.homeStage) this.ensureSceneArt(state.foodStage);
         if (state.weaponsUnlocked && state.showWeapon) {
@@ -456,7 +481,9 @@
         width = portrait
           ? w * extent * 1.21
           : Math.min(w * (0.22 + stage * 0.012), h * (0.4 + stage * 0.037)),
-        scale = Math.min(width / f.w, (h * (portrait ? 0.47 : 0.75)) / f.h),
+        scale =
+          Math.min(width / f.w, (h * (portrait ? 0.47 : 0.75)) / f.h) *
+          ([13, 14].includes(stage) ? 0.9 : 1),
         dw = f.w * scale,
         dh = f.h * scale,
         cx = w * (portrait ? 0.5 : 0.7),
@@ -550,6 +577,8 @@
       return f;
     }
     drawBird(canvas, b) {
+      if (typeof PugCharacterMotion !== 'undefined' && PugCharacterMotion.drawBird(this, canvas, b))
+        return;
       if (!this.images.birds) return;
       if (canvas.width !== 256 || canvas.height !== 384) {
         canvas.width = 256;
@@ -627,6 +656,12 @@
       return pose;
     }
     visiblePug(now = performance.now()) {
+      if (this.rig?.ready(this.state.pugStage)) {
+        const fart = this.scene.farting;
+        if (fart && now - fart.last <= 1100) return { pose: 'back', mirror: false };
+        if (fart && now - fart.last > 1100) this.scene.farting = null;
+        return { pose: this.activePose(), mirror: false };
+      }
       const pose =
         this.scene?.fartPose(now) || this.poseFrame(this.activePose(), this.poseProgress(now), now);
       const mirror =
@@ -637,6 +672,13 @@
       return { pose, mirror: !!mirror };
     }
     currentHead(now = performance.now()) {
+      if (this.rig?.ready(this.state.pugStage)) {
+        const pose = this.visiblePug(now).pose;
+        return {
+          head: this.rig.measure(this.state.pugStage, pose, this.layout(now), now).normalizedHead,
+          pose,
+        };
+      }
       const { pose, mirror } = this.visiblePug(now),
         head = this.prepare(pose, this.state.pugStage).head;
       return { head: mirror ? { ...head, x: 1 - head.x, tilt: -(head.tilt || 0) } : head, pose };
@@ -644,6 +686,15 @@
     birdAnchor(target) {
       const l = target === 2 ? this.layout() : this.foodLayout();
       if (target === 2) {
+        if (this.rig?.ready(this.state.pugStage)) {
+          const pose = this.visiblePug().pose,
+            m = this.rig.measure(this.state.pugStage, pose, l);
+          const f =
+            this.state.hat &&
+            this.extras.hatFrame(this.state.hat, HatAttachmentsV9.VIEW_POSE[m.head.perspective]);
+          const fit = f && HatAttachmentsV9.layout(this.state.hat, m.head, pose, f);
+          return fit?.topPoint || { x: m.head.x, y: m.head.y - m.head.w * 0.04 };
+        }
         const { head, pose } = this.currentHead(),
           i = PugGame.HATS.findIndex((h) => h.id === this.state.hat);
         const hat = i >= 0 ? this.extras.hatFrame(this.state.hat, pose) : null;
@@ -686,7 +737,24 @@
       const l = this.foodLayout();
       return { x: l.cx, y: l.y + l.h * 0.55 };
     }
-    dog(ctx, stage, pose, x, y, size, alpha = 1, withHat = true) {
+    dog(ctx, stage, pose, x, y, size, alpha = 1, withHat = true, now = performance.now()) {
+      if (this.rig?.ready(stage)) {
+        const l = { x, y, size },
+          m = this.rig.measure(stage, pose, l, now);
+        ctx.save();
+        ctx.globalAlpha *= alpha;
+        if (m.view !== 'back') this.extras.weapon(ctx, l, pose, m.normalizedHead);
+        ctx.restore();
+        const result = this.rig.draw(ctx, stage, pose, l, now, { alpha, withHat });
+        if (m.view === 'back') {
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          this.extras.weapon(ctx, l, pose, m.normalizedHead);
+          ctx.restore();
+        }
+        return result;
+      }
+      this.rig?.preload(stage).catch(() => {});
       const f = this.prepare(pose, stage);
       ctx.globalAlpha = alpha;
       ctx.save();
@@ -711,6 +779,7 @@
       return f;
     }
     idleReady() {
+      if (this.rig?.ready(this.state.pugStage)) return true;
       return (
         this.state?.pugStage === 15 ||
         ['sleep', 'whistle', 'back', 'stretch'].every((p) => this.images[p])
@@ -726,6 +795,7 @@
     }
     activePose() {
       const e = this.idleEvent;
+      if (this.rig?.ready(this.state.pugStage) && e?.kind === 'zoomies') return 'tailchase';
       return e
         ? e.kind === 'pee' || e.kind === 'backlook'
           ? 'back'
@@ -786,6 +856,7 @@
     }
     hitPug(px, py) {
       if (!this.ready) return false;
+      if (this.rig?.ready(this.state.pugStage)) return this.rig.hit(px, py, this.layout());
       const l = this.layout(),
         visible = this.visiblePug(),
         f = this.prepare(visible.pose, this.state.pugStage),
@@ -802,7 +873,11 @@
     }
     animatePose(pose, now = performance.now()) {
       if (this.reduced) return;
-      if (this.state.pugStage === 15 && !this.worldMusclePoseReady(pose)) {
+      if (
+        !this.rig?.ready(this.state.pugStage) &&
+        this.state.pugStage === 15 &&
+        !this.worldMusclePoseReady(pose)
+      ) {
         this.nextPose = now + 5000;
         this.scene
           .preloadPug(pose)
@@ -810,7 +885,12 @@
           .catch(() => {});
         return;
       }
-      if (this.state.pugStage !== 15 && !this.images[pose] && this.catalog?.[pose]) {
+      if (
+        !this.rig?.ready(this.state.pugStage) &&
+        this.state.pugStage !== 15 &&
+        !this.images[pose] &&
+        this.catalog?.[pose]
+      ) {
         this.nextPose = now + 5000;
         Promise.all([
           this.image(pose, this.catalog[pose]),
@@ -836,7 +916,8 @@
           .catch(() => {});
         return;
       }
-      if (this.state.pugStage !== 15 && !this.images[pose]) return;
+      if (!this.rig?.ready(this.state.pugStage) && this.state.pugStage !== 15 && !this.images[pose])
+        return;
       this.pose = pose;
       this.poseStart = now;
       this.poseEnd =
@@ -889,8 +970,8 @@
     motionDog(ctx, stage, pose, l, p, alpha = 1, now = performance.now()) {
       // Hold one fully opaque drawing: dissolving two different bodies blurred
       // the face, doubled legs/medals and made every animation look smeared.
-      const frame = this.poseFrame(pose, p, now);
-      this.dog(ctx, stage, frame, l.x, l.y, l.size, alpha);
+      const frame = this.rig?.ready(stage) ? pose : this.poseFrame(pose, p, now);
+      this.dog(ctx, stage, frame, l.x, l.y, l.size, alpha, true, now);
     }
     spitCoverage(now = performance.now(), kind = 'spit') {
       const c = this.coverageCanvas.getContext('2d', { willReadFrequently: true });
@@ -1011,7 +1092,7 @@
         c.scale(-1, 1);
         c.translate(-l.x - l.size * 0.5, 0);
       }
-      this.dog(c, s.pugStage, visible.pose, l.x, l.y, l.size, weight);
+      this.dog(c, s.pugStage, visible.pose, l.x, l.y, l.size, weight, true, now);
 
       c.restore();
       if (e?.kind === 'sleep') this.scene.bed(c, true);
@@ -1101,7 +1182,12 @@
         c.strokeStyle = '#f4ffff88';
         c.lineWidth = 1;
         c.beginPath();
-        c.ellipse(l.x + l.size * 0.88, l.y + l.size * 0.84, r, r * 1.35, 0, 0, Math.PI * 2);
+        const nose = this.rig?.ready(this.state.pugStage)
+          ? this.rig.noseAnchor(now, l)
+          : this.state.pugStage === 15
+            ? { x: l.x + l.size * 0.38, y: l.y + l.size * 0.7 }
+            : { x: l.x + l.size * 0.88, y: l.y + l.size * 0.84 };
+        c.ellipse(nose.x + r * 0.3, nose.y + r * 0.55, r, r * 1.35, -0.12, 0, Math.PI * 2);
         c.fill();
         c.stroke();
         c.restore();
